@@ -1,0 +1,5 @@
+DEFAULT-BAN-REASON: "Being a poo poo head"
+DEFAULT-KICK-REASON: "Being a poo poo head"
+FORMAT-KICK: "You have been kicked by {0} for {1}"
+FORMAT-BAN: "You have been banned by {0} for {1}"
+PLUGIN-PREFIX: "[SB]"
