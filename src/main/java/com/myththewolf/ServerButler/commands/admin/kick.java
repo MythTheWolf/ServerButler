@@ -6,22 +6,26 @@ import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserKick;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
-import com.myththewolf.ServerButler.lib.player.impl.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 
+/**
+ * This class represents the /kick command
+ */
 public class kick extends CommandAdapter {
     @Override
-    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+    public void onCommand(Optional<IMythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found.");
             return;
         }
         target.ifPresent(target1 -> {
-            String modName = sender.map(MythPlayer::getName).orElse("CONSOLE");
+            String modName = sender.map(IMythPlayer::getName).orElse("CONSOLE");
             String reason = StringUtils.arrayToString(1, args);
             ModerationAction action = new ActionUserKick(reason, target1, sender.orElse(null));
             ((ActionUserKick) action).update();

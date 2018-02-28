@@ -3,7 +3,8 @@ package com.myththewolf.ServerButler.lib.cache;
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.player.impl.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.joda.time.DateTime;
@@ -27,7 +28,7 @@ public class DataCache {
             return playerHashMap.get(UUID);
         }
         MythPlayer player = makeNewPlayerObj(UUID);
-        if (player.Exists()) {
+        if (player.playerExists()) {
             playerHashMap.put(UUID, player);
         } else {
             player = createPlayer(UUID);
@@ -40,7 +41,7 @@ public class DataCache {
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in database. Inserting.");
         }
-        MythPlayer MP = new MythPlayer(new DateTime(), UUID);
+        MythPlayer MP = new IMythPlayer(new DateTime(), UUID);
         playerHashMap.put(UUID, MP);
         return MP;
     }
@@ -49,7 +50,7 @@ public class DataCache {
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in cache. Creating.");
         }
-        MythPlayer MP = new MythPlayer(UUID);
+        MythPlayer MP = new IMythPlayer(UUID);
         playerHashMap.put(UUID, MP);
         return MP;
     }
@@ -60,7 +61,7 @@ public class DataCache {
     }
 
     public static Optional<ChatChannel> getOrMakeChannel(int ID) {
-        getLogger().info((allChannels  == null) + "" + ID);
+        getLogger().info((allChannels == null) + "" + ID);
         return allChannels.stream().filter(chatChannel -> chatChannel.getID().equals(Integer.toString(ID))).findFirst();
     }
 

@@ -2,7 +2,8 @@ package com.myththewolf.ServerButler.lib.Chat;
 
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
-import com.myththewolf.ServerButler.lib.player.impl.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -71,7 +72,7 @@ public class ChatChannel implements SQLAble {
         return Optional.ofNullable(shortcut);
     }
 
-    public void push(String content, MythPlayer player) {
+    public void push(String content, IMythPlayer player) {
         getAllCachedPlayers().forEach(p -> p.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(getPrefix() + player.getName() + ": " + content)));
     }

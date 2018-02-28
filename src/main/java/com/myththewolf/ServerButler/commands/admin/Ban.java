@@ -5,15 +5,19 @@ import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.player.impl.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 
+/**
+ * This class represents the /ban command
+ */
 public class Ban extends CommandAdapter {
     @Override
-    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+    public void onCommand(Optional<IMythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");

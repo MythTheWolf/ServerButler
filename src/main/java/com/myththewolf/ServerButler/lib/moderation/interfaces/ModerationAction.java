@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.moderation.interfaces;
 
-import com.myththewolf.ServerButler.lib.player.impl.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.joda.time.DateTime;
 
 import java.util.Optional;
