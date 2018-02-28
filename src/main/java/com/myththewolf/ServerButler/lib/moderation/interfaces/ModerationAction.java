@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.moderation.interfaces;
 
 import com.myththewolf.ServerButler.lib.player.impl.MythPlayer;
+import org.joda.time.DateTime;
 
 import java.util.Optional;
 
@@ -8,26 +9,39 @@ import java.util.Optional;
  * This interface represents a moderation action
  */
 public interface ModerationAction {
-    public String getReason();
-    public Optional<MythPlayer> getTargetUser();
-    public Optional<MythPlayer> getModeratorUser();
-    public Optional<String> getTargetIP();
-    public Optional<String> getExpireDateString();
-    public ActionType getActionType();
-    public TargetType getTargetType();
+    String getReason();
+
+    default Optional<MythPlayer> getTargetUser() {
+        return Optional.empty();
+    }
+
+    Optional<MythPlayer> getModeratorUser();
+
+    default public Optional<String> getTargetIP() {
+        return Optional.empty();
+    }
+
+    default Optional<String> getExpireDateString(){ return Optional.empty(); }
+    DateTime getDateApplied();
+    ActionType getActionType();
+
+    TargetType getTargetType();
+
     public String getDatabaseID();
-    default boolean isFromConsole(){
+
+    default boolean isFromConsole() {
         return !getModeratorUser().isPresent();
     }
 
-    default boolean isFromPlayer(){
+    default boolean isFromPlayer() {
         return !isFromConsole();
     }
 
-    default boolean targetIsPlayer(){
+    default boolean targetIsPlayer() {
         return getTargetType().equals(TargetType.BUKKIT_PLAYER);
     }
-    default boolean targetIsIP(){
+
+    default boolean targetIsIP() {
         return !targetIsPlayer();
     }
 

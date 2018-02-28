@@ -16,7 +16,7 @@ public class SetWriteChannelPacketHandler implements ItemPacketHandler {
         optionalChatChannel.ifPresent(channel -> {
             player.setWritingChannel(channel);
             player.updatePlayer();
-            DataCache.rebuildChannel(channel);
+            DataCache.rebuildChannelList();
         });
     }
 }

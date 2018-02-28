@@ -14,10 +14,9 @@ public class OpenChannelPacketHandler implements ItemPacketHandler {
         Optional<ChatChannel> optionalChatChannel = data.isNull("channelID") ? DataCache
                 .getOrMakeChannel(-1) : DataCache.getOrMakeChannel(data.getInt("channelID"));
         optionalChatChannel.ifPresent(channel -> {
-            System.out.print("SET!");
             player.openChannel(channel);
             player.updatePlayer();
-            DataCache.rebuildChannel(channel.getID());
+            DataCache.rebuildChannelList();
         });
     }
 }

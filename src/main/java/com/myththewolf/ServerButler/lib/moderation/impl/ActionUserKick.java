@@ -14,28 +14,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-public class ActionUserBan implements ModerationAction, SQLAble {
-    /**
-     * The target player
-     */
+public class ActionUserKick implements ModerationAction, SQLAble {
+
     private MythPlayer target;
-    /**
-     * The reason
-     */
     private String reason;
-    /**
-     * The [Maybe] moderator
-     */
     private MythPlayer moderator;
-
-    private String DB_ID = null;
-
     private DateTime dateApplied;
+    private String ID;
 
-    public ActionUserBan(String id) {
-        DB_ID = id;
+    public ActionUserKick(String ID) {
+        this.ID = ID;
         String SQL = "SELECT * FROM `SB_Actions` WHERE `ID` = ?";
-        ResultSet resultSet = prepareAndExecuteSelectExceptionally(SQL, 1, DB_ID);
+        ResultSet resultSet = prepareAndExecuteSelectExceptionally(SQL, 1, ID);
         try {
             while (resultSet.next()) {
                 this.dateApplied = TimeUtils.timeFromString(resultSet.getString("dateApplied"));
@@ -50,7 +40,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
         }
     }
 
-    public ActionUserBan(String reason, MythPlayer target, MythPlayer moderator) {
+    public ActionUserKick(String reason, MythPlayer target, MythPlayer moderator) {
         this.target = target;
         this.moderator = moderator;
         this.reason = reason;
@@ -59,12 +49,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     @Override
     public String getReason() {
-        return (reason != null ? reason : ConfigProperties.DEFAULT_BAN_REASON);
-    }
-
-    @Override
-    public Optional<MythPlayer> getTargetUser() {
-        return Optional.ofNullable(target);
+        return reason == null ? ConfigProperties.DEFAULT_KICK_REASON : reason;
     }
 
     @Override
@@ -73,18 +58,8 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     }
 
     @Override
-    public Optional<String> getTargetIP() {
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<String> getExpireDateString() {
-        return Optional.empty();
-    }
-
-    @Override
     public ActionType getActionType() {
-        return ActionType.BAN;
+        return ActionType.KICK;
     }
 
     @Override
@@ -92,24 +67,9 @@ public class ActionUserBan implements ModerationAction, SQLAble {
         return TargetType.BUKKIT_PLAYER;
     }
 
-    public void update() {
-        if (DB_ID == null) {
-            String SQL = "INSERT INTO `SB_Actions` (`type`, `reason`, `target`,`moderator`,`targetType`,`dateApplied`) VALUES (?,?,?,?,?,?)";
-            prepareAndExecuteUpdateExceptionally(SQL, 6, ActionType.BAN, reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), TimeUtils.dateToString(dateApplied));
-        } else {
-            String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 7, ActionType.BAN, reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), Integer.parseInt(this.DB_ID), TimeUtils
-                    .dateToString(dateApplied));
-        }
-    }
-
     @Override
     public String getDatabaseID() {
-        return DB_ID;
+        return ID;
     }
 
     @Override
@@ -117,8 +77,17 @@ public class ActionUserBan implements ModerationAction, SQLAble {
         return dateApplied;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return (o instanceof ModerationAction) && ((ModerationAction) o).getDatabaseID().equals(getDatabaseID());
+    public void update() {
+        if (getDatabaseID() == null) {
+            String SQL = "INSERT INTO `SB_Actions` (`type`,`reason`,`target`,`targetType`,`moderator`,`dateApplied`) VALUES (?,?,?,?,?,?)";
+            prepareAndExecuteUpdateExceptionally(SQL, 6, getActionType(), getReason(), getTargetUser().get()
+                    .getUUID(), getTargetType(), getModeratorUser()
+                    .map(MythPlayer::getUUID).orElse(null), TimeUtils.dateToString(getDateApplied()));
+        } else {
+            String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `targetType` = ?,`moderator` = ? WHERE `ID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), getReason(), getTargetUser().get()
+                    .getUUID(), getTargetType(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TimeUtils
+                    .dateToString(getDateApplied()), getDatabaseID());
+        }
     }
 }

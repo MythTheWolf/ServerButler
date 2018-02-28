@@ -31,7 +31,8 @@ public class channelmanager extends CommandAdapter {
             for (int i = 0; i < DataCache.allChannels.size(); i++) {
                 JSONObject packet = new JSONObject();
                 packet.put("packetType", PacketType.VIEW_CHANNEL_OPTIONS);
-                packet.put("CHANNEL_ID", DataCache.allChannels.get(i).getID());
+                packet.put("channelID", DataCache.allChannels.get(i).getID());
+                packet.put("ding","dongs");
                 ChatChannel theChannel = null;
                 theChannel = DataCache.allChannels.get(i);
                 ItemStack channelItem = (player.isViewing(theChannel) ? (player.getWritingChannel() != null && player

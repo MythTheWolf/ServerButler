@@ -16,7 +16,7 @@ public class CloseChannelPacketHandler implements ItemPacketHandler {
         optionalChatChannel.ifPresent(channel -> {
             player.closeChannel(channel);
             player.updatePlayer();
-            DataCache.rebuildChannel(channel.getID());
+            DataCache.rebuildChannelList();
         });
     }
 }

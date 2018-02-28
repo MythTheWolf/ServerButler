@@ -22,8 +22,7 @@ public class PreCommand implements Listener, Loggable {
         String raw = event.getMessage();
         event.getPlayer().sendMessage(raw);
         String[] split = raw.split(" ");
-        Command command = Bukkit.getPluginCommand(split[0]);
-        if (command != null && !ServerButler.commands.containsKey(split[0].substring(1))) {
+        if (!ServerButler.commands.containsKey(split[0].substring(1))) {
             return;
         }
         event.setCancelled(true);

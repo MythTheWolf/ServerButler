@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserBan;
+import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserKick;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
@@ -67,7 +68,7 @@ public class MythPlayer implements SQLAble {
                 this.name = RS.getString("name");
                 this.channelList = StringUtils.deserializeArray(RS.getString("channels")).stream()
                         .filter(s -> !s.isEmpty())
-                        .map(Integer::parseInt).map(integer -> DataCache.getOrMakeChannel(integer).get())
+                        .map(Integer::parseInt).map(integer -> DataCache.getOrMakeChannel(integer).orElse(null))
                         .collect(Collectors.toList());
                 this.writeTo = RS.getString("writeChannel") != null ? DataCache
                         .getOrMakeChannel(RS.getInt("ID")).get() : null;
@@ -116,8 +117,9 @@ public class MythPlayer implements SQLAble {
         if (exists) {
             String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?,`writeChannel` = ?, `channels` = ? WHERE `UUID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 6, getLoginStatus(), getChatStatus(), getName(), getWritingChannel()
-                    .orElse(null), StringUtils.serializeArray(channelList.stream().map(ChatChannel::getID)
-                    .collect(Collectors.toList())), getUUID());
+                    .map(ChatChannel::getID).orElse(null), StringUtils
+                    .serializeArray(channelList.stream().map(ChatChannel::getID)
+                            .collect(Collectors.toList())), getUUID());
 
         } else {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";
@@ -153,6 +155,8 @@ public class MythPlayer implements SQLAble {
     }
 
     public void kickPlayer(String reason, MythPlayer moderator) {
+        ModerationAction kick = new ActionUserKick(reason, this, moderator);
+        ((ActionUserKick) kick).update();
         String fReason = (reason == null ? ConfigProperties.DEFAULT_KICK_REASON : reason);
         String pattern = ConfigProperties.FORMAT_KICK;
         String modName = (moderator != null ? moderator.getName() : "CONSOLE");

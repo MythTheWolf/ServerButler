@@ -60,6 +60,7 @@ public class DataCache {
     }
 
     public static Optional<ChatChannel> getOrMakeChannel(int ID) {
+        getLogger().info((allChannels  == null) + "" + ID);
         return allChannels.stream().filter(chatChannel -> chatChannel.getID().equals(Integer.toString(ID))).findFirst();
     }
 
@@ -102,9 +103,11 @@ public class DataCache {
         ChatChannel admin = new ChatChannel("ADMIN", ConfigProperties.ADMIN_CHAT_PERMISSION, "#", pre);
         return admin;
     }
-    public static ChatChannel getAdminChannel(){
+
+    public static ChatChannel getAdminChannel() {
         return getOrMakeChannel("ADMIN").get();
     }
+
     public static Optional<MythPlayer> getPlayerByName(String name) {
         MythPlayer mythPlayer = null;
         try {
@@ -112,7 +115,7 @@ public class DataCache {
                     .prepareStatement("SELECT * FROM `SB_Players` WHERE `name` = ?");
             ps.setString(1, name);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()){
+            while (rs.next()) {
                 mythPlayer = getOrMakePlayer(rs.getString("UUID"));
             }
         } catch (SQLException excep) {

@@ -6,6 +6,7 @@ public class ConfigProperties {
     public static String DEFAULT_BAN_REASON = ServerButler.configuration.getString("DEFAULT-BAN-REASON");
     public static String DEFAULT_KICK_REASON = ServerButler.configuration.getString("DEFAULT-KICK-REASON");
     public static String FORMAT_KICK = ServerButler.configuration.getString("FORMAT-KICK-PLAYER");
+    public static String FORMAT_KICK_CHAT = ServerButler.configuration.getString("FORMAT-KICK-CHAT");
     public static String FORMAT_BAN = ServerButler.configuration.getString("FORMAT-BAN-PLAYER");
     public static String FORMAT_BAN_CHAT = ServerButler.configuration.getString("FORMAT-BAN-CHAT");
     public static String PREFIX = ServerButler.configuration.getString("PLUGIN-PREFIX");

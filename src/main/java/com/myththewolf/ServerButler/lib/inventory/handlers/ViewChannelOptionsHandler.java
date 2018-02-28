@@ -14,8 +14,8 @@ import java.util.Optional;
 public class ViewChannelOptionsHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
-        Optional<ChatChannel> optionalChatChannel = data.isNull("CHANNEL_ID") ? DataCache
-                .getOrMakeChannel(-1) : DataCache.getOrMakeChannel(data.getInt("CHANNEL_ID"));
+        Optional<ChatChannel> optionalChatChannel = data.isNull("channelID") ? DataCache
+                .getOrMakeChannel(-1) : DataCache.getOrMakeChannel(data.getInt("channelID"));
         optionalChatChannel.ifPresent(channel -> {
             boolean isCurrentlyViewing = player.isViewing(channel);
             if (!isCurrentlyViewing) {
