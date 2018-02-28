@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.lib.cache;
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
+import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
@@ -18,11 +19,30 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-
+/**
+ * This class represents all caching
+ */
 public class DataCache {
+    /**
+     * This a mapping of a player's UUID and their cached MythPlayer object
+     *
+     * @Note This HashMap is not populated upon creation, and contains cached items only from players whom have joined the server since uptime.
+     */
     public static HashMap<String, MythPlayer> playerHashMap;
+    /**
+     * This is a list of all ChatChannels
+     *
+     * @Note This list is populated by a selection of * in the SB_Channels database,so all chat channels exist in this list.
+     */
     public static List<ChatChannel> allChannels;
 
+    /**
+     * Gets a player from cache if presents, but makes a new player object, or inserts a player into the database if they don't
+     *
+     * @param UUID The UUID of which player to grab
+     * @return A new MythPlayer object
+     * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
+     */
     public static MythPlayer getOrMakePlayer(String UUID) {
         if (playerHashMap.containsKey(UUID)) {
             return playerHashMap.get(UUID);
@@ -37,6 +57,13 @@ public class DataCache {
         return playerHashMap.get(UUID);
     }
 
+    /**
+     * This inserts a player into the database
+     *
+     * @param UUID The UUID of the player to create
+     * @return The created player
+     * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
+     */
     private static MythPlayer createPlayer(String UUID) {
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in database. Inserting.");
@@ -46,6 +73,13 @@ public class DataCache {
         return MP;
     }
 
+    /**
+     * Creates a new player object and inserts into cache
+     *
+     * @param UUID The UUID of the player
+     * @return The inserted player object
+     * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
+     */
     private static MythPlayer makeNewPlayerObj(String UUID) {
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in cache. Creating.");
@@ -55,24 +89,42 @@ public class DataCache {
         return MP;
     }
 
+    /**
+     * Instantiates the cache maps
+     */
     public static void makeMaps() {
         playerHashMap = new HashMap<>();
         allChannels = new ArrayList<>();
     }
 
+    /**
+     * Gets a channel by its' ID
+     *
+     * @param ID The ID of the channel to grab
+     * @return A channel Optional, empty if the channel doesn't exist in the current cache
+     * @apiNote This does not perform a selection from the database. It only searches cache
+     * @see @link{DataCache#rebuildChannelList()} for rebuilding the channel list
+     */
     public static Optional<ChatChannel> getOrMakeChannel(int ID) {
         getLogger().info((allChannels == null) + "" + ID);
         return allChannels.stream().filter(chatChannel -> chatChannel.getID().equals(Integer.toString(ID))).findFirst();
     }
 
+    /**
+     * Gets a channel by it's name
+     *
+     * @param name The name of the channel to get
+     * @return A channel Optional, empty if the channel doesn't exist in the current cache
+     * @apiNote This does not perform a selection from the database. It only searches cache
+     * @see @link{DataCache#rebuildChannelList()} for rebuilding the channel list
+     */
     public static Optional<ChatChannel> getOrMakeChannel(String name) {
         return allChannels.stream().filter(chatChannel -> chatChannel.getName().equals(name)).findFirst();
     }
 
-    public static void rebuildChannel(ChatChannel channel) {
-        rebuildChannel(channel.getID());
-    }
-
+    /**
+     * Empties the current cached channel list and re-populates it by a database selection
+     */
     public static void rebuildChannelList() {
         allChannels = new ArrayList<>();
         try {
@@ -82,33 +134,47 @@ public class DataCache {
             while (rs.next()) {
                 allChannels.add(new ChatChannel(rs.getString("ID")));
             }
-            allChannels.add(getAdminChatChannel());
+            allChannels.add(makeAdminChatChannel());
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
     }
 
-    public static void rebuildChannel(String ID) {
-        ChatChannel newChan = new ChatChannel(ID);
-        allChannels.remove(newChan);
-        allChannels.add(newChan);
-    }
-
+    /**
+     * Gets the plugin logger. We can't use {@link Loggable#getLogger()} because all methods here are static
+     * @return The logger
+     */
     private static Logger getLogger() {
         return Bukkit.getPluginManager().getPlugin("ServerButler").getLogger();
     }
 
-    private static ChatChannel getAdminChatChannel() {
+    /**
+     * Creates a new admin ChatChannel object
+     * @return The Admin chat channel object
+     * @apiNote The admin chat is hard-coded and will never be in the database, so the update method should never be run.
+     */
+    private static ChatChannel makeAdminChatChannel() {
         String pre = ChatColor.GRAY + "[" + ChatColor.RED + "#STAFF" + ChatColor.GRAY + "]";
         ChatChannel admin = new ChatChannel("ADMIN", ConfigProperties.ADMIN_CHAT_PERMISSION, "#", pre);
         return admin;
     }
 
+    /**
+     * Pulls the hard-coded admin chat channel from cache
+     * @return The cached Admin chat channel
+     */
     public static ChatChannel getAdminChannel() {
+        //We always put this channel into cache upon any build of the channel list, so the optional should always have a value present.
         return getOrMakeChannel("ADMIN").get();
     }
 
+    /**
+     * Gets a player by their name
+     * @param name The player name
+     * @return A optional, empty if no player by that name exists in the database
+     * @apiNote This performs a database selection to convert their name into a UUID, but pulls their MythPlayer object from cache (or creates it if not present)
+     */
     public static Optional<MythPlayer> getPlayerByName(String name) {
         MythPlayer mythPlayer = null;
         try {

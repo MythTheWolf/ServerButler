@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
@@ -19,9 +20,12 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This class represents the /chan command, it brings up the channel manager GUI for players
+ */
 public class channelmanager extends CommandAdapter {
     @Override
-    public void onCommand(Optional<IMythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         sender.ifPresent(player -> {
             Inventory I = (DataCache.allChannels.size() > 9 ? Bukkit
                     .createInventory(null, DataCache.allChannels.size(), ChatColor

@@ -17,7 +17,7 @@ import java.util.Optional;
  */
 public class Ban extends CommandAdapter {
     @Override
-    public void onCommand(Optional<IMythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");

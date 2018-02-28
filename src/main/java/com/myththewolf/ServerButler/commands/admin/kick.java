@@ -18,14 +18,14 @@ import java.util.Optional;
  */
 public class kick extends CommandAdapter {
     @Override
-    public void onCommand(Optional<IMythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found.");
             return;
         }
         target.ifPresent(target1 -> {
-            String modName = sender.map(IMythPlayer::getName).orElse("CONSOLE");
+            String modName = sender.map(MythPlayer::getName).orElse("CONSOLE");
             String reason = StringUtils.arrayToString(1, args);
             ModerationAction action = new ActionUserKick(reason, target1, sender.orElse(null));
             ((ActionUserKick) action).update();
