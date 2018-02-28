@@ -1,13 +1,16 @@
 package com.myththewolf.ServerButler.lib.command.impl;
 
 import com.myththewolf.ServerButler.lib.command.interfaces.Commandable;
-import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 
 /**
  * This class represents a extendable command handler
  */
 public abstract class CommandAdapter implements Commandable {
-    private IMythPlayer lastPlayer;
+    /**
+     * The last player who ran this command, used for {@link CommandAdapter#reply(String)}
+     */
+    private MythPlayer lastPlayer;
 
     /**
      * Sends a message to the player
@@ -23,7 +26,7 @@ public abstract class CommandAdapter implements Commandable {
      *
      * @return The player
      */
-    public IMythPlayer getLastPlayer() {
+    public MythPlayer getLastPlayer() {
         return lastPlayer;
     }
 
@@ -32,7 +35,7 @@ public abstract class CommandAdapter implements Commandable {
      *
      * @param lastPlayer The new player
      */
-    public void setLastPlayer(IMythPlayer lastPlayer) {
+    public void setLastPlayer(MythPlayer lastPlayer) {
         this.lastPlayer = lastPlayer;
     }
 

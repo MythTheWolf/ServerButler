@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.lib.event.player;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -17,8 +18,8 @@ public class EPlayerChat implements Listener {
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         event.setCancelled(true);
         shortCutRan = false;
-        IMythPlayer player = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
-        List<ChatChannel> shortCut = DataCache.allChannels.stream()
+        MythPlayer player = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        List<ChatChannel> shortCut = DataCache.getAllChannels().stream()
                 .filter(channel -> (!channel.getPermission().isPresent() || (player.getBukkitPlayer().get()
                         .hasPermission(channel.getPermission().get())) && (channel
                         .getShortcut().isPresent() && event.getMessage().startsWith(channel.getShortcut().get()))))

@@ -8,6 +8,7 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -15,7 +16,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 public class Join implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        IMythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
         if (MP.getLoginStatus() != LoginStatus.PERMITTED) {
             if (MP.getLoginStatus() == LoginStatus.BANNED) {
                 ModerationAction action = MP.getLatestActionOfType(ActionType.BAN).orElse(null);

@@ -13,11 +13,12 @@ import org.joda.time.DateTime;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * This class represents all caching
@@ -30,11 +31,11 @@ public class DataCache {
      */
     public static HashMap<String, MythPlayer> playerHashMap;
     /**
-     * This is a list of all ChatChannels
+     * This is a mapping of all ChatChannels to their IDs
      *
      * @Note This list is populated by a selection of * in the SB_Channels database,so all chat channels exist in this list.
      */
-    public static List<ChatChannel> allChannels;
+    public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
 
     /**
      * Gets a player from cache if presents, but makes a new player object, or inserts a player into the database if they don't
@@ -94,7 +95,7 @@ public class DataCache {
      */
     public static void makeMaps() {
         playerHashMap = new HashMap<>();
-        allChannels = new ArrayList<>();
+        channelHashMap = new HashMap<>();
     }
 
     /**
@@ -106,8 +107,9 @@ public class DataCache {
      * @see @link{DataCache#rebuildChannelList()} for rebuilding the channel list
      */
     public static Optional<ChatChannel> getOrMakeChannel(int ID) {
-        getLogger().info((allChannels == null) + "" + ID);
-        return allChannels.stream().filter(chatChannel -> chatChannel.getID().equals(Integer.toString(ID))).findFirst();
+        return channelHashMap.containsKey(Integer.toString(ID)) ? Optional
+                .ofNullable(channelHashMap.get(Integer.toString(ID))) : Optional
+                .empty();
     }
 
     /**
@@ -119,22 +121,23 @@ public class DataCache {
      * @see @link{DataCache#rebuildChannelList()} for rebuilding the channel list
      */
     public static Optional<ChatChannel> getOrMakeChannel(String name) {
-        return allChannels.stream().filter(chatChannel -> chatChannel.getName().equals(name)).findFirst();
+        return channelHashMap.entrySet().stream().map(Map.Entry::getValue)
+                .filter(chatChannel -> chatChannel.getName().equals(name)).findFirst();
     }
 
     /**
      * Empties the current cached channel list and re-populates it by a database selection
      */
     public static void rebuildChannelList() {
-        allChannels = new ArrayList<>();
+        channelHashMap = new HashMap<>();
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()
                     .prepareStatement("SELECT * FROM `SB_Channels`");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                allChannels.add(new ChatChannel(rs.getString("ID")));
+                channelHashMap.put(rs.getString("ID"), new ChatChannel(rs.getString("ID")));
             }
-            allChannels.add(makeAdminChatChannel());
+            channelHashMap.put("-1", makeAdminChatChannel());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -142,7 +145,16 @@ public class DataCache {
     }
 
     /**
+     * Converts the channelHashMap to a list
+     * @return The list of channels
+     */
+    public static List<ChatChannel> getAllChannels() {
+        return channelHashMap.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+    }
+
+    /**
      * Gets the plugin logger. We can't use {@link Loggable#getLogger()} because all methods here are static
+     *
      * @return The logger
      */
     private static Logger getLogger() {
@@ -151,6 +163,7 @@ public class DataCache {
 
     /**
      * Creates a new admin ChatChannel object
+     *
      * @return The Admin chat channel object
      * @apiNote The admin chat is hard-coded and will never be in the database, so the update method should never be run.
      */
@@ -162,6 +175,7 @@ public class DataCache {
 
     /**
      * Pulls the hard-coded admin chat channel from cache
+     *
      * @return The cached Admin chat channel
      */
     public static ChatChannel getAdminChannel() {
@@ -171,6 +185,7 @@ public class DataCache {
 
     /**
      * Gets a player by their name
+     *
      * @param name The player name
      * @return A optional, empty if no player by that name exists in the database
      * @apiNote This performs a database selection to convert their name into a UUID, but pulls their MythPlayer object from cache (or creates it if not present)
@@ -189,5 +204,21 @@ public class DataCache {
             excep.printStackTrace();
         }
         return Optional.ofNullable(mythPlayer);
+    }
+
+    /**
+     * Overload method of {@link DataCache#rebuildChannel(String)}
+     * @param rebuild The channel to rebuild
+     */
+    public static void rebuildChannel(ChatChannel rebuild) {
+        rebuildChannel(rebuild.getID());
+    }
+
+    /**
+     * Rebuilds the cache entry of a chatChannel, given the ID
+     * @param channelID The ID of the channel to rebuild
+     */
+    public static void rebuildChannel(String channelID) {
+        channelHashMap.put(channelID, new ChatChannel(channelID));
     }
 }

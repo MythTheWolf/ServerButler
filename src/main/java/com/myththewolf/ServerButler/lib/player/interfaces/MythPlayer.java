@@ -87,7 +87,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         });
     }
 
-    default void kickPlayer(String reason, IMythPlayer moderator) {
+    default void kickPlayer(String reason, MythPlayer moderator) {
         ModerationAction kick = new ActionUserKick(reason, this, moderator);
         ((ActionUserKick) kick).update();
         String fReason = (reason == null ? ConfigProperties.DEFAULT_KICK_REASON : reason);
