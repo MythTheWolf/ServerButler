@@ -11,7 +11,7 @@ import org.bukkit.event.server.ServerCommandEvent;
 public class EConsoleCommand implements Listener, Loggable {
     /**
      * Runs when a Console command is received
-     * @param event The
+     * @param event The event received from bukkit
      */
     @EventHandler
     public void onConsoleCommand(ServerCommandEvent event) {
