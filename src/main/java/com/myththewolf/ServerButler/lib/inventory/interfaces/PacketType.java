@@ -1,5 +1,8 @@
 package com.myththewolf.ServerButler.lib.inventory.interfaces;
 
+/**
+ * A enumeration for all packet types
+ */
 public enum PacketType {
     TOGGLE_CHANNEL_ON,
     TOGGLE_CHANNEL_OFF,

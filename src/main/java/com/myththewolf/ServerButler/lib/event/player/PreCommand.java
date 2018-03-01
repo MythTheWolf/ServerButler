@@ -16,6 +16,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * This class captures all Pre-command events
+ */
 public class PreCommand implements Listener, Loggable {
     @EventHandler
     public void onPreCommand(PlayerCommandPreprocessEvent event) {

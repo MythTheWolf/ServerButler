@@ -4,7 +4,6 @@ import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
-import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
@@ -12,6 +11,9 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
+/**
+ * This class handles all packets received from items that are to show the player options,given a channel
+ */
 public class ViewChannelOptionsHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {

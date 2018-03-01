@@ -11,7 +11,13 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * This class captures all chat events from players
+ */
 public class EPlayerChat implements Listener {
+    /**
+     * Used to return if the message was used to send a channel message via the channel's shortcut
+     */
     boolean shortCutRan = false;
 
     @EventHandler

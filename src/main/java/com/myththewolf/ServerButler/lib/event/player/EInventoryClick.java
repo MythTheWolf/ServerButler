@@ -11,6 +11,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.json.JSONObject;
 
+/**
+ * This class captures all inventory click events
+ */
 public class EInventoryClick implements Listener, Loggable {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {

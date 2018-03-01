@@ -9,6 +9,9 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
+/**
+ * This class handles all packets received from items that are to close a open channel
+ */
 public class CloseChannelPacketHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {

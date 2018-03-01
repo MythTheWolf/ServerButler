@@ -28,11 +28,19 @@ public class ActionUserBan implements ModerationAction, SQLAble {
      * The [Maybe] moderator
      */
     private MythPlayer moderator;
-
+    /**
+     * The ID of this entry from the database, null if not currently in the database
+     */
     private String DB_ID = null;
-
+    /**
+     * The Date and Time the ban was applied
+     */
     private DateTime dateApplied;
 
+    /**
+     * Constructs a new ActionUserBan, pulling data from the Database
+     * @param id
+     */
     public ActionUserBan(String id) {
         DB_ID = id;
         String SQL = "SELECT * FROM `SB_Actions` WHERE `ID` = ?";

@@ -9,6 +9,9 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
+/**
+ * This class handles all packets received from items that are to set a player's write channel
+ */
 public class SetWriteChannelPacketHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
