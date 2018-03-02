@@ -14,14 +14,36 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
+/**
+ * This class represents a kick history entry
+ */
 public class ActionUserKick implements ModerationAction, SQLAble {
-
+    /**
+     * The target user
+     */
     private MythPlayer target;
+    /**
+     * The reason for the kick
+     */
     private String reason;
+    /**
+     * The moderator who issued this action (or NULL if from the console)
+     */
     private MythPlayer moderator;
+    /**
+     * The time and date og when this action was applied
+     */
     private DateTime dateApplied;
+    /**
+     * The ID of the database
+     */
     private String ID;
 
+    /**
+     * Constructs a new ActionUserKick, pulling data from the Database
+     *
+     * @param ID The ID of the entry of the database to pull data from
+     */
     public ActionUserKick(String ID) {
         this.ID = ID;
         String SQL = "SELECT * FROM `SB_Actions` WHERE `ID` = ?";
@@ -40,6 +62,13 @@ public class ActionUserKick implements ModerationAction, SQLAble {
         }
     }
 
+    /**
+     * Constructs a new ActionUserKick such that no entry in the database exists with these parameters
+     *
+     * @param reason    The reason of the ban
+     * @param target    The target player
+     * @param moderator The moderator, or null if from the console
+     */
     public ActionUserKick(String reason, MythPlayer target, MythPlayer moderator) {
         this.target = target;
         this.moderator = moderator;
@@ -75,6 +104,11 @@ public class ActionUserKick implements ModerationAction, SQLAble {
     @Override
     public DateTime getDateApplied() {
         return dateApplied;
+    }
+
+    @Override
+    public Optional<MythPlayer> getTargetUser() {
+        return Optional.ofNullable(target);
     }
 
     public void update() {

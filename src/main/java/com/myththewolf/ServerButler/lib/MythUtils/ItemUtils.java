@@ -15,8 +15,15 @@ import java.util.Arrays;
 import java.util.List;
 
 
-
+/**
+ * This class contains various Item utils
+ */
 public class ItemUtils {
+    /**
+     * Creates a item attached with a OPEN_CHANNEL packet
+     * @param channel
+     * @return
+     */
     public static ItemStack makeOpenChannelItemStack(ChatChannel channel) {
         Wool W = new Wool();
         W.setColor(DyeColor.LIME);

@@ -15,6 +15,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
+/**
+ * This class represents a ban history entry
+ */
 public class ActionUserBan implements ModerationAction, SQLAble {
     /**
      * The target player
@@ -39,7 +42,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     /**
      * Constructs a new ActionUserBan, pulling data from the Database
-     * @param id
+     * @param id The ID of the entry of the database to pull data from
      */
     public ActionUserBan(String id) {
         DB_ID = id;
@@ -59,6 +62,12 @@ public class ActionUserBan implements ModerationAction, SQLAble {
         }
     }
 
+    /**
+     * Constructs a new ActionUserBan such that no entry in the database exists with these parameters
+     * @param reason The reason of the ban
+     * @param target The target player
+     * @param moderator The moderator, or null if from the console
+     */
     public ActionUserBan(String reason, MythPlayer target, MythPlayer moderator) {
         this.target = target;
         this.moderator = moderator;
@@ -101,6 +110,9 @@ public class ActionUserBan implements ModerationAction, SQLAble {
         return TargetType.BUKKIT_PLAYER;
     }
 
+    /**
+     * Updates (Or inserts into) the database with the information in this instance
+     */
     public void update() {
         if (DB_ID == null) {
             String SQL = "INSERT INTO `SB_Actions` (`type`, `reason`, `target`,`moderator`,`targetType`,`dateApplied`) VALUES (?,?,?,?,?,?)";
