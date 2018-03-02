@@ -23,6 +23,14 @@ public class StringUtils {
      */
     private static final String SEQUENCE_FOOTER = "" + ChatColor.RESET + ChatColor.ITALIC + ChatColor.RESET;
 
+    /**
+     * Replaces parameters, denoted by the pattern "{x}" where x represents parameter indexes
+     *
+     * @param raw       The raw String
+     * @param numParams The total number of parameters
+     * @param values    The values to replace
+     * @return The replaced String
+     */
     public static String replaceParameters(String raw, int numParams, String... values) {
         String rep = raw;
         for (int i = 0; i < numParams; i++) {
@@ -31,6 +39,13 @@ public class StringUtils {
         return rep;
     }
 
+    /**
+     * Turns a array (with the specified start index) into a string, putting a space between values
+     *
+     * @param index The start index
+     * @param arr   The array
+     * @return The value String
+     */
     public static String arrayToString(int index, String[] arr) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = index; i < arr.length; i++) {
@@ -39,44 +54,51 @@ public class StringUtils {
         return stringBuilder.toString();
     }
 
-
+    /**
+     * Converts a String to to a encoded/hidden String for a ItemStack
+     * @param hiddenString The String to hide
+     * @return  The new hidden String
+     */
     public static String encodeStringForItemStack(String hiddenString) {
         return quote(stringToColors(hiddenString));
     }
 
+    /**
+     * Checks if a String is hidden
+     * @param input The String to check
+     * @return true if the String is hidden
+     */
     public static boolean hasHiddenString(String input) {
         if (input == null) return false;
 
         return input.indexOf(SEQUENCE_HEADER) > -1 && input.indexOf(SEQUENCE_FOOTER) > -1;
     }
 
+    /**
+     * Decodes a hidden String
+     * @param input The Sting to decode
+     * @return The decoded String
+     */
     public static String extractHiddenString(String input) {
         return colorsToString(extract(input));
     }
 
 
-    public static String replaceHiddenString(String input, String hiddenString) {
-        if (input == null) return null;
-
-        int start = input.indexOf(SEQUENCE_HEADER);
-        int end = input.indexOf(SEQUENCE_FOOTER);
-
-        if (start < 0 || end < 0) {
-            return null;
-        }
-
-        return input.substring(0, start + SEQUENCE_HEADER.length()) + stringToColors(hiddenString) + input
-                .substring(end, input.length());
-    }
-
     /**
-     * Internal stuff.
+     * Attaches the SEQUENCE_HEADER and the SEQUENCE_FOOTER to a given string
+     * @param input The string to quote
+     * @return The String, with the headers
      */
     private static String quote(String input) {
         if (input == null) return null;
         return SEQUENCE_HEADER + input + SEQUENCE_FOOTER;
     }
 
+    /**
+     * Extracts the String between the two headers
+     * @param input The String to extract from
+     * @return The extracted String
+     */
     private static String extract(String input) {
         if (input == null) return null;
 
@@ -89,7 +111,6 @@ public class StringUtils {
 
         return input.substring(start + SEQUENCE_HEADER.length(), end);
     }
-
     private static String stringToColors(String normal) {
         if (normal == null) return null;
 
@@ -155,6 +176,11 @@ public class StringUtils {
         return new char[]{unsignedIntToHex((unsignedByte >> 4) & 0xf), unsignedIntToHex(unsignedByte & 0xf)};
     }
 
+    /**
+     * Converts a ArrayList into a String, seperated by ","
+     * @param array The ArrayList to serialize
+     * @return The serialized ArrayList String
+     */
     public static String serializeArray(List<String> array) {
         String it = "";
         for (Object o : array) {
@@ -163,15 +189,30 @@ public class StringUtils {
         return it.endsWith(",") ? it.substring(0, it.length() - 1) : it;
     }
 
+    /**
+     * Converts a ArrayList serial string to an array
+     * @param in The serialized ArrayList string
+     * @return The new ArrayList
+     */
     public static List<String> deserializeArray(String in) {
         return Arrays.asList(in.split(","));
     }
 
+    /**
+     * Extracts a hidden string from a ItemStack
+     * @param item The item to extract the String from
+     * @return A optional, empty if no hidden String is present
+     */
     public static Optional<String> getEmeddedString(ItemStack item) {
         return item.getItemMeta().getLore().stream().filter(StringUtils::hasHiddenString)
                 .map(StringUtils::extractHiddenString).findFirst();
     }
 
+    /**
+     * Parses a JSON string
+     * @param in The JSON String to parse
+     * @return A optional, empty if the JSON String is invalid.
+     */
     public static Optional<JSONObject> parseJSON(String in) {
         org.json.JSONObject jsonObject = null;
         try {
