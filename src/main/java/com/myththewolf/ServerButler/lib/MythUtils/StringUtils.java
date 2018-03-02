@@ -10,9 +10,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This class contains various String utils
+ */
 public class StringUtils {
-
+    /**
+     * The start sequence of a hidden string in a item's lore
+     */
     private static final String SEQUENCE_HEADER = "" + ChatColor.RESET + ChatColor.UNDERLINE + ChatColor.RESET;
+    /**
+     * The start sequence of a hidden string in a item's lore
+     */
     private static final String SEQUENCE_FOOTER = "" + ChatColor.RESET + ChatColor.ITALIC + ChatColor.RESET;
 
     public static String replaceParameters(String raw, int numParams, String... values) {

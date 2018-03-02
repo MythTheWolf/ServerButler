@@ -4,7 +4,6 @@ import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Wool;
@@ -21,8 +20,9 @@ import java.util.List;
 public class ItemUtils {
     /**
      * Creates a item attached with a OPEN_CHANNEL packet
-     * @param channel
-     * @return
+     *
+     * @param channel The channel to package in the packet
+     * @return The new ItemStack, with JSON applied
      */
     public static ItemStack makeOpenChannelItemStack(ChatChannel channel) {
         Wool W = new Wool();
@@ -39,7 +39,13 @@ public class ItemUtils {
         return stack;
     }
 
-    public static ItemStack makeCloseChanneItemStack(ChatChannel channel) {
+    /**
+     * Creates a item with a CLOSE_CHANNEL packet
+     *
+     * @param channel The channel to package in the packet
+     * @return The new ItemStack, with JSON applied
+     */
+    public static ItemStack makeCloseChannelItemStack(ChatChannel channel) {
         ItemStack stack = new ItemStack(Material.BARRIER);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.TOGGLE_CHANNEL_OFF);
@@ -52,6 +58,12 @@ public class ItemUtils {
         return stack;
     }
 
+    /**
+     * Creates a item with a SET_WRITE_CHANNEL packet
+     *
+     * @param channel The channel to package in the packet
+     * @return The new ItemStack, with JSON applied
+     */
     public static ItemStack makeWriteToChannelItemStack(ChatChannel channel) {
         ItemStack stack = new ItemStack(Material.BOOK_AND_QUILL);
         JSONObject packet = new JSONObject();
@@ -65,6 +77,13 @@ public class ItemUtils {
         return stack;
     }
 
+    /**
+     * Applies JSON to a item via hiding it in the lore
+     *
+     * @param json   The JSON to apply
+     * @param source The item to apply it to
+     * @return The new ItemStack, with JSON applied
+     */
     public static ItemStack applyJSON(JSONObject json, ItemStack source) {
         ItemStack copy = source;
         ItemMeta meta = source.getItemMeta();

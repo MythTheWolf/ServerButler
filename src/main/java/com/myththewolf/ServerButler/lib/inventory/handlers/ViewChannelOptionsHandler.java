@@ -28,7 +28,7 @@ public class ViewChannelOptionsHandler implements ItemPacketHandler {
                 player.getBukkitPlayer().ifPresent(player1 -> player1.openInventory(I));
             } else {
                 Inventory I = Bukkit.createInventory(null, 9, "Channel options: " + channel.getName());
-                I.setItem(0, ItemUtils.makeCloseChanneItemStack(channel));
+                I.setItem(0, ItemUtils.makeCloseChannelItemStack(channel));
                 I.setItem(1, ItemUtils.makeWriteToChannelItemStack(channel));
                 player.getBukkitPlayer().ifPresent(player1 -> player1.openInventory(I));
             }
