@@ -10,7 +10,6 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
-import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.joda.time.DateTime;
@@ -22,12 +21,24 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * This interface extends all sub-interfaces to form a complete MythPlayer
+ */
 public interface MythPlayer extends SQLAble, ChannelViewer {
-
+    /**
+     * Gets this player as a bukkit player
+     *
+     * @return A Optional, empty if the player is offline
+     */
     default Optional<Player> getBukkitPlayer() {
         return Optional.ofNullable(Bukkit.getPlayer(java.util.UUID.fromString(getUUID())));
     }
 
+    /**
+     * Gets a list of this player's punishment history
+     *
+     * @return The history, most recent first
+     */
     default List<ModerationAction> getPlayerHistory() {
         List<ModerationAction> his = new ArrayList<>();
         try {
@@ -47,33 +58,90 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         return his;
     }
 
+    /**
+     * Gets the latest history entry of a specified type
+     *
+     * @param type The type
+     * @return A optional, empty if no action was found
+     */
     default Optional<ModerationAction> getLatestActionOfType(ActionType type) {
         return getPlayerHistory().stream().filter(moderationAction -> moderationAction.getActionType().equals(type))
                 .findFirst();
     }
 
+    /**
+     * Gets this player's login status
+     *
+     * @return Their login status
+     */
     LoginStatus getLoginStatus();
 
+    /**
+     * Sets this player's login status
+     *
+     * @param loginStatus The status to set to
+     */
     void setLoginStatus(LoginStatus loginStatus);
 
+    /**
+     * Gets this player's unique ID (bukkit)
+     *
+     * @return Their UUID
+     */
     String getUUID();
 
+    /**
+     * Gets this player's in game name (IGN)
+     *
+     * @return Their name
+     */
     String getName();
 
+    /**
+     * Gets the date that this player joined
+     *
+     * @return The join date
+     */
     DateTime getJoinDate();
 
+    /**
+     * Checks if this player is online
+     *
+     * @return True if they are
+     */
     default boolean isOnline() {
         return getBukkitPlayer().isPresent();
     }
 
-    default boolean canLogin() {
+    /**
+     * Checks if this player is permitted to join the server
+     *
+     * @return True if their status permits login
+     */
+    default boolean canJoin() {
         return getLoginStatus().equals(LoginStatus.PERMITTED);
     }
 
+    /**
+     * Checks if this player is inserted into the database
+     *
+     * @return True if they are
+     */
     boolean playerExists();
 
-    void setExistant(boolean existant);
+    /**
+     * Sets this player existent value
+     *
+     * @param existent The boolean value
+     */
+    void setExistent(boolean existent);
 
+    /**
+     * Bans this player
+     *
+     * @param reason    The reason who for their ban
+     * @param moderator The moderator who banned, null if from CONSOLE
+     */
     default void banPlayer(String reason, MythPlayer moderator) {
         setLoginStatus(LoginStatus.BANNED);
         ModerationAction ban = new ActionUserBan(reason, this, moderator);
@@ -87,6 +155,12 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         });
     }
 
+    /**
+     * Kicks this player (if online)
+     *
+     * @param reason    The reason who for their ban
+     * @param moderator The moderator who banned, null if from CONSOLE
+     */
     default void kickPlayer(String reason, MythPlayer moderator) {
         ModerationAction kick = new ActionUserKick(reason, this, moderator);
         ((ActionUserKick) kick).update();
@@ -97,7 +171,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         getBukkitPlayer().ifPresent(p -> p.kickPlayer(formatted));
     }
 
-
+    /**
+     * Updates or Inserts this player into the database
+     */
     default void updatePlayer() {
         if (playerExists()) {
             String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?,`writeChannel` = ?, `channels` = ? WHERE `UUID` = ?";
@@ -110,7 +186,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";
             prepareAndExecuteUpdateExceptionally(SQL, 5, LoginStatus.PERMITTED, ChatStatus.PERMITTED, getName(), TimeUtils
                     .dateToString(getJoinDate()), getUUID());
-            setExistant(true);
+            setExistent(true);
         }
     }
 

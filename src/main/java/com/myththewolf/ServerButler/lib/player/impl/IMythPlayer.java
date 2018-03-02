@@ -116,7 +116,7 @@ public class IMythPlayer implements MythPlayer {
     }
 
     @Override
-    public void setExistant(boolean existant) {
+    public void setExistent(boolean existant) {
 
     }
 
