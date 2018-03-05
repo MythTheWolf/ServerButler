@@ -142,9 +142,14 @@ public class ChatChannel implements SQLAble {
      *
      * @param content The message to send
      * @param player  The player who is sending the message
-     * @apiNote If player is null, the message being sent will be treated as a raw message, where the channel prefix and player name will not be included.
+     * @apiNote If player is null, the message being sent will be treated as a raw message, where the player name will not be included.
      */
     public void push(String content, MythPlayer player) {
+        if (player == null) {
+            getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p -> p.getBukkitPlayer().get())
+                    .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + content));
+            return;
+        }
         getAllCachedPlayers().forEach(p -> p.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(getPrefix() + player.getName() + ": " + content)));
     }
@@ -162,7 +167,8 @@ public class ChatChannel implements SQLAble {
     public void update() {
         if (getID() == null) {
             String SQL = "INSERT INTO `SB_Channels` (`name`,`permission`,`shortcut`,`prefix`) VALUES (?,?,?,?)";
-            prepareAndExecuteUpdateExceptionally(SQL, 4, getName(), getPermission(), getShortcut(), getPrefix());
+            prepareAndExecuteUpdateExceptionally(SQL, 4, getName(), getPermission().orElse(null), getShortcut()
+                    .orElse(null), getPrefix());
         } else {
             String SQL = "UPDATE `SB_Channels` SET `name` = ?,`permission` = ?,`shortcut` = ?, `prefix` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 5, getName(), getPermission(), getShortcut(), getPrefix(), getID());
@@ -170,4 +176,8 @@ public class ChatChannel implements SQLAble {
         DataCache.rebuildChannelList();
     }
 
+    @Override
+    public String toString() {
+        return getID();
+    }
 }

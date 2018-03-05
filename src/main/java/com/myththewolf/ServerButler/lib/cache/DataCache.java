@@ -70,8 +70,8 @@ public class DataCache {
             getLogger().info("Player doesn't exist in database. Inserting.");
         }
         MythPlayer MP = new IMythPlayer(new DateTime(), UUID);
-        playerHashMap.put(UUID, MP);
-        return MP;
+        MP.updatePlayer();
+        return makeNewPlayerObj(UUID);
     }
 
     /**
@@ -86,7 +86,6 @@ public class DataCache {
             getLogger().info("Player doesn't exist in cache. Creating.");
         }
         MythPlayer MP = new IMythPlayer(UUID);
-        playerHashMap.put(UUID, MP);
         return MP;
     }
 
@@ -137,15 +136,15 @@ public class DataCache {
             while (rs.next()) {
                 channelHashMap.put(rs.getString("ID"), new ChatChannel(rs.getString("ID")));
             }
-            channelHashMap.put("-1", makeAdminChatChannel());
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
+        getAdminChannel();
     }
 
     /**
      * Converts the channelHashMap to a list
+     *
      * @return The list of channels
      */
     public static List<ChatChannel> getAllChannels() {
@@ -179,8 +178,18 @@ public class DataCache {
      * @return The cached Admin chat channel
      */
     public static ChatChannel getAdminChannel() {
-        //We always put this channel into cache upon any build of the channel list, so the optional should always have a value present.
-        return getOrMakeChannel("ADMIN").get();
+        Optional<ChatChannel> admin = getOrMakeChannel("ADMIN");
+        if(!admin.isPresent()){
+            ChatChannel c = makeAdminChatChannel();
+            c.update();
+            return getOrMakeChannel("ADMIN").get();
+        }
+        if (admin.get().getID() == null) {
+            admin.get().update();
+            rebuildChannelList();
+            return getOrMakeChannel("ADMIN").get();
+        }
+        return admin.get();
     }
 
     /**
@@ -208,6 +217,7 @@ public class DataCache {
 
     /**
      * Overload method of {@link DataCache#rebuildChannel(String)}
+     *
      * @param rebuild The channel to rebuild
      */
     public static void rebuildChannel(ChatChannel rebuild) {
@@ -216,6 +226,7 @@ public class DataCache {
 
     /**
      * Rebuilds the cache entry of a chatChannel, given the ID
+     *
      * @param channelID The ID of the channel to rebuild
      */
     public static void rebuildChannel(String channelID) {

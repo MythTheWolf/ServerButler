@@ -44,6 +44,8 @@ public class IMythPlayer implements MythPlayer {
         this.joinDate = joinDate;
         this.UUID = UUID1;
         this.name = Bukkit.getPlayer(java.util.UUID.fromString(UUID1)).getName();
+        this.loginStatus = LoginStatus.PERMITTED;
+        this.chatStatus = ChatStatus.PERMITTED;
         exists = false;
         updatePlayer();
     }
@@ -64,7 +66,7 @@ public class IMythPlayer implements MythPlayer {
                         .map(Integer::parseInt).map(integer -> DataCache.getOrMakeChannel(integer).orElse(null))
                         .collect(Collectors.toList());
                 this.writeTo = RS.getString("writeChannel") != null ? DataCache
-                        .getOrMakeChannel(RS.getInt("ID")).get() : null;
+                        .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
             }
             return;
         } catch (SQLException exception) {
@@ -87,71 +89,71 @@ public class IMythPlayer implements MythPlayer {
 
     @Override
     public LoginStatus getLoginStatus() {
-        return null;
+        return loginStatus;
     }
 
     @Override
     public void setLoginStatus(LoginStatus loginStatus) {
-
+        this.loginStatus = loginStatus;
     }
 
     @Override
     public String getUUID() {
-        return null;
+        return UUID;
     }
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
     public DateTime getJoinDate() {
-        return null;
+        return joinDate;
     }
 
     @Override
     public boolean playerExists() {
-        return false;
+        return exists;
     }
 
     @Override
     public void setExistent(boolean existant) {
-
+        this.exists = existant;
     }
 
     @Override
     public Optional<ChatChannel> getWritingChannel() {
-        return Optional.empty();
+        return Optional.ofNullable(writeTo);
     }
 
     @Override
     public void setWritingChannel(ChatChannel channel) {
-
+        this.writeTo = channel;
     }
 
     @Override
     public List<ChatChannel> getChannelList() {
-        return null;
+        return channelList;
     }
 
     @Override
     public ChatStatus getChatStatus() {
-        return null;
+        return chatStatus;
     }
 
     @Override
     public void setChatStatus(ChatStatus chatStatus) {
-
+        this.chatStatus = chatStatus;
     }
 
     @Override
     public void openChannel(ChatChannel channel) {
-
+        this.channelList.add(channel);
     }
 
     @Override
     public void closeChannel(ChatChannel channel) {
-
+        this.channelList.remove(channel);
     }
 }

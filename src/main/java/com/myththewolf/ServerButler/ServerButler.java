@@ -1,13 +1,17 @@
 package com.myththewolf.ServerButler;
 
+import com.myththewolf.ServerButler.commands.admin.player;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.event.player.*;
-import com.myththewolf.ServerButler.lib.inventory.handlers.CloseChannelPacketHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.OpenChannelPacketHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.SetWriteChannelPacketHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.ViewChannelOptionsHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.chat.CloseChannelPacketHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.chat.OpenChannelPacketHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.chat.SetWriteChannelPacketHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.chat.ViewChannelOptionsHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.player.BanPlayerHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.player.MutePlayerHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.player.SoftmutePlayerHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
@@ -43,10 +47,11 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         Bukkit.getPluginManager().registerEvents(new PreCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EInventoryClick(), this);
-        Bukkit.getPluginManager().registerEvents(new EPlayerChat(),this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerChat(), this);
         checkTables();
         DataCache.rebuildChannelList();
         registerCommand("chan", new channelmanager());
+        registerCommand("player", new player());
     }
 
     @Override
@@ -59,6 +64,9 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.TOGGLE_CHANNEL_ON, new OpenChannelPacketHandler());
         registerPacketHandler(PacketType.TOGGLE_CHANNEL_OFF, new CloseChannelPacketHandler());
         registerPacketHandler(PacketType.SET_WRITE_CHANNEL, new SetWriteChannelPacketHandler());
+        registerPacketHandler(PacketType.BAN_PLAYER, new BanPlayerHandler());
+        registerPacketHandler(PacketType.MUTE_PLAYER, new MutePlayerHandler());
+        registerPacketHandler(PacketType.SOFTMUTE_PLAYER, new SoftmutePlayerHandler());
     }
 
     public void checkConfiguration() {

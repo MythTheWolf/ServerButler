@@ -6,7 +6,6 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
-import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.event.EventHandler;
@@ -31,7 +30,8 @@ public class Join implements Listener {
                         .replaceParameters(ConfigProperties.FORMAT_BAN, 2, action.getReason(), (action
                                 .getModeratorUser().isPresent() ? action.getModeratorUser().get()
                                 .getName() : "CONSOLE"));
-                MP.getBukkitPlayer().get().kickPlayer(kickReason);
+                MP.kickPlayerRaw(kickReason);
+                return;
             }
             MP.getChannelList().stream().map(ChatChannel::getID).forEach(DataCache::rebuildChannel);
             return;

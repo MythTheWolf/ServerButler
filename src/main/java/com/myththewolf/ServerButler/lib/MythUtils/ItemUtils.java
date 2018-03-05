@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler.lib.MythUtils;
 
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -92,5 +93,112 @@ public class ItemUtils {
         meta.setLore(lore);
         source.setItemMeta(meta);
         return copy;
+    }
+
+    /**
+     * Creates a item with a BAN_PLAYER packet
+     *
+     * @param player The player to ban
+     * @param mod    The moderator
+     * @return The new ItemStack, with JSON applied
+     */
+    public static ItemStack makeBanUserItem(MythPlayer player, MythPlayer mod) {
+        ItemStack stack = woolForColor(DyeColor.RED);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("Ban User");
+        stack.setItemMeta(meta);
+        JSONObject packet = new JSONObject();
+        packet.put("packetType", PacketType.BAN_PLAYER.toString());
+        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("MOD-UUID", mod.getUUID());
+        return applyJSON(packet, stack);
+    }
+
+    /**
+     * Creates a item with a PARDON_PLAYER packet
+     *
+     * @param player The player to pardon
+     * @param mod    The moderator
+     * @return The new ItemStack, with JSON applied
+     */
+    public static ItemStack makePardonUserItem(MythPlayer player, MythPlayer mod) {
+        ItemStack stack = woolForColor(DyeColor.LIME);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("Pardon User");
+        stack.setItemMeta(meta);
+        JSONObject packet = new JSONObject();
+        packet.put("packetType", PacketType.PARDON_PLAYER.toString());
+        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("MOD-UUID", mod.getUUID());
+        return applyJSON(packet, stack);
+    }
+
+    /**
+     * Creates a item with a MUTE_PLAYER packet
+     *
+     * @param player The player to mute
+     * @param mod    The moderator
+     * @return The new ItemStack, with JSON applied
+     */
+    public static ItemStack makeMuteUserItem(MythPlayer player, MythPlayer mod) {
+        ItemStack stack = new ItemStack(Material.WRITTEN_BOOK);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("Mute User");
+        stack.setItemMeta(meta);
+        JSONObject packet = new JSONObject();
+        packet.put("packetType", PacketType.MUTE_PLAYER.toString());
+        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("MOD-UUID", mod.getUUID());
+        return applyJSON(packet, stack);
+    }
+
+    /**
+     * Creates a item with a SOFTMUTE_PLAYER packet
+     *
+     * @param player The player to softmute
+     * @param mod    The moderator
+     * @return The new ItemStack, with JSON applied
+     */
+    public static ItemStack makeSoftmuteUserItem(MythPlayer player, MythPlayer mod) {
+        ItemStack stack = new ItemStack(Material.EYE_OF_ENDER);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("Softmute User");
+        stack.setItemMeta(meta);
+        JSONObject packet = new JSONObject();
+        packet.put("packetType", PacketType.SOFTMUTE_PLAYER.toString());
+        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("MOD-UUID", mod.getUUID());
+        return applyJSON(packet, stack);
+    }
+
+    /**
+     * Creates a item with a UNMUTE_PLAYER packet
+     *
+     * @param player The player to unmute
+     * @param mod    The moderator
+     * @return The new ItemStack, with JSON applied
+     */
+    public static ItemStack makUnmuteUserItem(MythPlayer player, MythPlayer mod) {
+        ItemStack stack = new ItemStack(Material.BOOK_AND_QUILL);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("Unmute Player");
+        stack.setItemMeta(meta);
+        JSONObject packet = new JSONObject();
+        packet.put("packetType", PacketType.UNMUTE_PLAYER.toString());
+        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("MOD-UUID", mod.getUUID());
+        return applyJSON(packet, stack);
+    }
+
+    /**
+     * Creates a wool itemstack for the given color
+     *
+     * @param color The color to dye the wool
+     * @return The colored wool
+     */
+    public static ItemStack woolForColor(DyeColor color) {
+        Wool w = new Wool();
+        w.setColor(color);
+        return w.toItemStack(1);
     }
 }
