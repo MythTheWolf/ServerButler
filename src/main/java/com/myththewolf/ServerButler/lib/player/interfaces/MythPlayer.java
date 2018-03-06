@@ -222,6 +222,10 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         updatePlayer();
     }
 
+
+    default void tempbanPlayer(MythPlayer mod,String reason,DateTime expire){
+
+    }
     /**
      * Updates or Inserts this player into the database
      */

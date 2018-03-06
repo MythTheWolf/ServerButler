@@ -104,4 +104,6 @@ public class ConfigProperties {
      * The permission node required to view/write to the admin chat
      */
     public static String ADMIN_CHAT_PERMISSION = ServerButler.configuration.getString("ADMIN-CHAT-PERMISSION");
+
+    private String PERMISSION_BAN = ServerButler.configuration.getString("BAN-PERMISSION");
 }
