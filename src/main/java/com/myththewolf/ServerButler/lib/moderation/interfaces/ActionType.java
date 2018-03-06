@@ -10,5 +10,6 @@ public enum ActionType {
     TEMP_MUTE,
     SOFT_MUTE,
     KICK,
-    PARDON
+    PARDON,
+    UNMUTE
 }

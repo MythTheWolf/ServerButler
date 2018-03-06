@@ -4,10 +4,7 @@ import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserBan;
-import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserKick;
-import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserMute;
-import com.myththewolf.ServerButler.lib.moderation.impl.ActionUserSoftmute;
+import com.myththewolf.ServerButler.lib.moderation.impl.*;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
@@ -156,9 +153,26 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     }
 
     /**
+     * Un-Mutes this player
+     *
+     * @param reason    The reason who for their unmute
+     * @param moderator The moderator who banned, null if from CONSOLE
+     */
+    default void unmutePlayer(String reason, MythPlayer moderator) {
+        setChatStatus(ChatStatus.PERMITTED);
+        ModerationAction mute = new ActionUserUnmute(reason, this, moderator);
+        ((ActionUserUnmute) mute).update();
+        updatePlayer();
+        String fin = StringUtils
+                .replaceParameters(ConfigProperties.FORMAT_UNMUTE, 2, reason, (moderator != null ? moderator
+                        .getName() : "CONSOLE"));
+        getBukkitPlayer().ifPresent(player -> player.sendMessage(fin));
+    }
+
+    /**
      * Mutes this player
      *
-     * @param reason    The reason who for their ban
+     * @param reason    The reason who for their mute
      * @param moderator The moderator who banned, null if from CONSOLE
      */
     default void mutePlayer(String reason, MythPlayer moderator) {
@@ -171,6 +185,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                         .getName() : "CONSOLE"));
         getBukkitPlayer().ifPresent(player -> player.sendMessage(fin));
     }
+
     /**
      * Softmutes this player
      *
@@ -183,6 +198,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         ((ActionUserSoftmute) mute).update();
         updatePlayer();
     }
+
     /**
      * Kicks this player (if online)
      *
@@ -197,6 +213,13 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         String modName = (moderator != null ? moderator.getName() : "CONSOLE");
         String formatted = StringUtils.replaceParameters(pattern, 2, modName, fReason);
         getBukkitPlayer().ifPresent(p -> p.kickPlayer(formatted));
+    }
+
+    default void pardonPlayer(MythPlayer mod, String reason) {
+        ModerationAction pardon = new ActionUserPardon(reason, this, mod);
+        ((ActionUserPardon) pardon).update();
+        setLoginStatus(LoginStatus.PERMITTED);
+        updatePlayer();
     }
 
     /**

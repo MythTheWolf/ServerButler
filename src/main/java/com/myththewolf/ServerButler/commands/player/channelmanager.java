@@ -22,12 +22,13 @@ import java.util.Optional;
  * This class represents the /chan command, it brings up the channel manager GUI for players
  */
 public class channelmanager extends CommandAdapter {
-    int i = 0;
+    private int i = 0;
 
     @Override
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         i = 0;
         sender.ifPresent(player -> {
+            if(!player.getBukkitPlayer().isPresent()) return;
             Inventory I = (DataCache.getAllChannels().size() > 9 ? Bukkit
                     .createInventory(null, DataCache.getAllChannels().size(), ChatColor
                             .translateAlternateColorCodes('&', "&8[&6All available channels&8]")) : Bukkit
@@ -36,7 +37,6 @@ public class channelmanager extends CommandAdapter {
             DataCache.getAllChannels().stream()
                     .filter(channel -> !channel.getPermission().isPresent() || player.getBukkitPlayer().get()
                             .hasPermission(channel.getPermission().get())).forEach(theChannel -> {
-                i++;
                 JSONObject packet = new JSONObject();
                 packet.put("packetType", PacketType.VIEW_CHANNEL_OPTIONS);
                 packet.put("channelID", theChannel.getID());
@@ -55,7 +55,9 @@ public class channelmanager extends CommandAdapter {
                 meta_jsonApplied.setLore(oldLore);
                 json_Applied.setItemMeta(meta_jsonApplied);
                 I.setItem(i, json_Applied);
+                i++;
             });
+            player.getBukkitPlayer().ifPresent(p -> p.openInventory(I));
         });
 
     }

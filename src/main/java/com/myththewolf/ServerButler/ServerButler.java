@@ -5,14 +5,11 @@ import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.event.player.*;
-
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.CloseChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.OpenChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.SetWriteChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.ViewChannelOptionsHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.player.BanPlayerHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.player.MutePlayerHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.player.SoftmutePlayerHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.player.*;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
@@ -43,13 +40,16 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         checkConfiguration();
         registerPacketHandlers();
         configuration = getConfig();
+        getLogger().info("Connecting to SQL server");
         connector = new SQLConnector("70.139.52.7", 3306, "Myth", "00163827", "MB_REWRITE");
         Bukkit.getPluginManager().registerEvents(new Join(), this);
         Bukkit.getPluginManager().registerEvents(new PreCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EInventoryClick(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerChat(), this);
+        getLogger().info("Constructing database");
         checkTables();
+        getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
         registerCommand("chan", new channelmanager());
         registerCommand("player", new player());
@@ -61,6 +61,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void registerPacketHandlers() {
+        getLogger().info("Applying packet handlers");
         registerPacketHandler(PacketType.VIEW_CHANNEL_OPTIONS, new ViewChannelOptionsHandler());
         registerPacketHandler(PacketType.TOGGLE_CHANNEL_ON, new OpenChannelPacketHandler());
         registerPacketHandler(PacketType.TOGGLE_CHANNEL_OFF, new CloseChannelPacketHandler());
@@ -68,6 +69,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.BAN_PLAYER, new BanPlayerHandler());
         registerPacketHandler(PacketType.MUTE_PLAYER, new MutePlayerHandler());
         registerPacketHandler(PacketType.SOFTMUTE_PLAYER, new SoftmutePlayerHandler());
+        registerPacketHandler(PacketType.PARDON_PLAYER, new PardonPlayerHandler());
+        registerPacketHandler(PacketType.UNMUTE_PLAYER, new UnmutePlayerHandler());
     }
 
     public void checkConfiguration() {

@@ -3,9 +3,11 @@ package com.myththewolf.ServerButler.lib.inventory.handlers.chat;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
+import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.inventory.Inventory;
 import org.json.JSONObject;
 
@@ -20,6 +22,7 @@ public class ViewChannelOptionsHandler implements ItemPacketHandler {
         Optional<ChatChannel> optionalChatChannel = data.isNull("channelID") ? DataCache
                 .getOrMakeChannel(-1) : DataCache.getOrMakeChannel(data.getInt("channelID"));
         optionalChatChannel.ifPresent(channel -> {
+            player.getBukkitPlayer().get().sendMessage(ConfigProperties.PREFIX+ ChatColor.GREEN+"Displaying options for channel  \""+channel+"\"...");
             boolean isCurrentlyViewing = player.isViewing(channel);
             if (!isCurrentlyViewing) {
                 Inventory I = Bukkit.createInventory(null, 9, "Channel options: " + channel.getName());

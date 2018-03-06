@@ -201,4 +201,15 @@ public class ItemUtils {
         w.setColor(color);
         return w.toItemStack(1);
     }
+
+    public static ItemStack makeKickItem(MythPlayer target) {
+        ItemStack stack = new ItemStack(Material.JUNGLE_DOOR);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setDisplayName("Kick player");
+        stack.setItemMeta(meta);
+        JSONObject packet = new JSONObject();
+        packet.put("packetType",PacketType.KICK_PLAYER);
+        packet.put("PLAYER-UUID",target.getUUID());
+        return applyJSON(packet,stack);
+    }
 }
