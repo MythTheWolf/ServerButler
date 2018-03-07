@@ -47,4 +47,14 @@ public class player extends CommandAdapter {
     public int getNumRequiredArgs() {
         return 1;
     }
+
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.BAN_PERMISSION;
+    }
+
+    @Override
+    public String getUsage() {
+        return "/player <playername>";
+    }
 }

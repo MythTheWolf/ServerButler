@@ -124,8 +124,8 @@ public class ActionUserMute implements ModerationAction, SQLAble {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), reason, getTargetUser().get()
                     .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), Integer.parseInt(this.DB_ID), TimeUtils
-                    .dateToString(dateApplied));
+                    .toString(), TimeUtils
+                    .dateToString(dateApplied), Integer.parseInt(this.DB_ID));
         }
     }
 

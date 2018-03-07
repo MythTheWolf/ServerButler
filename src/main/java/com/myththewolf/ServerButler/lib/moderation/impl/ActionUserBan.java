@@ -41,6 +41,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     /**
      * Constructs a new ActionUserBan, pulling data from the Database
+     *
      * @param id The ID of the entry of the database to pull data from
      */
     public ActionUserBan(String id) {
@@ -63,8 +64,9 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     /**
      * Constructs a new ActionUserBan such that no entry in the database exists with these parameters
-     * @param reason The reason of the ban
-     * @param target The target player
+     *
+     * @param reason    The reason of the ban
+     * @param target    The target player
      * @param moderator The moderator, or null if from the console
      */
     public ActionUserBan(String reason, MythPlayer target, MythPlayer moderator) {
@@ -122,8 +124,8 @@ public class ActionUserBan implements ModerationAction, SQLAble {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 7, ActionType.BAN, reason, getTargetUser().get()
                     .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), Integer.parseInt(this.DB_ID), TimeUtils
-                    .dateToString(dateApplied));
+                    .toString(), TimeUtils
+                    .dateToString(dateApplied), Integer.parseInt(this.DB_ID));
         }
     }
 

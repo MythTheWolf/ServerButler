@@ -42,6 +42,7 @@ public class ActionUserPardon implements ModerationAction, SQLAble {
 
     /**
      * Constructs a new ActionUserPardon, pulling data from the Database
+     *
      * @param id The ID of the entry of the database to pull data from
      */
     public ActionUserPardon(String id) {
@@ -64,8 +65,9 @@ public class ActionUserPardon implements ModerationAction, SQLAble {
 
     /**
      * Constructs a new ActionUserPardon such that no entry in the database exists with these parameters
-     * @param reason The reason of the pardon
-     * @param target The target player
+     *
+     * @param reason    The reason of the pardon
+     * @param target    The target player
      * @param moderator The moderator, or null if from the console
      */
     public ActionUserPardon(String reason, MythPlayer target, MythPlayer moderator) {
@@ -123,8 +125,8 @@ public class ActionUserPardon implements ModerationAction, SQLAble {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), reason, getTargetUser().get()
                     .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), Integer.parseInt(this.DB_ID), TimeUtils
-                    .dateToString(dateApplied));
+                    .toString(), TimeUtils
+                    .dateToString(dateApplied), Integer.parseInt(this.DB_ID));
         }
     }
 
