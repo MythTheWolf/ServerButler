@@ -63,7 +63,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                         his.add(new ActionUserUnmute(history.getString("ID")));
                         break;
                     case TEMP_BAN:
-                        his.add(new ActionUserUnmute(history.getString("ID")));
+                        his.add(new ActionUserTempBan(history.getString("ID")));
                     default:
                         break;
                 }
