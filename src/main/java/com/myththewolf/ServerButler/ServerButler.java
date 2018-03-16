@@ -1,6 +1,9 @@
 package com.myththewolf.ServerButler;
 
+import com.myththewolf.ServerButler.commands.admin.Ban;
+import com.myththewolf.ServerButler.commands.admin.kick;
 import com.myththewolf.ServerButler.commands.admin.player;
+import com.myththewolf.ServerButler.commands.admin.tempban;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
@@ -51,8 +54,14 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         checkTables();
         getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
+        //*********** PLAIN USER COMMANDS ***********//
         registerCommand("chan", new channelmanager());
+        //*********** ADMIN COMMANDS ***********//
         registerCommand("player", new player());
+        registerCommand("ban",new Ban());
+        registerCommand("kick", new kick());
+        registerCommand("tempban",new tempban());
+
     }
 
     @Override

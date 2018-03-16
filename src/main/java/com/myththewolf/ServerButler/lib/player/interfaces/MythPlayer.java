@@ -241,7 +241,10 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
 
 
     default void tempbanPlayer(MythPlayer mod,String reason,DateTime expire){
-
+            ModerationAction tBan = new ActionUserTempBan(reason,expire,this,mod);
+        ((ActionUserTempBan) tBan).update();
+        setLoginStatus(LoginStatus.TEMP_BANNED);
+        updatePlayer();
     }
     /**
      * Updates or Inserts this player into the database

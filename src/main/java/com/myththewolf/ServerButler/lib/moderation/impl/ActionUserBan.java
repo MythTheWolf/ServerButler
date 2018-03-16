@@ -129,6 +129,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
         }
     }
 
+
     @Override
     public String getDatabaseID() {
         return DB_ID;
