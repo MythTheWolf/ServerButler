@@ -50,6 +50,21 @@ public class ConfigProperties {
      */
     public static String FORMAT_BAN_CHAT = ServerButler.configuration.getString("FORMAT-BAN-CHAT");
 
+    /**
+     * The pattern used to make the message to display when the target player when banned Such that: <br />
+     * {0} will be replaced with the name of the admin who executed the punishment, or "CONSOLE" if the command was ran from the console.
+     * {1} will be replaced with the reason specified for the ban
+     * {2} will be replaced with the expire date
+     */
+    public static String FORMAT_TEMPBAN = ServerButler.configuration.getString("FORMAT-TEMPBAN-PLAYER");
+    /**
+     * The pattern used to make the message sent to the admin channel such that: <br />
+     * {0} will be replaced with the name of the admin who executed the punishment, or "CONSOLE" if the command was ran from the console.
+     * {1} will be replaced with the target player's name
+     * {2} will be replaced with the reason specified for the ban
+     * {3} will be replaced with the expire date
+     */
+    public static String FORMAT_TEMPBAN_CHAT = ServerButler.configuration.getString("FORMAT-TEMPBAN-CHAT");
 
     /**
      * The pattern used to make the message to display when the target player when muted Such that: <br />

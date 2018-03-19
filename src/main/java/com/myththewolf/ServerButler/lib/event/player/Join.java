@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler.lib.event.player;
 
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
@@ -11,6 +12,7 @@ import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.joda.time.DateTime;
 
 /**
  * This class captures all join events
@@ -27,10 +29,26 @@ public class Join implements Listener {
                     return;
                 }
                 String kickReason = StringUtils
-                        .replaceParameters(ConfigProperties.FORMAT_BAN, 2, action.getReason(), (action
+                        .replaceParameters(ConfigProperties.FORMAT_BAN, action.getReason(), (action
                                 .getModeratorUser().isPresent() ? action.getModeratorUser().get()
                                 .getName() : "CONSOLE"));
                 MP.kickPlayerRaw(kickReason);
+                return;
+            } else if (MP.getLoginStatus() == LoginStatus.TEMP_BANNED) {
+                ModerationAction moderationAction = MP.getLatestActionOfType(ActionType.TEMP_BAN).orElse(null);
+                if (moderationAction == null) {
+                    MP.kickPlayer("You have been temp banned from the server", null);
+                    return;
+                }
+                if(moderationAction.getExpireDate().get().isBeforeNow()){
+                    MP.pardonPlayer(null,"The tempban has expired.");
+                    return;
+                }
+                String REASON = moderationAction.getReason();
+                String MOD_NAME = moderationAction.getModeratorUser().map(MythPlayer::getName).orElse("CONSOLE");
+                String EXPIRE = moderationAction.getExpireDate().map(TimeUtils::dateToString).orElse("[error]");
+                MP.kickPlayerRaw(StringUtils
+                        .replaceParameters(ConfigProperties.FORMAT_TEMPBAN, MOD_NAME, REASON, EXPIRE));
                 return;
             }
             MP.getChannelList().stream().map(ChatChannel::getID).forEach(DataCache::rebuildChannel);

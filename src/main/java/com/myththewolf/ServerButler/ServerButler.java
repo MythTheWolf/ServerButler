@@ -58,9 +58,9 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("chan", new channelmanager());
         //*********** ADMIN COMMANDS ***********//
         registerCommand("player", new player());
-        registerCommand("ban",new Ban());
+        registerCommand("ban", new Ban());
         registerCommand("kick", new kick());
-        registerCommand("tempban",new tempban());
+        registerCommand("tempban", new tempban());
 
     }
 
@@ -80,6 +80,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.SOFTMUTE_PLAYER, new SoftmutePlayerHandler());
         registerPacketHandler(PacketType.PARDON_PLAYER, new PardonPlayerHandler());
         registerPacketHandler(PacketType.UNMUTE_PLAYER, new UnmutePlayerHandler());
+        registerPacketHandler(PacketType.TEMPBAN_PLAYER, new TempBanPlayerHandler());
     }
 
     public void checkConfiguration() {

@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.commands.admin;
 
+import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
@@ -23,22 +24,31 @@ public class tempban extends CommandAdapter {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
             return;
         }
-        expireDate = null;
-        reply(ConfigProperties.PREFIX + "Please supply a interval:");
-        reply(ConfigProperties.PREFIX + "(Format: [Integer][Period], example: 1d4h)");
-        EPlayerChat.inputs.put(sender.get().getName(), content -> {
-            Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(content);
+        if (args.length >= 3) {
+            String DATESTR = args[1];
+            String reason = StringUtils.arrayToString(2, args);
+            Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATESTR);
             expireDate = (new DateTime()).withPeriodAdded(p, 1);
-        });
-        reply(ConfigProperties.PREFIX + "Please supply a reason:");
-        EPlayerChat.inputs.put(sender.get().getName(), content -> {
-            targetOp.get().tempbanPlayer(sender.orElse(null), content, expireDate);
-        });
+            targetOp.get().tempbanPlayer(sender.orElse(null), reason, expireDate);
+        } else {
+            expireDate = null;
+            reply(ConfigProperties.PREFIX + "Please supply a interval:");
+            reply(ConfigProperties.PREFIX + "(Format: [Integer][Period], example: 1d4h)");
+            EPlayerChat.inputs.put(sender.get().getUUID(), content -> {
+                Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(content);
+                expireDate = (new DateTime()).withPeriodAdded(p, 1);
+                reply(ConfigProperties.PREFIX + "Please supply a reason:");
+                EPlayerChat.inputs.put(sender.get().getUUID(), content2 -> {
+                    targetOp.get().tempbanPlayer(sender.orElse(null), content2, expireDate);
+                });
+            });
+        }
+
     }
 
     @Override
     public int getNumRequiredArgs() {
-        return 2;
+        return 1;
     }
 
     @Override

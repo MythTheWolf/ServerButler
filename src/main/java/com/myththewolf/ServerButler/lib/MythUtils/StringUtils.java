@@ -27,14 +27,15 @@ public class StringUtils {
      * Replaces parameters, denoted by the pattern "{x}" where x represents parameter indexes
      *
      * @param raw       The raw String
-     * @param numParams The total number of parameters
      * @param values    The values to replace
      * @return The replaced String
      */
-    public static String replaceParameters(String raw, int numParams, String... values) {
+    public static String replaceParameters(String raw,  String... values) {
         String rep = raw;
-        for (int i = 0; i < numParams; i++) {
-            rep = rep.replace("{" + i + "}", values[i]);
+        int pos =0;
+        for (String val: values) {
+            rep = rep.replace("{" + pos + "}", val);
+            pos++;
         }
         return rep;
     }

@@ -16,7 +16,7 @@ public class SoftmutePlayerHandler implements ItemPacketHandler {
                 .sendMessage(ConfigProperties.PREFIX + "Please type the reason for the softmute:"));
         EPlayerChat.inputs.put(player.getUUID(), content -> {
             target.softmutePlayer(content, player);
-            String toSend = StringUtils.replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, 3, player.getName(), target
+            String toSend = StringUtils.replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, player.getName(), target
                     .getName(), content);
             DataCache.getAdminChannel().push("[Softmute]" + toSend, null);
         });

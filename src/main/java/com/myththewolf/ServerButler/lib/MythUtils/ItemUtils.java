@@ -212,4 +212,11 @@ public class ItemUtils {
         packet.put("PLAYER-UUID",target.getUUID());
         return applyJSON(packet,stack);
     }
+
+    public static ItemStack nameItem(String x,ItemStack source){
+        ItemMeta meta = source.getItemMeta();
+        meta.setDisplayName(x);
+        source.setItemMeta(meta);
+        return source;
+    }
 }

@@ -164,7 +164,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         ((ActionUserBan) ban).update();
         updatePlayer();
         String fin = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_BAN, 2, reason, (moderator != null ? moderator
+                .replaceParameters(ConfigProperties.FORMAT_BAN, reason, (moderator != null ? moderator
                         .getName() : "CONSOLE"));
         kickPlayerRaw(fin);
     }
@@ -181,7 +181,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         ((ActionUserUnmute) mute).update();
         updatePlayer();
         String fin = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_UNMUTE, 2, reason, (moderator != null ? moderator
+                .replaceParameters(ConfigProperties.FORMAT_UNMUTE, reason, (moderator != null ? moderator
                         .getName() : "CONSOLE"));
         getBukkitPlayer().ifPresent(player -> player.sendMessage(fin));
     }
@@ -198,7 +198,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         ((ActionUserMute) mute).update();
         updatePlayer();
         String fin = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_MUTE, 2, reason, (moderator != null ? moderator
+                .replaceParameters(ConfigProperties.FORMAT_MUTE, reason, (moderator != null ? moderator
                         .getName() : "CONSOLE"));
         getBukkitPlayer().ifPresent(player -> player.sendMessage(fin));
     }
@@ -228,7 +228,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         String fReason = (reason == null ? ConfigProperties.DEFAULT_KICK_REASON : reason);
         String pattern = ConfigProperties.FORMAT_KICK;
         String modName = (moderator != null ? moderator.getName() : "CONSOLE");
-        String formatted = StringUtils.replaceParameters(pattern, 2, modName, fReason);
+        String formatted = StringUtils.replaceParameters(pattern, modName, fReason);
         getBukkitPlayer().ifPresent(p -> p.kickPlayer(formatted));
     }
 
@@ -240,12 +240,19 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     }
 
 
-    default void tempbanPlayer(MythPlayer mod,String reason,DateTime expire){
-            ModerationAction tBan = new ActionUserTempBan(reason,expire,this,mod);
+    default void tempbanPlayer(MythPlayer mod, String reason, DateTime expire) {
+        ModerationAction tBan = new ActionUserTempBan(reason, expire, this, mod);
         ((ActionUserTempBan) tBan).update();
         setLoginStatus(LoginStatus.TEMP_BANNED);
         updatePlayer();
+        getLatestActionOfType(ActionType.TEMP_BAN).ifPresent(moderationAction -> {
+            String REASON = moderationAction.getReason();
+            String MOD_NAME = moderationAction.getModeratorUser().map(MythPlayer::getName).orElse("CONSOLE");
+            String EXPIRE = moderationAction.getExpireDate().map(TimeUtils::dateToString).orElse("[error]");
+            kickPlayerRaw(StringUtils.replaceParameters(ConfigProperties.FORMAT_TEMPBAN, MOD_NAME, REASON, EXPIRE));
+        });
     }
+
     /**
      * Updates or Inserts this player into the database
      */

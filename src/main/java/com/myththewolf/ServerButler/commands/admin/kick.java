@@ -30,7 +30,7 @@ public class kick extends CommandAdapter {
             ModerationAction action = new ActionUserKick(reason, target1, sender.orElse(null));
             ((ActionUserKick) action).update();
             String message = StringUtils
-                    .replaceParameters(ConfigProperties.FORMAT_KICK_CHAT, 3, modName, target.get().getName(), reason);
+                    .replaceParameters(ConfigProperties.FORMAT_KICK_CHAT, modName, target.get().getName(), reason);
             DataCache.getAdminChannel().push(message, null);
         });
     }

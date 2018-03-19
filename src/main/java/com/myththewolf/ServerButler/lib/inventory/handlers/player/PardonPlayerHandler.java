@@ -15,7 +15,7 @@ public class PardonPlayerHandler implements ItemPacketHandler {
         player.getBukkitPlayer().ifPresent(pl -> pl.sendMessage(ConfigProperties.PREFIX + "Please type out the reason for the pardon:"));
         EPlayerChat.inputs.put(player.getUUID(), content -> {
             target.pardonPlayer(player, content);
-            String msg = StringUtils.replaceParameters(ConfigProperties.FORMAT_PARDON_CHAT, 3, player.getName(), target
+            String msg = StringUtils.replaceParameters(ConfigProperties.FORMAT_PARDON_CHAT, player.getName(), target
                     .getName(), content);
             DataCache.getAdminChannel().push(msg, null);
         });

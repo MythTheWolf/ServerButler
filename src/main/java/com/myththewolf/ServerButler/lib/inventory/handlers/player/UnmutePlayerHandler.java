@@ -15,7 +15,7 @@ public class UnmutePlayerHandler implements ItemPacketHandler{
         player.getBukkitPlayer().ifPresent(p -> p.sendMessage(ConfigProperties.PREFIX+"Please type out the reason for the unmute:"));
         EPlayerChat.inputs.put(player.getUUID(),content -> {
            target.unmutePlayer(content,player);
-            String msg = StringUtils.replaceParameters(ConfigProperties.FORMAT_UNMUTE_CHAT, 3, player.getName(), target
+            String msg = StringUtils.replaceParameters(ConfigProperties.FORMAT_UNMUTE_CHAT,player.getName(), target
                     .getName(), content);
             DataCache.getAdminChannel().push(msg, null);
         });

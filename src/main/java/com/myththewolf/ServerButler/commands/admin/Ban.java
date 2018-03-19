@@ -5,7 +5,6 @@ import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,7 +26,7 @@ public class Ban extends CommandAdapter {
         target.get().banPlayer(reason, sender.orElse(null));
         ChatChannel adminChat = DataCache.getAdminChannel();
         String message = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_BAN_CHAT, 3, (sender.isPresent() ? sender.get()
+                .replaceParameters(ConfigProperties.FORMAT_BAN_CHAT, (sender.isPresent() ? sender.get()
                         .getName() : "CONSOLE"), target.get().getName(), reason);
         adminChat.push(message, null);
     }
