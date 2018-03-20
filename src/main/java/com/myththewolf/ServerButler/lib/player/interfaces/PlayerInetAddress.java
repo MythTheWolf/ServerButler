@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.player.interfaces;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import org.joda.time.DateTime;
 
@@ -51,8 +52,32 @@ public class PlayerInetAddress implements SQLAble {
                 return;
             }
         } else {
-            String SQL = "UPDATE `SB_IPAddresses` SET `address` = ? ,`playerUUIDs` = ?,`loginStatus` = ?,`dateJoined` =? ";
+            String SQL = "UPDATE `SB_IPAddresses` SET `address` = ? ,`playerUUIDs` = ?,`loginStatus` = ?,`dateJoined` =? WHERE `ID` = ? ";
+            prepareAndExecuteUpdateExceptionally(SQL, 5, getAddress(), StringUtils
+                    .serializeArray(getMappedPlayers().stream().map(MythPlayer::getUUID)
+                            .collect(Collectors.toList())), getLoginStatus(), TimeUtils
+                    .dateToString(getJoinDate()), getDatabaseId());
         }
+    }
+
+    public InetAddress getAddress() {
+        return address;
+    }
+
+    public List<MythPlayer> getMappedPlayers() {
+        return mappedPlayers;
+    }
+
+    public DateTime getJoinDate() {
+        return joinDate;
+    }
+
+    public LoginStatus getLoginStatus() {
+        return loginStatus;
+    }
+
+    public String getDatabaseId() {
+        return databaseId;
     }
 
     private boolean exists() {
