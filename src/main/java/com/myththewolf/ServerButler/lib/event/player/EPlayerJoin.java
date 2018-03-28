@@ -9,10 +9,13 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.PlayerInetAddress;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.joda.time.DateTime;
+
+import java.util.Optional;
 
 /**
  * This class captures all join events
@@ -21,6 +24,11 @@ public class EPlayerJoin implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        Optional<PlayerInetAddress> ipAddress  = DataCache.getOrMakeInetAddress(event.getPlayer().getAddress().getAddress());
+        if(!ipAddress.isPresent()){
+            DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(),MP);
+        }
+
         if (MP.getLoginStatus() != LoginStatus.PERMITTED) {
             if (MP.getLoginStatus() == LoginStatus.BANNED) {
                 ModerationAction action = MP.getLatestActionOfType(ActionType.BAN).orElse(null);

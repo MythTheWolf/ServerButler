@@ -237,10 +237,12 @@ public class DataCache {
         channelHashMap.put(channelID, new ChatChannel(channelID));
     }
 
-    public static Optional<PlayerInetAddress> getOrMakeInetAddress(String ID) {
-        return ipHashMap.containsKey(ID) ? Optional.ofNullable(ipHashMap.get(ID)) : playerInetAddressFor(ID);
+    public static Optional<PlayerInetAddress> getOrMakeInetAddress(String IP) {
+        return ipHashMap.containsKey(IP) ? Optional.ofNullable(ipHashMap.get(IP)) : playerInetAddressFor(IP);
     }
-
+    public static Optional<PlayerInetAddress> getOrMakeInetAddress(InetAddress src){
+        return getOrMakeInetAddress(src.toString());
+    }
     private static Optional<PlayerInetAddress> playerInetAddressFor(String ID) {
         PlayerInetAddress pp = new PlayerInetAddress(ID);
         return pp.exists() ? Optional.ofNullable(pp) : Optional.empty();

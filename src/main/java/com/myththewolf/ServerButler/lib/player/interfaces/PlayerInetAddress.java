@@ -51,7 +51,7 @@ public class PlayerInetAddress implements SQLAble {
             try {
                 PreparedStatement statement = getSQLConnection().prepareStatement(SQL,
                         Statement.RETURN_GENERATED_KEYS);
-                statement.setString(1, address.getHostName());
+                statement.setString(1, address.toString());
                 statement.setString(2, StringUtils
                         .serializeArray(mappedPlayers.stream().map(MythPlayer::getUUID).collect(Collectors.toList())));
                 statement.executeUpdate();
@@ -100,6 +100,6 @@ public class PlayerInetAddress implements SQLAble {
 
     @Override
     public String toString() {
-        return getAddress().getHostAddress().toString();
+        return getAddress().toString();
     }
 }
