@@ -45,8 +45,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         configuration = getConfig();
         getLogger().info("Connecting to SQL server");
         connector = new SQLConnector("70.139.52.7", 3306, "Myth", "00163827", "MB_REWRITE");
-        Bukkit.getPluginManager().registerEvents(new Join(), this);
-        Bukkit.getPluginManager().registerEvents(new PreCommand(), this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerJoin(), this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EInventoryClick(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerChat(), this);

@@ -277,4 +277,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                 .runTask(Bukkit.getPluginManager().getPlugin("ServerButler"), () -> player.kickPlayer(reason)));
     }
 
+    List<PlayerInetAddress> getPlayerAddresses();
+
+    Optional<PlayerInetAddress> getConnectionAddress();
 }

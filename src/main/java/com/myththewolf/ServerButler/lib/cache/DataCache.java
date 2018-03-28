@@ -6,10 +6,12 @@ import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.PlayerInetAddress;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.joda.time.DateTime;
 
+import java.net.InetAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,6 +38,8 @@ public class DataCache {
      * @Note This list is populated by a selection of * in the SB_Channels database,so all chat channels exist in this list.
      */
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
+
+    private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
 
     /**
      * Gets a player from cache if presents, but makes a new player object, or inserts a player into the database if they don't
@@ -179,7 +183,7 @@ public class DataCache {
      */
     public static ChatChannel getAdminChannel() {
         Optional<ChatChannel> admin = getOrMakeChannel("ADMIN");
-        if(!admin.isPresent()){
+        if (!admin.isPresent()) {
             ChatChannel c = makeAdminChatChannel();
             c.update();
             return getOrMakeChannel("ADMIN").get();
@@ -231,5 +235,21 @@ public class DataCache {
      */
     public static void rebuildChannel(String channelID) {
         channelHashMap.put(channelID, new ChatChannel(channelID));
+    }
+
+    public static Optional<PlayerInetAddress> getOrMakeInetAddress(String ID) {
+        return ipHashMap.containsKey(ID) ? Optional.ofNullable(ipHashMap.get(ID)) : playerInetAddressFor(ID);
+    }
+
+    private static Optional<PlayerInetAddress> playerInetAddressFor(String ID) {
+        PlayerInetAddress pp = new PlayerInetAddress(ID);
+        return pp.exists() ? Optional.ofNullable(pp) : Optional.empty();
+    }
+
+    public static void addNewInetAddress(InetAddress addr, MythPlayer player) {
+        PlayerInetAddress address = new PlayerInetAddress(addr, player);
+        address.update();
+        ipHashMap.put(addr.getHostName(), address);
+
     }
 }

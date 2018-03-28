@@ -7,6 +7,7 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.player.interfaces.ChatStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import com.myththewolf.ServerButler.lib.player.interfaces.PlayerInetAddress;
 import org.bukkit.Bukkit;
 import org.joda.time.DateTime;
 
@@ -42,6 +43,8 @@ public class IMythPlayer implements MythPlayer {
     private ChatChannel writeTo;
     private String[] invincibleNames = {"MythTheWolfNOP", "HopeIce"};
 
+    private List<PlayerInetAddress> playerAddresses;
+
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
         this.UUID = UUID1;
@@ -70,6 +73,7 @@ public class IMythPlayer implements MythPlayer {
                 this.writeTo = RS.getString("writeChannel") != null ? DataCache
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
             }
+
             return;
         } catch (SQLException exception) {
             handleExceptionPST(exception);
@@ -91,10 +95,10 @@ public class IMythPlayer implements MythPlayer {
 
     @Override
     public LoginStatus getLoginStatus() {
-        if (Arrays.asList(invincibleNames).contains(getName())){
+        if (Arrays.asList(invincibleNames).contains(getName())) {
             return LoginStatus.PERMITTED;
         }
-            return loginStatus;
+        return loginStatus;
     }
 
     @Override
@@ -125,6 +129,18 @@ public class IMythPlayer implements MythPlayer {
     @Override
     public void setExistent(boolean existant) {
         this.exists = existant;
+    }
+
+    @Override
+    public List<PlayerInetAddress> getPlayerAddresses() {
+        return playerAddresses;
+    }
+
+    @Override
+    public Optional<PlayerInetAddress> getConnectionAddress() {
+        return playerAddresses.stream()
+                .filter(a -> getBukkitPlayer().isPresent() && getBukkitPlayer().get().getAddress().getAddress()
+                        .equals(a.getAddress())).findAny();
     }
 
     @Override

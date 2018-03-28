@@ -17,7 +17,7 @@ import org.joda.time.DateTime;
 /**
  * This class captures all join events
  */
-public class Join implements Listener {
+public class EPlayerJoin implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());

@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler.lib.player.interfaces;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
+import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import org.joda.time.DateTime;
 
@@ -19,10 +20,21 @@ public class PlayerInetAddress implements SQLAble {
     private List<MythPlayer> mappedPlayers;
     private String databaseId;
     private DateTime joinDate;
-
     public PlayerInetAddress(String databaseId) {
-        this.databaseId = databaseId;
 
+        this.databaseId = databaseId;
+        String SQL = "SELECT * FROM `SB_IPAddresses` WHERE `ID` = ?";
+        try {
+            ResultSet rs = prepareAndExecuteSelectThrow(SQL, 1, databaseId);
+            while (rs.next()) {
+                StringUtils.deserializeArray(rs.getString("playerUUIDs")).stream().map(DataCache::getOrMakePlayer)
+                        .forEach(mappedPlayers::add);
+                loginStatus = LoginStatus.valueOf(rs.getString("loginStatus"));
+                joinDate = TimeUtils.timeFromString(rs.getString("dateJoined"));
+            }
+        } catch (SQLException e) {
+            handleException(e);
+        }
     }
 
     public PlayerInetAddress(InetAddress addr, MythPlayer start) {
@@ -30,6 +42,7 @@ public class PlayerInetAddress implements SQLAble {
         mappedPlayers.add(start);
         joinDate = new DateTime();
         loginStatus = LoginStatus.PERMITTED;
+
     }
 
     public void update() {
@@ -52,11 +65,12 @@ public class PlayerInetAddress implements SQLAble {
                 return;
             }
         } else {
-            String SQL = "UPDATE `SB_IPAddresses` SET `address` = ? ,`playerUUIDs` = ?,`loginStatus` = ?,`dateJoined` =? WHERE `ID` = ? ";
-            prepareAndExecuteUpdateExceptionally(SQL, 5, getAddress(), StringUtils
-                    .serializeArray(getMappedPlayers().stream().map(MythPlayer::getUUID)
-                            .collect(Collectors.toList())), getLoginStatus(), TimeUtils
-                    .dateToString(getJoinDate()), getDatabaseId());
+            try {
+                String SQL = "UPDATE `SB_IPAddresses` SET `address` = ? ,`playerUUIDs` = ?,`loginStatus` = ?,`dateJoined` =? WHERE `ID` = ? ";
+                PreparedStatement ps = getSQLConnection().prepareStatement(SQL);
+            }catch (SQLException e){
+                handleException(e);
+            }
         }
     }
 
@@ -80,7 +94,12 @@ public class PlayerInetAddress implements SQLAble {
         return databaseId;
     }
 
-    private boolean exists() {
+    public boolean exists() {
         return databaseId != null;
+    }
+
+    @Override
+    public String toString() {
+        return getAddress().getHostAddress().toString();
     }
 }

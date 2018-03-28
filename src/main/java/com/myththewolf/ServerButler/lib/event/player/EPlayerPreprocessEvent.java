@@ -19,7 +19,7 @@ import java.util.Optional;
 /**
  * This class captures all Pre-command events
  */
-public class PreCommand implements Listener, Loggable {
+public class EPlayerPreprocessEvent implements Listener, Loggable {
     @EventHandler
     public void onPreCommand(PlayerCommandPreprocessEvent event) {
         String raw = event.getMessage();
