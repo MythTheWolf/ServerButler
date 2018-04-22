@@ -1,6 +1,5 @@
 package com.myththewolf.ServerButler.lib.inventory.handlers.player;
 
-import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
@@ -16,9 +15,6 @@ public class MutePlayerHandler implements ItemPacketHandler {
                 .sendMessage(ConfigProperties.PREFIX + "Please type the reason for the mute:"));
         EPlayerChat.inputs.put(player.getUUID(), content -> {
             target.mutePlayer(content, player);
-            String toSend = StringUtils.replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT,  player.getName(), target
-                    .getName(), content);
-            DataCache.getAdminChannel().push(toSend, null);
         });
     }
 }

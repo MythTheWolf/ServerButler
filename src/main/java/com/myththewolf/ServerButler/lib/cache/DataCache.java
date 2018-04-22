@@ -6,7 +6,7 @@ import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
-import com.myththewolf.ServerButler.lib.player.interfaces.PlayerInetAddress;
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.joda.time.DateTime;
@@ -237,8 +237,8 @@ public class DataCache {
         channelHashMap.put(channelID, new ChatChannel(channelID));
     }
 
-    public static Optional<PlayerInetAddress> getOrMakeInetAddress(String IP) {
-        return ipHashMap.containsKey(IP) ? Optional.ofNullable(ipHashMap.get(IP)) : playerInetAddressFor(IP);
+    public static Optional<PlayerInetAddress> getOrMakeInetAddress(String ID) {
+        return ipHashMap.containsKey(ID) ? Optional.ofNullable(ipHashMap.get(ID)) : playerInetAddressFor(ID);
     }
     public static Optional<PlayerInetAddress> getOrMakeInetAddress(InetAddress src){
         return getOrMakeInetAddress(src.toString());
@@ -251,7 +251,6 @@ public class DataCache {
     public static void addNewInetAddress(InetAddress addr, MythPlayer player) {
         PlayerInetAddress address = new PlayerInetAddress(addr, player);
         address.update();
-        ipHashMap.put(addr.getHostName(), address);
-
+        ipHashMap.put(addr.toString(), address);
     }
 }

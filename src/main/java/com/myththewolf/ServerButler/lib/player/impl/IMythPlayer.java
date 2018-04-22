@@ -4,10 +4,10 @@ import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
+import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.interfaces.ChatStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
-import com.myththewolf.ServerButler.lib.player.interfaces.PlayerInetAddress;
 import org.bukkit.Bukkit;
 import org.joda.time.DateTime;
 
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 /**
  * This class represents a rich player, proprietary to this plugin
  */
-public class IMythPlayer implements MythPlayer {
+public class IMythPlayer implements MythPlayer, Loggable {
     /**
      * The UUID of the player
      */
@@ -43,7 +43,7 @@ public class IMythPlayer implements MythPlayer {
     private ChatChannel writeTo;
     private String[] invincibleNames = {"MythTheWolfNOP", "HopeIce"};
 
-    private List<PlayerInetAddress> playerAddresses;
+    private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
 
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
@@ -74,7 +74,16 @@ public class IMythPlayer implements MythPlayer {
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
             }
 
-            return;
+            String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE %?%";
+            ResultSet rs = prepareAndExecuteSelectExceptionally(SQL_2, 1, getUUID());
+            while (rs.next()) {
+                Optional<PlayerInetAddress> address = DataCache.getOrMakeInetAddress(rs.getString("ID"));
+                if (!address.isPresent()) {
+                    debug("Could not map address to object: " + rs.getString("address"));
+                    return;
+                }
+                address.ifPresent(playerAddresses::add);
+            }
         } catch (SQLException exception) {
             handleExceptionPST(exception);
             return;

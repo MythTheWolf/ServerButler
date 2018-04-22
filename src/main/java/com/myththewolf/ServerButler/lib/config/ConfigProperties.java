@@ -120,5 +120,5 @@ public class ConfigProperties {
      */
     public static String ADMIN_CHAT_PERMISSION = ServerButler.configuration.getString("ADMIN-CHAT-PERMISSION");
 
-    private String PERMISSION_BAN = ServerButler.configuration.getString("BAN-PERMISSION");
+    public static String MUTE_PERMISSION = ServerButler.configuration.getString("MUTE-PERMISSION");
 }

@@ -5,30 +5,30 @@ import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
+import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
-import com.myththewolf.ServerButler.lib.player.interfaces.PlayerInetAddress;
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.joda.time.DateTime;
 
 import java.util.Optional;
 
 /**
  * This class captures all join events
  */
-public class EPlayerJoin implements Listener {
+public class EPlayerJoin implements Listener, Loggable {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
-        Optional<PlayerInetAddress> ipAddress  = DataCache.getOrMakeInetAddress(event.getPlayer().getAddress().getAddress());
-        if(!ipAddress.isPresent()){
-            DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(),MP);
+        Optional<PlayerInetAddress> ipAddress = DataCache
+                .getOrMakeInetAddress(event.getPlayer().getAddress().getAddress());
+        if (!ipAddress.isPresent()) {
+            DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
         }
-
         if (MP.getLoginStatus() != LoginStatus.PERMITTED) {
             if (MP.getLoginStatus() == LoginStatus.BANNED) {
                 ModerationAction action = MP.getLatestActionOfType(ActionType.BAN).orElse(null);
@@ -48,8 +48,8 @@ public class EPlayerJoin implements Listener {
                     MP.kickPlayer("You have been temp banned from the server", null);
                     return;
                 }
-                if(moderationAction.getExpireDate().get().isBeforeNow()){
-                    MP.pardonPlayer(null,"The tempban has expired.");
+                if (moderationAction.getExpireDate().get().isBeforeNow()) {
+                    MP.pardonPlayer(null, "The tempban has expired.");
                     return;
                 }
                 String REASON = moderationAction.getReason();
@@ -61,6 +61,14 @@ public class EPlayerJoin implements Listener {
             }
             MP.getChannelList().stream().map(ChatChannel::getID).forEach(DataCache::rebuildChannel);
             return;
+        }
+        if (!MP.getConnectionAddress().get().getLoginStatus().equals(LoginStatus.PERMITTED)) {
+            switch (MP.getConnectionAddress().get().getLoginStatus()){
+                case PERMITTED:break;
+                default:break;
+                case BANNED:
+                    break;
+            }
         }
     }
 }
