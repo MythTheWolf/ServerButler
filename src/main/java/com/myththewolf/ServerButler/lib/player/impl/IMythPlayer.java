@@ -74,8 +74,8 @@ public class IMythPlayer implements MythPlayer, Loggable {
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
             }
 
-            String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE %?%";
-            ResultSet rs = prepareAndExecuteSelectExceptionally(SQL_2, 1, getUUID());
+            String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE ?";
+            ResultSet rs = prepareAndExecuteSelectExceptionally(SQL_2, 1, "%" + getUUID() + "%");
             while (rs.next()) {
                 Optional<PlayerInetAddress> address = DataCache.getOrMakeInetAddress(rs.getString("ID"));
                 if (!address.isPresent()) {
@@ -147,9 +147,15 @@ public class IMythPlayer implements MythPlayer, Loggable {
 
     @Override
     public Optional<PlayerInetAddress> getConnectionAddress() {
+        if(!isOnline()){
+            return Optional.empty();
+        }
         return playerAddresses.stream()
-                .filter(a -> getBukkitPlayer().isPresent() && getBukkitPlayer().get().getAddress().getAddress()
-                        .equals(a.getAddress())).findAny();
+                .filter(a -> {
+                    debug(getBukkitPlayer().get().getAddress().getAddress().toString()+":"+a.getAddress().toString());
+                    return getBukkitPlayer().get().getAddress().getAddress().toString()
+                            .equals(a.getAddress().toString());
+                }).findAny();
     }
 
     @Override

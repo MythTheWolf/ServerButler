@@ -28,6 +28,8 @@ public class EPlayerJoin implements Listener, Loggable {
                 .getOrMakeInetAddress(event.getPlayer().getAddress().getAddress());
         if (!ipAddress.isPresent()) {
             DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
+            DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
+            MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
         }
         if (MP.getLoginStatus() != LoginStatus.PERMITTED) {
             if (MP.getLoginStatus() == LoginStatus.BANNED) {
@@ -62,6 +64,7 @@ public class EPlayerJoin implements Listener, Loggable {
             MP.getChannelList().stream().map(ChatChannel::getID).forEach(DataCache::rebuildChannel);
             return;
         }
+        debug(MP.getPlayerAddresses().size()+"");
         if (!MP.getConnectionAddress().get().getLoginStatus().equals(LoginStatus.PERMITTED)) {
             switch (MP.getConnectionAddress().get().getLoginStatus()){
                 case PERMITTED:break;

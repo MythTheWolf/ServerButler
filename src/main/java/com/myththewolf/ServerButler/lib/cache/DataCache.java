@@ -253,4 +253,7 @@ public class DataCache {
         address.update();
         ipHashMap.put(addr.toString(), address);
     }
+    public static void rebuildPlayer(String UUID){
+       playerHashMap.put(UUID,new IMythPlayer(UUID));
+    }
 }
