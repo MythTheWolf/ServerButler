@@ -148,11 +148,11 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public Optional<PlayerInetAddress> getConnectionAddress() {
         if(!isOnline()){
+            //They can't have a connection address if they aren't online lol
             return Optional.empty();
         }
         return playerAddresses.stream()
                 .filter(a -> {
-                    debug(getBukkitPlayer().get().getAddress().getAddress().toString()+":"+a.getAddress().toString());
                     return getBukkitPlayer().get().getAddress().getAddress().toString()
                             .equals(a.getAddress().toString());
                 }).findAny();

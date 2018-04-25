@@ -5,8 +5,8 @@ import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
-import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.joda.time.DateTime;
@@ -240,12 +240,19 @@ public class DataCache {
     public static Optional<PlayerInetAddress> getOrMakeInetAddress(String ID) {
         return ipHashMap.containsKey(ID) ? Optional.ofNullable(ipHashMap.get(ID)) : playerInetAddressFor(ID);
     }
-    public static Optional<PlayerInetAddress> getOrMakeInetAddress(InetAddress src){
+
+    public static Optional<PlayerInetAddress> getOrMakeInetAddress(InetAddress src) {
         return getOrMakeInetAddress(src.toString());
     }
+
     private static Optional<PlayerInetAddress> playerInetAddressFor(String ID) {
         PlayerInetAddress pp = new PlayerInetAddress(ID);
         return pp.exists() ? Optional.ofNullable(pp) : Optional.empty();
+    }
+
+    public static Optional<PlayerInetAddress> getPlayerInetAddressByIp(String IP) {
+        return ipHashMap.entrySet().stream().map(Map.Entry::getValue)
+                .filter(playerInetAddress -> playerInetAddress.getAddress().toString().equals(IP)).findAny();
     }
 
     public static void addNewInetAddress(InetAddress addr, MythPlayer player) {
@@ -253,7 +260,8 @@ public class DataCache {
         address.update();
         ipHashMap.put(addr.toString(), address);
     }
-    public static void rebuildPlayer(String UUID){
-       playerHashMap.put(UUID,new IMythPlayer(UUID));
+
+    public static void rebuildPlayer(String UUID) {
+        playerHashMap.put(UUID, new IMythPlayer(UUID));
     }
 }

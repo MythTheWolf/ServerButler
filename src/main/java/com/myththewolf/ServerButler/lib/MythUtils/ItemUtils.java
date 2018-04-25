@@ -3,16 +3,19 @@ package com.myththewolf.ServerButler.lib.MythUtils;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.Wool;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 
 /**
@@ -208,15 +211,23 @@ public class ItemUtils {
         meta.setDisplayName("Kick player");
         stack.setItemMeta(meta);
         JSONObject packet = new JSONObject();
-        packet.put("packetType",PacketType.KICK_PLAYER);
-        packet.put("PLAYER-UUID",target.getUUID());
-        return applyJSON(packet,stack);
+        packet.put("packetType", PacketType.KICK_PLAYER);
+        packet.put("PLAYER-UUID", target.getUUID());
+        return applyJSON(packet, stack);
     }
 
-    public static ItemStack nameItem(String x,ItemStack source){
+    public static ItemStack nameItem(String x, ItemStack source) {
         ItemMeta meta = source.getItemMeta();
         meta.setDisplayName(x);
         source.setItemMeta(meta);
         return source;
+    }
+
+    public static ItemStack getSkullofPlayer(String playerUUID) {
+        ItemStack raw = new ItemStack(Material.SKULL_ITEM, (short) 3);
+        SkullMeta skullMeta = (SkullMeta) raw.getItemMeta();
+        skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(UUID.fromString(playerUUID)));
+        raw.setItemMeta(skullMeta);
+        return raw;
     }
 }

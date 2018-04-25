@@ -10,6 +10,7 @@ import com.myththewolf.ServerButler.lib.inventory.handlers.chat.OpenChannelPacke
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.SetWriteChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.ViewChannelOptionsHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.player.*;
+import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.ViewPlayerIPs;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
@@ -59,6 +60,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("kick", new kick());
         registerCommand("tempban", new tempban());
         registerCommand("mute",new mute());
+        registerCommand("ips",new ips());
 
     }
 
@@ -80,6 +82,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.UNMUTE_PLAYER, new UnmutePlayerHandler());
         registerPacketHandler(PacketType.TEMPBAN_PLAYER, new TempBanPlayerHandler());
         registerPacketHandler(PacketType.KICK_PLAYER, new KickPlayerHandler());
+        registerPacketHandler(PacketType.VIEW_PLAYER_IPS,new ViewPlayerIPs());
     }
 
     public void checkConfiguration() {
