@@ -3,6 +3,12 @@ package com.myththewolf.ServerButler.lib.player.impl;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
+import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetBan;
+import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetPardon;
+import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetTempBan;
+import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
+import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
+import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -15,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PlayerInetAddress implements SQLAble {
@@ -90,8 +97,35 @@ public class PlayerInetAddress implements SQLAble {
         return mappedPlayers.stream().map(DataCache::getOrMakePlayer).collect(Collectors.toList());
     }
 
-    public void setLoginStatus(LoginStatus loginStatus) {
-        this.loginStatus = loginStatus;
+    public List<ModerationAction> getInetAddressHistory() {
+        List<ModerationAction> theList = new ArrayList<>();
+        ResultSet history = prepareAndExecuteSelectExceptionally("SELECT * FROM `SB_Actions` WHERE `targetType` = ? AND `target` = ? ORDER BY `ID` DESC", 2, TargetType.IP_ADDRESS, getAddress()
+                .toString());
+        try {
+            while (history.next()) {
+                switch (ActionType.valueOf(history.getString("type"))) {
+                    case BAN:
+                        theList.add(new ActionInetBan(history.getString("ID")));
+                        break;
+                    case TEMP_BAN:
+                        theList.add(new ActionInetTempBan(history.getString("ID")));
+                        break;
+                    case PARDON:
+                        theList.add(new ActionInetPardon(history.getString("ID")));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } catch (SQLException excInetAddressHistory) {
+            handleExceptionPST(excInetAddressHistory);
+        }
+        return theList;
+    }
+
+    public Optional<ModerationAction> getLatestActionOfType(ActionType type) {
+        return getInetAddressHistory().stream()
+                .filter(moderationAction -> moderationAction.getActionType().equals(type)).findFirst();
     }
 
     public DateTime getJoinDate() {
@@ -100,6 +134,10 @@ public class PlayerInetAddress implements SQLAble {
 
     public LoginStatus getLoginStatus() {
         return loginStatus;
+    }
+
+    public void setLoginStatus(LoginStatus loginStatus) {
+        this.loginStatus = loginStatus;
     }
 
     public String getDatabaseId() {

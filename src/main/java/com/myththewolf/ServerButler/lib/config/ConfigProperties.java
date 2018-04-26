@@ -101,6 +101,17 @@ public class ConfigProperties {
      * {2} will be replaced with the reason specified for the pardon
      */
     public static String FORMAT_PARDON_CHAT = ServerButler.configuration.getString("FORMAT-PARDON-CHAT");
+    /**
+     *  The pattern used to make the message sent to the admin channel such that: <br />
+     *  {0} will be replaced with the target IP address String
+     *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
+     *  {2} will be replaced with the reason for the ban.
+     */
+    public static String FORMAT_IPBAN_CHAT = ServerButler.configuration.getString("FORMAT-BAN-IP-CHAT");
+
+    public static String FORMAT_IP_TEMPBAN_CHAT = ServerButler.configuration.getString("FORMAT-TEMPBAN-IP-CHAT");
+
+    public static String FORMAT_IP_PARDON = ServerButler.configuration.getString("FORMAT-PARDON-IP-CHAT");
 
     /**
      * The prefix used when displaying messges from this plugin
