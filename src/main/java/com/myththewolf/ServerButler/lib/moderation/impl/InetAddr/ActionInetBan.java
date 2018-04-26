@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.lib.moderation.impl.User;
+package com.myththewolf.ServerButler.lib.moderation.impl.InetAddr;
 
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -18,11 +18,11 @@ import java.util.Optional;
 /**
  * This class represents a ban history entry
  */
-public class ActionUserBan implements ModerationAction, SQLAble {
+public class ActionInetBan implements ModerationAction, SQLAble {
     /**
-     * The target player
+     * The target {@link PlayerInetAddress}
      */
-    private MythPlayer target;
+    private PlayerInetAddress target;
     /**
      * The reason
      */
@@ -41,11 +41,11 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     private DateTime dateApplied;
 
     /**
-     * Constructs a new ActionUserBan, pulling data from the Database
+     * Constructs a new ActionInetBan, pulling data from the Database
      *
      * @param id The ID of the entry of the database to pull data from
      */
-    public ActionUserBan(String id) {
+    public ActionInetBan(String id) {
         DB_ID = id;
         String SQL = "SELECT * FROM `SB_Actions` WHERE `ID` = ?";
         ResultSet resultSet = prepareAndExecuteSelectExceptionally(SQL, 1, DB_ID);
@@ -55,7 +55,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
                 this.reason = resultSet.getString("reason");
                 this.moderator = resultSet.getString("moderator") == null ? null : DataCache
                         .getOrMakePlayer(resultSet.getString("moderator"));
-                this.target = DataCache.getOrMakePlayer(resultSet.getString("target"));
+                this.target = DataCache.getPlayerInetAddressByIp(resultSet.getString("target")).orElseThrow(() -> new IllegalStateException("Could not find target IP in database"));
             }
         } catch (SQLException ex) {
             handleException(ex);
@@ -64,13 +64,13 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     }
 
     /**
-     * Constructs a new ActionUserBan such that no entry in the database exists with these parameters
+     * Constructs a new ActionInetBan such that no entry in the database exists with these parameters
      *
      * @param reason    The reason of the ban
-     * @param target    The target player
+     * @param target    The target {@link PlayerInetAddress}
      * @param moderator The moderator, or null if from the console
      */
-    public ActionUserBan(String reason, MythPlayer target, MythPlayer moderator) {
+    public ActionInetBan(String reason, PlayerInetAddress target, MythPlayer moderator) {
         this.target = target;
         this.moderator = moderator;
         this.reason = reason;
@@ -84,7 +84,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     @Override
     public Optional<MythPlayer> getTargetUser() {
-        return Optional.ofNullable(target);
+        return Optional.empty();
     }
 
     @Override
@@ -94,7 +94,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     @Override
     public Optional<PlayerInetAddress> getTargetIP() {
-        return Optional.empty();
+        return Optional.ofNullable(target);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     @Override
     public TargetType getTargetType() {
-        return TargetType.BUKKIT_PLAYER;
+        return TargetType.IP_ADDRESS;
     }
 
     /**
@@ -118,13 +118,11 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     public void update() {
         if (DB_ID == null) {
             String SQL = "INSERT INTO `SB_Actions` (`type`, `reason`, `target`,`moderator`,`targetType`,`dateApplied`) VALUES (?,?,?,?,?,?)";
-            DB_ID = Integer.toString(prepareAndExecuteUpdateExceptionally(SQL, 6, ActionType.BAN, reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
+            DB_ID = Integer.toString(prepareAndExecuteUpdateExceptionally(SQL, 6, ActionType.BAN, reason,target.getAddress().toString(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.IP_ADDRESS
                     .toString(), TimeUtils.dateToString(dateApplied)));
         } else {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 7, ActionType.BAN, reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
+            prepareAndExecuteUpdateExceptionally(SQL, 7, ActionType.BAN, reason, target.getAddress().toString(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.IP_ADDRESS
                     .toString(), TimeUtils
                     .dateToString(dateApplied), Integer.parseInt(this.DB_ID));
         }

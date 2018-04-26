@@ -3,10 +3,7 @@ package com.myththewolf.ServerButler.lib.mySQL;
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * This interface holds SQL helper methods
@@ -29,12 +26,13 @@ public interface SQLAble extends Loggable {
      * @param values    The values to bind to the parameters
      * @throws IllegalStateException If number of parameters != number of values
      * @throws SQLException          If a SQL connection or syntax error occurs
+     * @return The ID of the newly created row
      */
-    default void prepareAndExecuteUpdateThrow(String SQL, int numParams, Object... values) throws IllegalStateException, SQLException {
+    default int prepareAndExecuteUpdateThrow(String SQL, int numParams, Object... values) throws IllegalStateException, SQLException {
         if (numParams != values.length) {
             throw new IllegalStateException("Num of params do not match values (SQL: " + SQL + ")");
         }
-        PreparedStatement preparedStatement = getSQLConnection().prepareStatement(SQL);
+        PreparedStatement preparedStatement = getSQLConnection().prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS);
         for (int i = 0; i < numParams; i++) {
             Object singleValue = values[i];
             if (singleValue instanceof String) {
@@ -50,6 +48,11 @@ public interface SQLAble extends Loggable {
             }
         }
         preparedStatement.executeUpdate();
+        ResultSet rs = preparedStatement.getGeneratedKeys();
+        if (!rs.next()) {
+            throw new SQLException("Expected generated keys, got nothing.");
+        }
+        return rs.getInt(1);
     }
 
     /**
@@ -58,10 +61,11 @@ public interface SQLAble extends Loggable {
      * @param SQL       The SQL statement to execute
      * @param numParams The total number of parameters
      * @param values    The values to bind to the parameters
+     * @return The ID of the newly created row
      */
-    default void prepareAndExecuteUpdateExceptionally(String SQL, int numParams, Object... values) {
+    default int prepareAndExecuteUpdateExceptionally(String SQL, int numParams, Object... values) {
         try {
-            prepareAndExecuteUpdateThrow(SQL, numParams, values);
+            return prepareAndExecuteUpdateThrow(SQL, numParams, values);
         } catch (IllegalStateException ex) {
             getLogger().severe("Could not call internal database update: Paramaters mixmatch (SQL: " + SQL + ")");
             ex.printStackTrace();
@@ -69,6 +73,7 @@ public interface SQLAble extends Loggable {
             getLogger().severe("Could not call internal database update: SQL error (SQL: " + SQL + ")");
             ex.printStackTrace();
         }
+        return -1;
     }
 
     /**

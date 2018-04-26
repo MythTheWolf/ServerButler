@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.lib.moderation.impl.User;
+package com.myththewolf.ServerButler.lib.moderation.impl.InetAddr;
 
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -16,13 +16,14 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 /**
- * This class represents a ban history entry
+ * This class represents a pardon history entry
+ * I also wrote this class during a school lockdown :(
  */
-public class ActionUserBan implements ModerationAction, SQLAble {
+public class ActionInetPardon implements ModerationAction, SQLAble {
     /**
-     * The target player
+     * The target {@link PlayerInetAddress}
      */
-    private MythPlayer target;
+    private PlayerInetAddress target;
     /**
      * The reason
      */
@@ -36,16 +37,16 @@ public class ActionUserBan implements ModerationAction, SQLAble {
      */
     private String DB_ID = null;
     /**
-     * The Date and Time the ban was applied
+     * The Date and Time the pardon was applied
      */
     private DateTime dateApplied;
 
     /**
-     * Constructs a new ActionUserBan, pulling data from the Database
+     * Constructs a new ActionInetPardon, pulling data from the Database
      *
      * @param id The ID of the entry of the database to pull data from
      */
-    public ActionUserBan(String id) {
+    public ActionInetPardon(String id) {
         DB_ID = id;
         String SQL = "SELECT * FROM `SB_Actions` WHERE `ID` = ?";
         ResultSet resultSet = prepareAndExecuteSelectExceptionally(SQL, 1, DB_ID);
@@ -55,7 +56,9 @@ public class ActionUserBan implements ModerationAction, SQLAble {
                 this.reason = resultSet.getString("reason");
                 this.moderator = resultSet.getString("moderator") == null ? null : DataCache
                         .getOrMakePlayer(resultSet.getString("moderator"));
-                this.target = DataCache.getOrMakePlayer(resultSet.getString("target"));
+                this.target = DataCache.getPlayerInetAddressByIp(resultSet.getString("target"))
+                        .orElseThrow(() -> new IllegalStateException("Could not find target IP"));
+
             }
         } catch (SQLException ex) {
             handleException(ex);
@@ -64,13 +67,13 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     }
 
     /**
-     * Constructs a new ActionUserBan such that no entry in the database exists with these parameters
+     * Constructs a new ActionInetPardon such that no entry in the database exists with these parameters
      *
-     * @param reason    The reason of the ban
-     * @param target    The target player
+     * @param reason    The reason of the pardon
+     * @param target    The target {@link PlayerInetAddress}
      * @param moderator The moderator, or null if from the console
      */
-    public ActionUserBan(String reason, MythPlayer target, MythPlayer moderator) {
+    public ActionInetPardon(String reason, PlayerInetAddress target, MythPlayer moderator) {
         this.target = target;
         this.moderator = moderator;
         this.reason = reason;
@@ -79,11 +82,11 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     @Override
     public String getReason() {
-        return (reason != null ? reason : ConfigProperties.DEFAULT_BAN_REASON);
+        return (reason != null ? reason : ConfigProperties.DEFAULT_PARDON_REASON);
     }
 
     @Override
-    public Optional<MythPlayer> getTargetUser() {
+    public Optional<PlayerInetAddress> getTargetIP() {
         return Optional.ofNullable(target);
     }
 
@@ -93,7 +96,7 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     }
 
     @Override
-    public Optional<PlayerInetAddress> getTargetIP() {
+    public Optional<MythPlayer> getTargetUser() {
         return Optional.empty();
     }
 
@@ -104,12 +107,12 @@ public class ActionUserBan implements ModerationAction, SQLAble {
 
     @Override
     public ActionType getActionType() {
-        return ActionType.BAN;
+        return ActionType.PARDON;
     }
 
     @Override
     public TargetType getTargetType() {
-        return TargetType.BUKKIT_PLAYER;
+        return TargetType.IP_ADDRESS;
     }
 
     /**
@@ -118,18 +121,21 @@ public class ActionUserBan implements ModerationAction, SQLAble {
     public void update() {
         if (DB_ID == null) {
             String SQL = "INSERT INTO `SB_Actions` (`type`, `reason`, `target`,`moderator`,`targetType`,`dateApplied`) VALUES (?,?,?,?,?,?)";
-            DB_ID = Integer.toString(prepareAndExecuteUpdateExceptionally(SQL, 6, ActionType.BAN, reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), TimeUtils.dateToString(dateApplied)));
+            DB_ID = Integer
+                    .toString(prepareAndExecuteUpdateExceptionally(SQL, 6, getActionType(), reason, getTargetIP()
+                            .get()
+                            .getAddress().toString(), getModeratorUser().map(MythPlayer::getUUID)
+                            .orElse(null), TargetType.IP_ADDRESS
+                            .toString(), TimeUtils.dateToString(dateApplied)));
         } else {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 7, ActionType.BAN, reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
+            prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), reason, getTargetIP().get()
+                    .getAddress().toString(), getModeratorUser().map(MythPlayer::getUUID)
+                    .orElse(null), TargetType.IP_ADDRESS
                     .toString(), TimeUtils
                     .dateToString(dateApplied), Integer.parseInt(this.DB_ID));
         }
     }
-
 
     @Override
     public String getDatabaseID() {

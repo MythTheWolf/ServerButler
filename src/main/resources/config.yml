@@ -15,5 +15,8 @@ FORMAT-UNMUTE-PLAYER: "You have been unmuted by {1}. Reason: {0}"
 FORMAT-UNMUTE-CHAT: "{1} was unmuted by {0}. Reason: '{2}'"
 FORMAT-PARDON-CHAT: "{1} was pardoned by {0} for '{2}'"
 PLUGIN-PREFIX: "&8[&bSB&8]&6"
-#Permission
+#--Permission
 BAN-PERMISSION: "sb.ban"
+# -IP Permissions
+BAN-IP-PERMISSION: "sb.ban.ip"
+VIEW-PLAYER-IPS-PERMISSION: "sb.view.ips"

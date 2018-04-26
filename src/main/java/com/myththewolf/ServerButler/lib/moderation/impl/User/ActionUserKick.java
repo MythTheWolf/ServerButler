@@ -114,9 +114,9 @@ public class ActionUserKick implements ModerationAction, SQLAble {
     public void update() {
         if (getDatabaseID() == null) {
             String SQL = "INSERT INTO `SB_Actions` (`type`,`reason`,`target`,`targetType`,`moderator`,`dateApplied`) VALUES (?,?,?,?,?,?)";
-            prepareAndExecuteUpdateExceptionally(SQL, 6, getActionType(), getReason(), getTargetUser().get()
+            this.ID = Integer.toString(prepareAndExecuteUpdateExceptionally(SQL, 6, getActionType(), getReason(), getTargetUser().get()
                     .getUUID(), getTargetType(), getModeratorUser()
-                    .map(MythPlayer::getUUID).orElse(null), TimeUtils.dateToString(getDateApplied()));
+                    .map(MythPlayer::getUUID).orElse(null), TimeUtils.dateToString(getDateApplied())));
         } else {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `targetType` = ?,`moderator` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), getReason(), getTargetUser().get()

@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.lib.moderation.interfaces;
 
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.joda.time.DateTime;
 
@@ -38,7 +39,7 @@ public interface ModerationAction {
      *
      * @return A optional, empty if the target type is not a IP address or is not present
      */
-    default Optional<String> getTargetIP() {
+    default Optional<PlayerInetAddress> getTargetIP() {
         return Optional.empty();
     }
 

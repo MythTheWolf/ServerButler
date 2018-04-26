@@ -90,6 +90,10 @@ public class PlayerInetAddress implements SQLAble {
         return mappedPlayers.stream().map(DataCache::getOrMakePlayer).collect(Collectors.toList());
     }
 
+    public void setLoginStatus(LoginStatus loginStatus) {
+        this.loginStatus = loginStatus;
+    }
+
     public DateTime getJoinDate() {
         return joinDate;
     }

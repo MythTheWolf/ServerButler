@@ -7,6 +7,7 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.joda.time.DateTime;
 
@@ -98,7 +99,7 @@ public class ActionUserTempBan implements ModerationAction, SQLAble {
     }
 
     @Override
-    public Optional<String> getTargetIP() {
+    public Optional<PlayerInetAddress> getTargetIP() {
         return Optional.empty();
     }
 
@@ -123,14 +124,19 @@ public class ActionUserTempBan implements ModerationAction, SQLAble {
     public void update() {
         if (DB_ID == null) {
             String SQL = "INSERT INTO `SB_Actions` (`type`, `reason`, `target`,`moderator`,`targetType`,`dateApplied`,`expireDate`) VALUES (?,?,?,?,?,?,?)";
-            prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), TimeUtils.dateToString(dateApplied), TimeUtils.dateToString(getExpireDate().get()));
+            DB_ID = Integer
+                    .toString(prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), reason, getTargetUser()
+                            .get()
+                            .getUUID(), getModeratorUser().map(MythPlayer::getUUID)
+                            .orElse(null), TargetType.BUKKIT_PLAYER
+                            .toString(), TimeUtils.dateToString(dateApplied), TimeUtils
+                            .dateToString(getExpireDate().get())));
         } else {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ?, `expireDate` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 8, getActionType(), reason, getTargetUser().get()
                     .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), getExpireDate().map(TimeUtils::dateToString).get(), TimeUtils.dateToString(dateApplied), Integer.parseInt(this.DB_ID));
+                    .toString(), getExpireDate().map(TimeUtils::dateToString).get(), TimeUtils
+                    .dateToString(dateApplied), Integer.parseInt(this.DB_ID));
         }
     }
 

@@ -264,4 +264,9 @@ public class DataCache {
     public static void rebuildPlayer(String UUID) {
         playerHashMap.put(UUID, new IMythPlayer(UUID));
     }
+
+    public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
+        ipHashMap.put(src.getDatabaseId(), new PlayerInetAddress(src.getDatabaseId()));
+
+    }
 }

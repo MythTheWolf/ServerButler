@@ -7,6 +7,7 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.joda.time.DateTime;
 
@@ -92,7 +93,7 @@ public class ActionUserUnmute implements ModerationAction, SQLAble {
     }
 
     @Override
-    public Optional<String> getTargetIP() {
+    public Optional<PlayerInetAddress> getTargetIP() {
         return Optional.empty();
     }
 
@@ -117,9 +118,12 @@ public class ActionUserUnmute implements ModerationAction, SQLAble {
     public void update() {
         if (DB_ID == null) {
             String SQL = "INSERT INTO `SB_Actions` (`type`, `reason`, `target`,`moderator`,`targetType`,`dateApplied`) VALUES (?,?,?,?,?,?)";
-            prepareAndExecuteUpdateExceptionally(SQL, 6, getActionType(), reason, getTargetUser().get()
-                    .getUUID(), getModeratorUser().map(MythPlayer::getUUID).orElse(null), TargetType.BUKKIT_PLAYER
-                    .toString(), TimeUtils.dateToString(dateApplied));
+            DB_ID = Integer
+                    .toString(prepareAndExecuteUpdateExceptionally(SQL, 6, getActionType(), reason, getTargetUser()
+                            .get()
+                            .getUUID(), getModeratorUser().map(MythPlayer::getUUID)
+                            .orElse(null), TargetType.BUKKIT_PLAYER
+                            .toString(), TimeUtils.dateToString(dateApplied)));
         } else {
             String SQL = "UPDATE `SB_Actions` SET `type` = ?, `reason` = ?, `target` = ?, `moderator` = ?, `targetType` = ?, `dateApplied` = ? WHERE `ID` = ?";
             prepareAndExecuteUpdateExceptionally(SQL, 7, getActionType(), reason, getTargetUser().get()

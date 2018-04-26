@@ -116,6 +116,14 @@ public class ConfigProperties {
      */
     public static String BAN_PERMISSION = ServerButler.configuration.getString("BAN-PERMISSION");
     /**
+     * The permission node required to use the /banip command
+     */
+    public static String BAN__IP_PERMISSION = ServerButler.configuration.getString("BAN-IP-PERMISSION");
+    /**
+     * The permission node required to use the /ips command
+     */
+    public static String VIEW_PLAYER_IPS_PERMISSION = ServerButler.configuration.getString("VIEW-PLAYER-IPS-PERMISSION");
+    /**
      * The permission node required to view/write to the admin chat
      */
     public static String ADMIN_CHAT_PERMISSION = ServerButler.configuration.getString("ADMIN-CHAT-PERMISSION");

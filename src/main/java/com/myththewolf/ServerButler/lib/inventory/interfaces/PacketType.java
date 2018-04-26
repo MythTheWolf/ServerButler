@@ -20,6 +20,7 @@ public enum PacketType {
     DELETE_PLAYER,
     KICK_PLAYER,
     VIEW_PLAYER_HISTORY,
+    VIEW_PLAYER_EXTA_INFO,
     //IPS
     VIEW_PLAYER_IPS,
     VIEW_IP_OPTIONS,
@@ -27,5 +28,7 @@ public enum PacketType {
     PARDON_IP,
     TEMPBAN_IP,
     DELETE_IP,
-    LIST_PLAYERS
+    LIST_PLAYERS,
+    VIEW_IP_HISTORY,
+    VIEW_IP_EXTRA_INFO
 }

@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin;
+package com.myththewolf.ServerButler.commands.admin.InetAddr;
 
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -20,14 +20,14 @@ import java.util.Optional;
 public class ips extends CommandAdapter {
     @Override
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
-        if(!sender.isPresent())
+        if (!sender.isPresent())
             return;
-        if(!sender.get().getBukkitPlayer().isPresent())
+        if (!sender.get().getBukkitPlayer().isPresent())
             return;
-        sender.get().getBukkitPlayer().get().sendMessage(ConfigProperties.PREFIX+"Building GUI for you..");
+        sender.get().getBukkitPlayer().get().sendMessage(ConfigProperties.PREFIX + "Building GUI for you..");
         MythPlayer target = DataCache.getOrMakePlayer(args[0]);
         int slots = target.getPlayerAddresses().size() <= 9 ? 9 : target.getPlayerAddresses().size();
-        Inventory view = Bukkit.createInventory(null, slots);
+        Inventory view = Bukkit.createInventory(null, slots, "IP table for " + target.getName());
         int i = 0;
         for (PlayerInetAddress I : target.getPlayerAddresses()) {
             JSONObject packet = new JSONObject();
@@ -41,5 +41,20 @@ public class ips extends CommandAdapter {
         }
         sender.get().getBukkitPlayer().get().openInventory(view);
 
+    }
+
+    @Override
+    public int getNumRequiredArgs() {
+        return 1;
+    }
+
+    @Override
+    public String getUsage() {
+        return "/ips <player name>";
+    }
+
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.VIEW_PLAYER_IPS_PERMISSION;
     }
 }
