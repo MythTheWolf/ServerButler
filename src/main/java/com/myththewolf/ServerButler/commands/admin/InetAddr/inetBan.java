@@ -1,12 +1,12 @@
 package com.myththewolf.ServerButler.commands.admin.InetAddr;
 
+import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetBan;
-import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -14,9 +14,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class inetBan extends CommandAdapter implements Loggable {
     String reason;
+    String affectedPlayers;
 
     @Override
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
@@ -44,10 +46,14 @@ public class inetBan extends CommandAdapter implements Loggable {
         }
         target.ifPresent(playerInetAddress -> {
             playerInetAddress.setLoginStatus(LoginStatus.BANNED);
-            ActionInetBan actionInetBan = new ActionInetBan(reason,playerInetAddress,sender.orElse(null));
+            ActionInetBan actionInetBan = new ActionInetBan(reason, playerInetAddress, sender.orElse(null));
             actionInetBan.update();
             DataCache.rebuildPlayerInetAddress(playerInetAddress);
+            affectedPlayers = StringUtils
+                    .serializeArray(playerInetAddress.getMappedPlayers().stream().map(MythPlayer::getName)
+                            .collect(Collectors.toList()));
         });
+
     }
 
     @Override
