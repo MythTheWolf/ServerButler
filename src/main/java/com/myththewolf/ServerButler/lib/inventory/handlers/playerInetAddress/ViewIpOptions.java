@@ -51,7 +51,7 @@ public class ViewIpOptions implements ItemPacketHandler, Loggable {
         JSONObject packet_list_players = new JSONObject();
         packet_list_players.put("packetType", PacketType.LIST_PLAYERS);
         packet_list_players.put("ADDRESS", address.getAddress().toString());
-        packet_list_players.put("PAGE",0);
+        packet_list_players.put("PAGE", 0);
         ItemStack stack_list_players = ItemUtils.applyJSON(packet_list_players, ItemUtils
                 .nameItem("List players who have this IP", new ItemStack(Material.SKULL_ITEM, 1)));
         JSONObject packet_delete_ip = new JSONObject();
@@ -60,18 +60,19 @@ public class ViewIpOptions implements ItemPacketHandler, Loggable {
         ItemStack stack_delete_ip = ItemUtils
                 .applyJSON(packet_delete_ip, ItemUtils.nameItem("Delete this IP", new ItemStack(Material.BARRIER, 1)));
 
-        Inventory view = Bukkit.createInventory(null,9,"Options for "+address.getAddress().toString());
-        if(address.getLoginStatus().equals(LoginStatus.PERMITTED)){
-            view.setItem(0,stack_ban_ip);
-            view.setItem(1,stack_tempban_ip);
-        }else if(address.getLoginStatus().equals(LoginStatus.BANNED)){
-            view.setItem(0,stack_tempban_ip);
-            view.setItem(1,stack_pardon_ip);
-        }else{
-            view.setItem(0,stack_tempban_ip);
-            view.setItem(1,stack_pardon_ip);
+        Inventory view = Bukkit.createInventory(null, 9, "Options for " + address.getAddress().toString());
+        if (address.getLoginStatus().equals(LoginStatus.PERMITTED)) {
+            view.setItem(0, stack_ban_ip);
+            view.setItem(1, stack_tempban_ip);
+        } else if (address.getLoginStatus().equals(LoginStatus.BANNED)) {
+            view.setItem(0, stack_tempban_ip);
+            view.setItem(1, stack_pardon_ip);
+        } else {
+            view.setItem(0, stack_tempban_ip);
+            view.setItem(1, stack_pardon_ip);
         }
-        view.setItem(2,stack_list_players);
-        view.setItem(3,stack_delete_ip);
+        view.setItem(2, stack_list_players);
+        view.setItem(3, stack_delete_ip);
+        player.getBukkitPlayer().ifPresent(p -> p.openInventory(view));
     }
 }

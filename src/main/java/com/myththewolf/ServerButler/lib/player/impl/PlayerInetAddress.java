@@ -82,9 +82,9 @@ public class PlayerInetAddress implements SQLAble {
                 return;
             }
         } else {
-            String SQL = "UPDATE `SB_IPAddresses` SET `address` = ? ,`playerUUIDs` = ?,`loginStatus` = ?,`dateJoined` =? WHERE `ID` = ? ";
+            String SQL = "UPDATE `SB_IPAddresses` SET `playerUUIDs` = ?,`loginStatus` = ?,`dateJoined` =? WHERE `ID` = ? ";
             prepareAndExecuteUpdateExceptionally(SQL, 4, StringUtils
-                    .serializeArray(mappedPlayers), getLoginStatus(), TimeUtils
+                    .serializeArray(mappedPlayers), getLoginStatus().toString(), TimeUtils
                     .dateToString(getJoinDate()), getDatabaseId());
         }
     }
@@ -133,7 +133,7 @@ public class PlayerInetAddress implements SQLAble {
     }
 
     public LoginStatus getLoginStatus() {
-        return loginStatus;
+        return this.loginStatus;
     }
 
     public void setLoginStatus(LoginStatus loginStatus) {

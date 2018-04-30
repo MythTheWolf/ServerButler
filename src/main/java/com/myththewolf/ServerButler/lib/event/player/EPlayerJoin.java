@@ -6,11 +6,13 @@ import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetPardon;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
-import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
+import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -25,7 +27,7 @@ public class EPlayerJoin implements Listener, Loggable {
     public void onJoin(PlayerJoinEvent event) {
         MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
         Optional<PlayerInetAddress> ipAddress = DataCache
-                .getOrMakeInetAddress(event.getPlayer().getAddress().getAddress());
+                .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
         if (!ipAddress.isPresent()) {
             DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
             DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
@@ -64,14 +66,65 @@ public class EPlayerJoin implements Listener, Loggable {
             MP.getChannelList().stream().map(ChatChannel::getID).forEach(DataCache::rebuildChannel);
             return;
         }
-        debug(MP.getPlayerAddresses().size()+"");
-        if (!MP.getConnectionAddress().get().getLoginStatus().equals(LoginStatus.PERMITTED)) {
-            switch (MP.getConnectionAddress().get().getLoginStatus()){
-                case PERMITTED:break;
-                default:break;
-                case BANNED:
-                    break;
+        try {
+            if (!MP.getConnectionAddress().get().getLoginStatus().equals(LoginStatus.PERMITTED)) {
+                switch (MP.getConnectionAddress().get().getLoginStatus()) {
+                    case PERMITTED:
+                        break;
+                    default:
+                        break;
+                    case BANNED:
+                        PlayerInetAddress playerInetAddress = MP.getConnectionAddress()
+                                .orElseThrow(IllegalStateException::new);
+                        String reason = playerInetAddress.getLatestActionOfType(ActionType.BAN)
+                                .orElseThrow(IllegalStateException::new).getReason();
+                        Optional<MythPlayer> sender = playerInetAddress.getLatestActionOfType(ActionType.BAN)
+                                .orElseThrow(IllegalStateException::new).getModeratorUser();
+                        String KICK_REASON = StringUtils
+                                .replaceParameters(ConfigProperties.FORMAT_IP_BAN, playerInetAddress.getAddress()
+                                        .toString(), sender
+                                        .map(MythPlayer::getName).orElse("CONSOLE"), reason);
+                        MP.kickPlayerRaw(KICK_REASON);
+                        DataCache.getAdminChannel()
+                                .push(ConfigProperties.PREFIX + ChatColor.RED + "Rejected connection for player '" + MP
+                                        .getName() + "' because their IP," + MP.getConnectionAddress()
+                                        .orElseThrow(IllegalStateException::new).getAddress()
+                                        .toString() + ", is banned.", null);
+                        break;
+                    case TEMP_BANNED:
+                        PlayerInetAddress src = MP.getConnectionAddress().orElseThrow(IllegalStateException::new);
+                        ModerationAction action = src
+                                .getLatestActionOfType(ActionType.TEMP_BAN).orElseThrow(IllegalStateException::new);
+                        if (action.getExpireDate().orElseThrow(IllegalStateException::new).isBeforeNow()) {
+                            ModerationAction actionUnbanIp = new ActionInetPardon("The IP's tempban has expired.", src, null);
+                            ((ActionInetPardon) actionUnbanIp).update();
+                            src.setLoginStatus(LoginStatus.PERMITTED);
+                            src.update();
+                            DataCache.rebuildPlayerInetAddress(src);
+                            DataCache.rebuildPlayer(MP.getUUID());
+                            return;
+                        }
+                        KICK_REASON = StringUtils
+                                .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, src.getAddress()
+                                        .toString(), action.getModeratorUser().map(MythPlayer::getName)
+                                        .orElse("CONSOLE"), action.getReason(), TimeUtils
+                                        .dateToString(action.getExpireDate().orElseThrow(IllegalStateException::new)));
+                        MP.kickPlayerRaw(KICK_REASON);
+                        DataCache.getAdminChannel()
+                                .push(ConfigProperties.PREFIX + ChatColor.RED + "Rejected connection for player '" + MP
+                                        .getName() + "' because their IP," + MP.getConnectionAddress()
+                                        .orElseThrow(IllegalStateException::new).getAddress()
+                                        .toString() + ", is temp banned until: " + TimeUtils
+                                        .dateToString(action.getExpireDate()
+                                                .orElseThrow(IllegalStateException::new)), null);
+                        break;
+                }
+                return;
             }
+        } catch (Exception e) {
+            event.getPlayer()
+                    .kickPlayer(ConfigProperties.PREFIX + ChatColor.RED + "Internal error while accepting player connection event: " + e
+                            .getMessage());
         }
     }
 }

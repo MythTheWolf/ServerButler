@@ -251,8 +251,26 @@ public class DataCache {
     }
 
     public static Optional<PlayerInetAddress> getPlayerInetAddressByIp(String IP) {
-        return ipHashMap.entrySet().stream().map(Map.Entry::getValue)
-                .filter(playerInetAddress -> playerInetAddress.getAddress().toString().equals(IP)).findAny();
+        Optional<PlayerInetAddress> cache = ipHashMap.isEmpty() ? Optional.empty() : ipHashMap.entrySet().stream().map(Map.Entry::getValue).filter(add->add.getAddress().toString().equals(IP)).findAny();
+        if(cache.isPresent()){
+            return cache;
+        }
+        try {
+            String SQL = "SELECT * FROM `SB_IPAddresses` WHERE `address` = ?";
+            PreparedStatement ps = ServerButler.connector.getConnection()
+                    .prepareStatement(SQL);
+            ps.setString(1,IP);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                return Optional.empty();
+            }
+            PlayerInetAddress address= new PlayerInetAddress(rs.getString("ID"));
+            ipHashMap.put(address.getDatabaseId(),address);
+            return Optional.of(address);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
     public static void addNewInetAddress(InetAddress addr, MythPlayer player) {
@@ -266,7 +284,8 @@ public class DataCache {
     }
 
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
-        ipHashMap.put(src.getDatabaseId(), new PlayerInetAddress(src.getDatabaseId()));
+        String dbId = src.getDatabaseId();
+        ipHashMap.put(dbId, new PlayerInetAddress(dbId));
 
     }
 }

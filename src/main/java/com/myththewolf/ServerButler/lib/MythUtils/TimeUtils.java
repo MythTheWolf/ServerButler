@@ -21,7 +21,7 @@ public class TimeUtils {
      * @param input The date/time String to parse
      * @return The parsed DateTime
      */
-    public static DateTime timeFromString(String input) {
+    public static DateTime timeFromString(String input) throws IllegalArgumentException {
         return formatter.parseDateTime(input);
     }
 

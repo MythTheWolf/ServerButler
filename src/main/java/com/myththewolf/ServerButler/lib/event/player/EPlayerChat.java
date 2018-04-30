@@ -29,6 +29,7 @@ public class EPlayerChat implements Listener, Loggable {
         event.setCancelled(true);
         if (inputs.containsKey(event.getPlayer().getUniqueId().toString())) {
             inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
+            inputs.remove(event.getPlayer().getUniqueId().toString());
             return;
         }
         MythPlayer sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());

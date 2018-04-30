@@ -50,7 +50,7 @@ public interface SQLAble extends Loggable {
         preparedStatement.executeUpdate();
         ResultSet rs = preparedStatement.getGeneratedKeys();
         if (!rs.next()) {
-            throw new SQLException("Expected generated keys, got nothing.");
+            return -1;
         }
         return rs.getInt(1);
     }

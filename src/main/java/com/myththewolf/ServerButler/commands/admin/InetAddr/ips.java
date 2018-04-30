@@ -25,7 +25,12 @@ public class ips extends CommandAdapter {
         if (!sender.get().getBukkitPlayer().isPresent())
             return;
         sender.get().getBukkitPlayer().get().sendMessage(ConfigProperties.PREFIX + "Building GUI for you..");
-        MythPlayer target = DataCache.getOrMakePlayer(args[0]);
+        Optional<MythPlayer> targetOp = DataCache.getPlayerByName(args[0]);
+        if(!targetOp.isPresent()){
+            sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(send -> send.sendMessage(ConfigProperties.PREFIX+"Could not find a player by that name"));
+            return;
+        }
+        MythPlayer target = targetOp.get();
         int slots = target.getPlayerAddresses().size() <= 9 ? 9 : target.getPlayerAddresses().size();
         Inventory view = Bukkit.createInventory(null, slots, "IP table for " + target.getName());
         int i = 0;

@@ -105,11 +105,34 @@ public class ConfigProperties {
      *  The pattern used to make the message sent to the admin channel such that: <br />
      *  {0} will be replaced with the target IP address String
      *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
-     *  {2} will be replaced with the reason for the ban.
+     *  {2} will be replaced with the reason for the ban
+     *  {3} will be replaced with a list of affected usernames
      */
     public static String FORMAT_IPBAN_CHAT = ServerButler.configuration.getString("FORMAT-BAN-IP-CHAT");
-
+    /**
+     *  The pattern used to make the message sent to the admin channel such that: <br />
+     *  {0} will be replaced with the target IP address String
+     *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
+     *  {2} will be replaced with the reason for the ban
+     *  {3} will be replaced with a list of affected usernames
+     *  {4} will be replaced with the expire date string
+     */
     public static String FORMAT_IP_TEMPBAN_CHAT = ServerButler.configuration.getString("FORMAT-TEMPBAN-IP-CHAT");
+    /**
+     * The pattern used to make the message to display when the target player when banned Such that: <br />
+     * {0} will be replaced with the target IP address String
+     * {1} will be replaced with the name of the admin who executed the punishment, or "CONSOLE" if the command was ran from the console.
+     * {2} will be replaced with the reason specified for the ban
+     */
+    public static String FORMAT_IP_BAN = ServerButler.configuration.getString("FORMAT-BAN-IP-PLAYER");
+    /**
+     *  The pattern used to make the message sent to the admin channel such that: <br />
+     *  {0} will be replaced with the target IP address String
+     *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
+     *  {2} will be replaced with the reason for the ban
+     *  {3} will be replaced with the expire date string
+     */
+    public static String FORMAT_IP_TEMPBAN = ServerButler.configuration.getString("FORMAT-TEMPBAN-IP-PLAYER");
 
     public static String FORMAT_IP_PARDON = ServerButler.configuration.getString("FORMAT-PARDON-IP-CHAT");
 
