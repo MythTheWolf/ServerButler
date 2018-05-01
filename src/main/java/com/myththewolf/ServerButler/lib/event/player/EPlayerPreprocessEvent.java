@@ -35,27 +35,44 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
                 .filter(stringCommandAdapterEntry -> stringCommandAdapterEntry.getKey().equals(chop))
                 .map(Map.Entry::getValue).forEach(commandAdapter -> {
             commandAdapter.setLastPlayer(DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString()));
-            CommandPolicy CP = commandAdapter.getClass()
-                    .getMethod("onCommand", Optional.class, String[].class, JavaPlugin.class);
-            boolean isAnnoPresent = commandAdapter.getClass().isAnnotationPresent(CommandPolicy.class);
-            int commandUserReq = isAnnoPresent ? CP.userRequiredArgs() : -1;
-            int commandConsoleReq = isAnnoPresent ? CP.consoleRequiredArgs() : -1;
-            String usage = isAnnoPresent ? CP.commandUsage() : "<<NOT DEFINED>>";
-            if (event.getPlayer() == null && args.length < commandConsoleReq) {
-                getLogger().warning("Could not run command '" + split[0]
-                        .substring(1) + "': Required args do not match supplied args. Usage (optional args are required in this context): " + usage);
-                return;
-            } else if (event.getPlayer() == null && args.length >= commandConsoleReq) {
-                commandAdapter.onCommand(Optional.empty(), args, (JavaPlugin) Bukkit.getPluginManager()
-                        .getPlugin("ServerButler"));
-                return;
+            try {
+                CommandPolicy CP = commandAdapter.getClass()
+                        .getMethod("onCommand", Optional.class, String[].class, JavaPlugin.class)
+                        .getAnnotation(CommandPolicy.class);
+                boolean isAnnoPresent = commandAdapter.getClass().isAnnotationPresent(CommandPolicy.class);
+                if (!isAnnoPresent) {
+                    getLogger().warning("No annotations found for command executor class '" + commandAdapter.getClass()
+                            .getName() + "', no checks will be made by the system!");
+                }
+                int commandUserReq = isAnnoPresent ? CP.userRequiredArgs() : -1;
+                int commandConsoleReq = isAnnoPresent ? CP.consoleRequiredArgs() : -1;
+                String usage = isAnnoPresent ? CP.commandUsage() : "<<NOT DEFINED>>";
+                String permission = commandAdapter.getRequiredPermission();
+                if (event.getPlayer() == null && args.length < commandConsoleReq) {
+                    getLogger().warning("Could not run command '" + split[0]
+                            .substring(1) + "': Required args do not match supplied args. Usage (optional args are required in this context): " + usage);
+                    return;
+                } else if (event.getPlayer() == null && args.length >= commandConsoleReq) {
+                    commandAdapter.onCommand(Optional.empty(), args, (JavaPlugin) Bukkit.getPluginManager()
+                            .getPlugin("ServerButler"));
+                    return;
+                }
+                if (event.getPlayer() != null && args.length < commandUserReq) {
+                    event.getPlayer()
+                            .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "This command requires " + commandUserReq + " arguments, got " + args.length + ".");
+                    event.getPlayer().sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Usage: " + usage);
+                    return;
+                }
+                if (event.getPlayer() != null && permission != null && !event.getPlayer().hasPermission(permission)) {
+                    event.getPlayer()
+                            .sendMessage(ConfigProperties.PREFIX + "You do not have permission for this command.");
+                    return;
+                }
+            } catch (NoSuchMethodException ex) {
+                getLogger().severe("Could not find runner for command executor class: '" + commandAdapter.getClass()
+                        .getName() + "'");
             }
-            if (event.getPlayer() != null && args.length < commandUserReq) {
-                event.getPlayer()
-                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "This command requires " + commandUserReq + " arguments, got " + args.length + ".");
-                event.getPlayer().sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Usage: " + usage);
-                return;
-            }
+
             commandAdapter.onCommand(Optional.ofNullable(DataCache
                     .getOrMakePlayer(event.getPlayer().getUniqueId().toString())), args, (JavaPlugin) Bukkit
                     .getPluginManager().getPlugin("ServerButler"));

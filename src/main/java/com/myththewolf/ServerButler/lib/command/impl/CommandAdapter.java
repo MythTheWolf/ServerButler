@@ -40,24 +40,6 @@ public abstract class CommandAdapter implements Commandable {
     }
 
     /**
-     * Gets number of required args
-     *
-     * @return The number
-     */
-    public int getNumRequiredArgs() {
-        return 0;
-    }
-
-    /**
-     * Gets the command usage
-     *
-     * @return The usage
-     */
-    public String getUsage() {
-        return "<<NOT DEFINED>>";
-    }
-
-    /**
      * Gets the required permissions
      *
      * @return The permission

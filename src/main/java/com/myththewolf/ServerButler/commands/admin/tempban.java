@@ -4,6 +4,7 @@ import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -18,6 +19,7 @@ public class tempban extends CommandAdapter {
     DateTime expireDate = new DateTime();
 
     @Override
+    @CommandPolicy(commandUsage = "/tempban <player name> [period String] [reason]", consoleRequiredArgs = 3, userRequiredArgs = 1)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> targetOp = DataCache.getPlayerByName(args[0]);
         if (!targetOp.isPresent()) {
@@ -46,18 +48,10 @@ public class tempban extends CommandAdapter {
 
     }
 
-    @Override
-    public int getNumRequiredArgs() {
-        return 1;
-    }
 
     @Override
     public String getRequiredPermission() {
         return ConfigProperties.BAN_PERMISSION;
     }
 
-    @Override
-    public String getUsage() {
-        return "/tempban <player name>";
-    }
 }

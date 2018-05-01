@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.commands.admin.InetAddr;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
@@ -19,7 +20,9 @@ import java.util.stream.Collectors;
 public class inetBan extends CommandAdapter implements Loggable {
     String reason;
     PlayerInetAddress playerInetAddress;
+
     @Override
+    @CommandPolicy(commandUsage = "/ipban <IP address> [reason]", userRequiredArgs = 1, consoleRequiredArgs = 2)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
 
 
@@ -43,15 +46,16 @@ public class inetBan extends CommandAdapter implements Loggable {
                     .sendMessage(ConfigProperties.PREFIX + "Please give the reason for the ban: ");
             EPlayerChat.inputs.put(sender.get().getUUID(), content -> {
                 reason = content;
-                doThing(target,sender);
+                doThing(target, sender);
             });
             return;
         } else {
             reason = args[1];
-            doThing(target,sender);
+            doThing(target, sender);
         }
     }
-    private void doThing(Optional<PlayerInetAddress> target, Optional<MythPlayer> sender){
+
+    private void doThing(Optional<PlayerInetAddress> target, Optional<MythPlayer> sender) {
         target.ifPresent(playerInetAddress -> {
             playerInetAddress.setLoginStatus(LoginStatus.BANNED);
             playerInetAddress.update();
@@ -71,20 +75,6 @@ public class inetBan extends CommandAdapter implements Loggable {
             DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
             DataCache.rebuildPlayerInetAddress(playerInetAddress);
         });
-    }
-    @Override
-    public int getNumRequiredArgs() {
-        return 1;
-    }
-
-    @Override
-    public String getUsage() {
-        return "/ipban <IP address> [reason]";
-    }
-
-    @Override
-    public String getRequiredPermission() {
-        return ConfigProperties.BAN__IP_PERMISSION;
     }
 }
 

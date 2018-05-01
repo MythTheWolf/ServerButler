@@ -139,7 +139,7 @@ public class ConfigProperties {
     /**
      * The prefix used when displaying messges from this plugin
      */
-    public static String PREFIX = ChatColor
+    public final static String PREFIX = ChatColor
             .translateAlternateColorCodes('&', ServerButler.configuration.getString("PLUGIN-PREFIX"));
     /**
      * Boolean value of whether to display debug messages or not

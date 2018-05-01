@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.commands.admin.InetAddr;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
@@ -19,6 +20,7 @@ import java.util.Optional;
 
 public class ips extends CommandAdapter {
     @Override
+    @CommandPolicy(commandUsage = "/ips <player name>",userRequiredArgs = 1,consoleRequiredArgs = 1)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         if (!sender.isPresent())
             return;
@@ -46,16 +48,6 @@ public class ips extends CommandAdapter {
         }
         sender.get().getBukkitPlayer().get().openInventory(view);
 
-    }
-
-    @Override
-    public int getNumRequiredArgs() {
-        return 1;
-    }
-
-    @Override
-    public String getUsage() {
-        return "/ips <player name>";
     }
 
     @Override
