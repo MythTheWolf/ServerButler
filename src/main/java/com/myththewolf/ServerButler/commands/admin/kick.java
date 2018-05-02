@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.commands.admin;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.moderation.impl.User.ActionUserKick;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
@@ -17,6 +18,7 @@ import java.util.Optional;
  */
 public class kick extends CommandAdapter {
     @Override
+    @CommandPolicy(commandUsage = "/kick <username> <reason>",userRequiredArgs = 1,consoleRequiredArgs = 2)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {

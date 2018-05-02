@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.commands.admin;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -15,6 +16,7 @@ public class mute extends CommandAdapter {
     String reason;
 
     @Override
+    @CommandPolicy(commandUsage = "/mute <username> [reason]",consoleRequiredArgs = 2,userRequiredArgs = 1)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         reason = ConfigProperties.DEFAULT_MUTE_REASON;
         if (args.length < 2 && sender.isPresent()) {
@@ -40,13 +42,4 @@ public class mute extends CommandAdapter {
         return ConfigProperties.MUTE_PERMISSION;
     }
 
-    @Override
-    public int getNumRequiredArgs() {
-        return 1;
-    }
-
-    @Override
-    public String getUsage() {
-        return "/mute <username> [reason]";
-    }
 }

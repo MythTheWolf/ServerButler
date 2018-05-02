@@ -24,8 +24,6 @@ public class inetBan extends CommandAdapter implements Loggable {
     @Override
     @CommandPolicy(commandUsage = "/ipban <IP address> [reason]", userRequiredArgs = 1, consoleRequiredArgs = 2)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
-
-
         if (!sender.isPresent() && !(args.length == 2)) {
             getLogger().warning("Console usage for command /ipban: /ipban <username> <reason>");
             return;
@@ -50,7 +48,7 @@ public class inetBan extends CommandAdapter implements Loggable {
             });
             return;
         } else {
-            reason = args[1];
+            reason = StringUtils.arrayToString(1,args);
             doThing(target, sender);
         }
     }

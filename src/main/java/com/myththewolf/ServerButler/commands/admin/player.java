@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.commands.admin;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.player.interfaces.ChatStatus;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 public class player extends CommandAdapter {
     @Override
+    @CommandPolicy(commandUsage = "/player <player name>", userRequiredArgs = 1, consoleRequiredArgs = 1)
     public void onCommand(Optional<MythPlayer> send, String[] args, JavaPlugin javaPlugin) {
         send.ifPresent(player -> {
             Optional<MythPlayer> optionalMythPlayer = DataCache.getPlayerByName(args[0]);
@@ -53,24 +55,14 @@ public class player extends CommandAdapter {
                 viewPlayerIPsPacket.put("PLAYER-UUID", target.getUUID());
                 ItemStack itemViewIPs = ItemUtils.applyJSON(viewPlayerIPsPacket, ItemUtils
                         .nameItem("View Player IPs", ItemUtils.getSkullofPlayer(target.getUUID())));
-                targetInventory.setItem(4,itemViewIPs);
+                targetInventory.setItem(4, itemViewIPs);
                 sender.openInventory(targetInventory);
             });
         });
     }
 
     @Override
-    public int getNumRequiredArgs() {
-        return 1;
-    }
-
-    @Override
     public String getRequiredPermission() {
         return ConfigProperties.BAN_PERMISSION;
-    }
-
-    @Override
-    public String getUsage() {
-        return "/player <playername>";
     }
 }

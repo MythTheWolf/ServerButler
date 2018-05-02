@@ -152,4 +152,9 @@ public class PlayerInetAddress implements SQLAble {
     public String toString() {
         return getAddress().toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof PlayerInetAddress && ((PlayerInetAddress) o).getDatabaseId().equals(getDatabaseId()));
+    }
 }

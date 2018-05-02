@@ -4,6 +4,7 @@ import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
@@ -16,6 +17,7 @@ import java.util.Optional;
  */
 public class Ban extends CommandAdapter {
     @Override
+    @CommandPolicy(commandUsage = "/ban <username> <reason>",userRequiredArgs = 2,consoleRequiredArgs = 2)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
@@ -37,13 +39,4 @@ public class Ban extends CommandAdapter {
         return ConfigProperties.BAN_PERMISSION;
     }
 
-    @Override
-    public int getNumRequiredArgs() {
-        return 2;
-    }
-
-    @Override
-    public String getUsage() {
-        return "/ban <username> <reason>";
-    }
 }

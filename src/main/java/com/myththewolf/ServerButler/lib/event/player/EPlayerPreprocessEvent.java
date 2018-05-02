@@ -39,7 +39,7 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
                 CommandPolicy CP = commandAdapter.getClass()
                         .getMethod("onCommand", Optional.class, String[].class, JavaPlugin.class)
                         .getAnnotation(CommandPolicy.class);
-                boolean isAnnoPresent = commandAdapter.getClass().isAnnotationPresent(CommandPolicy.class);
+                boolean isAnnoPresent = commandAdapter.getClass().getMethod("onCommand", Optional.class, String[].class, JavaPlugin.class).isAnnotationPresent(CommandPolicy.class);
                 if (!isAnnoPresent) {
                     getLogger().warning("No annotations found for command executor class '" + commandAdapter.getClass()
                             .getName() + "', no checks will be made by the system!");
