@@ -19,6 +19,7 @@ import org.joda.time.Period;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class inetTempBan extends CommandAdapter implements Loggable {
     String DATE_STRING;
@@ -82,7 +83,8 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                 .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, target.getAddress().toString(), sender
                         .map(MythPlayer::getName).orElse("CONSOLE"), REASON, TimeUtils
                         .dateToString(actionInetTempBan.getExpireDate().get()));
-
+        String CHAT_MESSAGE = StringUtils.replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN_CHAT, target.getAddress().toString(), sender.map(MythPlayer::getName).orElse("CONSOLE"), REASON, StringUtils.serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName).collect(Collectors.toList())), TimeUtils.dateToString(actionInetTempBan.getExpireDate().get()));
+        DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
         DataCache.playerHashMap.entrySet().stream().map(Map.Entry::getValue).filter(MythPlayer::isOnline)
                 .filter(pl -> pl.getConnectionAddress().get().equals(target))
                 .forEach(player -> player.kickPlayerRaw(KICK_MESSAGE));

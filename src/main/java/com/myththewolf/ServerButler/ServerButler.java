@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler;
 
 import com.myththewolf.ServerButler.commands.admin.*;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.inetBan;
+import com.myththewolf.ServerButler.commands.admin.InetAddr.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.ips;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -67,6 +68,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("mute", new mute());
         registerCommand("ips", new ips());
         registerCommand("ipban", new inetBan());
+        registerCommand("iptempban",new inetTempBan());
     }
 
     @Override
