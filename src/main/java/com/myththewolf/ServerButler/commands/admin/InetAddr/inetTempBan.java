@@ -17,7 +17,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,19 +25,21 @@ public class inetTempBan extends CommandAdapter implements Loggable {
     String REASON;
 
     @Override
-    @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = 1, commandUsage = "/ipban <username> [period string] [reason..]")
+    @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = 1, commandUsage = "/iptempban <username> [period string] [reason..]")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
-        DATE_STRING = null;
-        REASON = null;
-        if (args.length == 1 && !sender.isPresent()) {
-            reply(ConfigProperties.PREFIX + "Please supply a interval:");
-            reply(ConfigProperties.PREFIX + "(Format: [Integer][Period], example: 1d4h)");
-            EPlayerChat.inputs.put(sender.get().getUUID(), content -> DATE_STRING = content);
-            EPlayerChat.inputs.put(sender.get().getUUID(), content -> REASON = content);
-        } else if (args.length > 1) {
-            DATE_STRING = args[1];
-            REASON = StringUtils.arrayToString(2, args);
-        }
+       if(args.length == 1){
+           PlayerInetAddress target;
+           getLogger().info("__INIT");
+           EPlayerChat.inputs.put(sender.get().getUUID(),content -> {
+               getLogger().info("-->"+content);
+               EPlayerChat.inputs.put(sender.get().getUUID(),content1 -> {
+                   getLogger().info("!--->"+content1);
+               });
+           });
+           return;
+       }
+    }
+    public void doThing(Optional<MythPlayer> sender,String[] args){
         PlayerInetAddress target;
         if (args[0].startsWith("/")) {
             Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
@@ -68,7 +69,7 @@ public class inetTempBan extends CommandAdapter implements Loggable {
             target = optionalMythPlayer.get();
         }
 
-
+        getLogger().info("CHECK 1" + target.getMappedPlayers().size());
         Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATE_STRING);
         ActionInetTempBan actionInetTempBan = new ActionInetTempBan(REASON, (new DateTime())
                 .withPeriodAdded(p, 1), target, sender
@@ -77,18 +78,22 @@ public class inetTempBan extends CommandAdapter implements Loggable {
 
         target.setLoginStatus(LoginStatus.TEMP_BANNED);
         target.update();
-        DataCache.rebuildPlayerInetAddress(target);
 
         String KICK_MESSAGE = StringUtils
                 .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, target.getAddress().toString(), sender
                         .map(MythPlayer::getName).orElse("CONSOLE"), REASON, TimeUtils
                         .dateToString(actionInetTempBan.getExpireDate().get()));
-        String CHAT_MESSAGE = StringUtils.replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN_CHAT, target.getAddress().toString(), sender.map(MythPlayer::getName).orElse("CONSOLE"), REASON, StringUtils.serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName).collect(Collectors.toList())), TimeUtils.dateToString(actionInetTempBan.getExpireDate().get()));
+        String CHAT_MESSAGE = StringUtils
+                .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN_CHAT, target.getAddress().toString(), sender
+                        .map(MythPlayer::getName).orElse("CONSOLE"), REASON, StringUtils
+                        .serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
+                                .collect(Collectors.toList())), TimeUtils
+                        .dateToString(actionInetTempBan.getExpireDate().get()));
         DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
-        DataCache.playerHashMap.entrySet().stream().map(Map.Entry::getValue).filter(MythPlayer::isOnline)
-                .filter(pl -> pl.getConnectionAddress().get().equals(target))
-                .forEach(player -> player.kickPlayerRaw(KICK_MESSAGE));
+        target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
+                .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
 
-
+        DataCache.rebuildPlayerInetAddress(target);
     }
+
 }

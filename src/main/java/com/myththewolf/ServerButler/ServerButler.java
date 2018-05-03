@@ -4,6 +4,7 @@ import com.myththewolf.ServerButler.commands.admin.*;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.ips;
+import com.myththewolf.ServerButler.commands.futureTest;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
@@ -16,6 +17,7 @@ import com.myththewolf.ServerButler.lib.inventory.handlers.player.*;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.ViewIpOptions;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.ViewPlayerIPs;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.punishment.BanIpHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.punishment.PardonIPHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.punishment.TempBanIpHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
@@ -68,7 +70,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("mute", new mute());
         registerCommand("ips", new ips());
         registerCommand("ipban", new inetBan());
-        registerCommand("iptempban",new inetTempBan());
+        registerCommand("iptempban", new inetTempBan());
+        registerCommand("intest", new futureTest());
     }
 
     @Override
@@ -93,6 +96,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.VIEW_IP_OPTIONS, new ViewIpOptions());
         registerPacketHandler(PacketType.BAN_IP, new BanIpHandler());
         registerPacketHandler(PacketType.TEMPBAN_IP, new TempBanIpHandler());
+        registerPacketHandler(PacketType.PARDON_IP, new PardonIPHandler());
 
     }
 

@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class captures all chat events from players
@@ -27,9 +28,16 @@ public class EPlayerChat implements Listener, Loggable {
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         shortCutRan = false;
         event.setCancelled(true);
-        if (inputs.containsKey(event.getPlayer().getUniqueId().toString())) {
-            inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
-            inputs.remove(event.getPlayer().getUniqueId().toString());
+        if (inputs
+                .containsKey(event.getPlayer().getUniqueId().toString())) {
+            getLogger().info("Capture!!! -> " + event.getMessage());
+            CompletableFuture.supplyAsync(() -> {
+                inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
+                return null;
+            }).thenAccept((o -> {
+                inputs.remove(event.getPlayer().getUniqueId().toString());
+                getLogger().info("Removing...");
+            }));
             return;
         }
         MythPlayer sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());

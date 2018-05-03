@@ -18,61 +18,67 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class inetBan extends CommandAdapter implements Loggable {
-    String reason;
-    PlayerInetAddress playerInetAddress;
-
+    String REASON;
+    String[] args;
     @Override
-    @CommandPolicy(commandUsage = "/ipban <IP address> [reason]", userRequiredArgs = 1, consoleRequiredArgs = 2)
-    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
-        if (!sender.isPresent() && !(args.length == 2)) {
-            getLogger().warning("Console usage for command /ipban: /ipban <username> <reason>");
+    @CommandPolicy(commandUsage = "/ipban <IP address || username> [reason]", userRequiredArgs = 1, consoleRequiredArgs = 2)
+    public void onCommand(Optional<MythPlayer> sender, String[] Theargs, JavaPlugin javaPlugin) {
+        args = Theargs;
+        if (args.length == 1 && sender.isPresent()) {
+            reply("Please supply a reason:");
+            EPlayerChat.inputs.put(sender.get().getUUID(), content -> { REASON = content; doThing(sender); });
             return;
+        } else if (args.length > 1) {
+            REASON = StringUtils.arrayToString(2, args);
         }
-        String IP = args[0].charAt(0) == '/' ? args[0] : "/" + args[0];
-        Optional<PlayerInetAddress> target = DataCache.getPlayerInetAddressByIp(IP);
-        if (!target.isPresent()) {
-            if (sender.isPresent()) {
-                sender.get().getBukkitPlayer().ifPresent(player -> player
-                        .sendMessage(ConfigProperties.PREFIX + ChatColor.DARK_RED + "Could not find that IP: " + IP));
-            }
-            getLogger().warning("IP not found: " + IP);
-            return;
-        }
-
-        if (sender.isPresent() && args.length == 1) {
-            sender.get().getBukkitPlayer().get()
-                    .sendMessage(ConfigProperties.PREFIX + "Please give the reason for the ban: ");
-            EPlayerChat.inputs.put(sender.get().getUUID(), content -> {
-                reason = content;
-                doThing(target, sender);
-            });
-            return;
-        } else {
-            reason = StringUtils.arrayToString(1,args);
-            doThing(target, sender);
-        }
+        doThing(sender);
     }
+    private void doThing(Optional<MythPlayer> sender){
+        PlayerInetAddress target;
+        if (args[0].startsWith("/")) {
+            Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
+            if (!optionalInetAddress.isPresent()) {
+                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
+                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "IP address not found"));
+                sender.orElseGet(() -> {
+                    getLogger().warning("IP address not found!");
+                    return null;
+                });
+                return;
+            }
+            target = optionalInetAddress.get();
+        } else {
+            Optional<PlayerInetAddress> optionalMythPlayer = DataCache.getPlayerByName(args[0])
+                    .flatMap(MythPlayer::getConnectionAddress);
+            if (!optionalMythPlayer.isPresent()) {
+                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
+                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Could not bind to player's connection address! (Are they offline or not existent?)"));
+                sender.orElseGet(() -> {
+                    getLogger()
+                            .warning("Could not bind to player's connection address! (Are they offline or not existent?)");
+                    return null;
+                });
+                return;
+            }
+            target = optionalMythPlayer.get();
+        }
+        ActionInetBan actionInetBan = new ActionInetBan(REASON, target, sender.orElse(null));
+        actionInetBan.update();
+        target.setLoginStatus(LoginStatus.BANNED);
+        DataCache.rebuildPlayerInetAddress(target);
+        String KICK_REASON = StringUtils
+                .replaceParameters(ConfigProperties.FORMAT_IP_BAN, target.getAddress().toString(), sender
+                        .map(MythPlayer::getName).orElse("CONSOLE"), REASON);
 
-    private void doThing(Optional<PlayerInetAddress> target, Optional<MythPlayer> sender) {
-        target.ifPresent(playerInetAddress -> {
-            playerInetAddress.setLoginStatus(LoginStatus.BANNED);
-            playerInetAddress.update();
-            ActionInetBan actionInetBan = new ActionInetBan(reason, playerInetAddress, sender.orElse(null));
-            actionInetBan.update();
-            String affectedPlayers = StringUtils
-                    .serializeArray(playerInetAddress.getMappedPlayers().stream().map(MythPlayer::getName)
-                            .collect(Collectors.toList()));
-            String KICK_REASON = StringUtils
-                    .replaceParameters(ConfigProperties.FORMAT_IP_BAN, playerInetAddress.getAddress().toString(), sender
-                            .map(MythPlayer::getName).orElse("CONSOLE"), reason);
-            String CHAT_MESSAGE = StringUtils
-                    .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, playerInetAddress.getAddress()
-                            .toString(), sender.map(MythPlayer::getName).orElse("CONSOLE"), reason, affectedPlayers);
-            playerInetAddress.getMappedPlayers().stream().filter(MythPlayer::isOnline)
-                    .forEach(mp -> mp.kickPlayerRaw(KICK_REASON));
-            DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
-            DataCache.rebuildPlayerInetAddress(playerInetAddress);
-        });
+        String affected = StringUtils.serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
+                .collect(Collectors.toList()));
+        String CHAT_MESSAGE = StringUtils
+                .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, target.getAddress().toString(), sender
+                        .map(MythPlayer::getName).orElse("CONSOLE"), REASON, affected);
+        DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+
+        target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
+                .forEachOrdered(player -> player.kickPlayerRaw(KICK_REASON));
     }
 }
 

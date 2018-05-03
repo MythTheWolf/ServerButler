@@ -17,18 +17,18 @@ public enum PacketType {
     MUTE_PLAYER,
     SOFTMUTE_PLAYER,
     UNMUTE_PLAYER,
-    DELETE_PLAYER,
+    DELETE_PLAYER, //TODO: Delete player
     KICK_PLAYER,
-    VIEW_PLAYER_HISTORY,
-    VIEW_PLAYER_EXTA_INFO,
+    VIEW_PLAYER_HISTORY, //TODO: Player History
+    VIEW_PLAYER_EXTA_INFO, //TODO: Player extra info
     //IPS
     VIEW_PLAYER_IPS,
     VIEW_IP_OPTIONS,
     BAN_IP,
-    PARDON_IP,
+    PARDON_IP, //TODO: Pardon IP
     TEMPBAN_IP,
-    DELETE_IP,
+    DELETE_IP, //TODO: Delete IP
     LIST_PLAYERS,
-    VIEW_IP_HISTORY,
-    VIEW_IP_EXTRA_INFO
+    VIEW_IP_HISTORY, //TODO: IP History
+    VIEW_IP_EXTRA_INFO //TODO: IP Exta info
 }
