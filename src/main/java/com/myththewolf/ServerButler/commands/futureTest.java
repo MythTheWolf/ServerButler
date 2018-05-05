@@ -21,6 +21,7 @@ public class futureTest extends CommandAdapter implements Loggable{
                 waiting = false;
             });
             while (waiting) {
+                //Just  keeping the thread busy
             }
         });
     }
