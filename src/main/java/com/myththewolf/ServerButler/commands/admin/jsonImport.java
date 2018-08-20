@@ -12,6 +12,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 public class jsonImport extends CommandAdapter implements Loggable {
@@ -21,7 +25,12 @@ public class jsonImport extends CommandAdapter implements Loggable {
         Thread T = new Thread(() -> {
             reply(ConfigProperties.PREFIX + "Reading ./banned-players.json");
             try {
-                JSONArray root = new JSONArray(new FileReader("banned-players.json"));
+
+                debug(readFile("banned-players.json",Charset.defaultCharset()));
+                JSONArray root = new JSONArray();
+
+                //JSONArray root = new JSONArray(new FileReader("banned-players.json"));
+
                 root.forEach(o -> {
                     JSONObject ban = (JSONObject) o;
                     if (ban.getString("expires").equals("forever")) {
@@ -44,5 +53,12 @@ public class jsonImport extends CommandAdapter implements Loggable {
     @Override
     public String getRequiredPermission() {
         return ConfigProperties.IMPORT_JSON_DATA;
+    }
+
+    static String readFile(String path, Charset encoding)
+            throws IOException
+    {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
     }
 }
