@@ -281,4 +281,8 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     List<PlayerInetAddress> getPlayerAddresses();
 
     Optional<PlayerInetAddress> getConnectionAddress();
+
+    default boolean hasPermission(String node){
+        return getBukkitPlayer().isPresent() && getBukkitPlayer().get().hasPermission(node);
+    }
 }

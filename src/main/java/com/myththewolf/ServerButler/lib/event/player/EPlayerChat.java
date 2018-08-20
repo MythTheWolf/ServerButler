@@ -30,17 +30,18 @@ public class EPlayerChat implements Listener, Loggable {
         event.setCancelled(true);
         if (inputs
                 .containsKey(event.getPlayer().getUniqueId().toString())) {
-            getLogger().info("Capture!!! -> " + event.getMessage());
             CompletableFuture.supplyAsync(() -> {
                 inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
                 return null;
             }).thenAccept((o -> {
                 inputs.remove(event.getPlayer().getUniqueId().toString());
-                getLogger().info("Removing...");
             }));
             return;
         }
         MythPlayer sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        sender.getChannelList().stream()
+                .filter(chatChannel -> !chatChannel.getPermission().isPresent() || sender.getBukkitPlayer().get()
+                        .hasPermission(chatChannel.getPermission().get())).forEach(sender::closeChannel);
         if (sender.getChatStatus() != ChatStatus.PERMITTED) {
             if (sender.getChatStatus() == ChatStatus.MUTED) {
                 sender.getBukkitPlayer().ifPresent(player -> player

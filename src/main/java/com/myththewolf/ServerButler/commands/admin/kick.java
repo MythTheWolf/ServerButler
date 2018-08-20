@@ -25,6 +25,10 @@ public class kick extends CommandAdapter {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found.");
             return;
         }
+        if(sender.isPresent() && target.get().equals(sender.get())){
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot kick yourself.");
+            return;
+        }
         target.ifPresent(target1 -> {
             String modName = sender.map(MythPlayer::getName).orElse("CONSOLE");
             String reason = StringUtils.arrayToString(1, args);

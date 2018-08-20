@@ -27,10 +27,10 @@ public class EInventoryClick implements Listener, Loggable {
             return;
         }
         String decoded = StringUtils.getEmeddedString(event.getCurrentItem()).get();
-        if (!StringUtils.parseJSON(decoded).isPresent()) {
+        if (!StringUtils.parseJSONObject(decoded).isPresent()) {
             return;
         }
-        JSONObject parsed = StringUtils.parseJSON(decoded).get();
+        JSONObject parsed = StringUtils.parseJSONObject(decoded).get();
         if (parsed.isNull("packetType") || !ServerButler.itemPacketHandlers
                 .containsKey(PacketType.valueOf(parsed.getString("packetType")))) {
             return;

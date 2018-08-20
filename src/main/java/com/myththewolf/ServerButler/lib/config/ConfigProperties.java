@@ -163,4 +163,6 @@ public class ConfigProperties {
     public static String ADMIN_CHAT_PERMISSION = ServerButler.configuration.getString("ADMIN-CHAT-PERMISSION");
 
     public static String MUTE_PERMISSION = ServerButler.configuration.getString("MUTE-PERMISSION");
+
+    public static String IMPORT_JSON_DATA = ServerButler.configuration.getString("IMPORT-JSON-DATA");
 }

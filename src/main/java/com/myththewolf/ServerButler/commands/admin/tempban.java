@@ -26,6 +26,10 @@ public class tempban extends CommandAdapter {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
             return;
         }
+        if(sender.isPresent() && targetOp.get().equals(sender.get())){
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot temp-ban yourself.");
+            return;
+        }
         if (args.length >= 3) {
             String DATESTR = args[1];
             String reason = StringUtils.arrayToString(2, args);

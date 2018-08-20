@@ -72,6 +72,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("ipban", new inetBan());
         registerCommand("iptempban", new inetTempBan());
         registerCommand("intest", new futureTest());
+        registerCommand("jsonimport",new jsonImport());
     }
 
     @Override

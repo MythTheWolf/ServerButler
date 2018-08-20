@@ -24,6 +24,11 @@ public class Ban extends CommandAdapter {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
             return;
         }
+        if(sender.isPresent() && target.get().equals(sender.get())){
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot ban yourself.");
+            return;
+        }
+
         String reason = StringUtils.arrayToString(1, args);
         target.get().banPlayer(reason, sender.orElse(null));
         ChatChannel adminChat = DataCache.getAdminChannel();

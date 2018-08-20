@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler.lib.MythUtils;
 
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -210,11 +211,11 @@ public class StringUtils {
     }
 
     /**
-     * Parses a JSON string
+     * Parses a JSONObject string
      * @param in The JSON String to parse
      * @return A optional, empty if the JSON String is invalid.
      */
-    public static Optional<JSONObject> parseJSON(String in) {
+    public static Optional<JSONObject> parseJSONObject(String in) {
         org.json.JSONObject jsonObject = null;
         try {
             jsonObject = new org.json.JSONObject(in);

@@ -17,25 +17,33 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class inetTempBan extends CommandAdapter implements Loggable {
     String DATE_STRING;
     String REASON;
-
+    String[] supArgs;
     @Override
-    @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = 1, commandUsage = "/iptempban <username> [period string] [reason..]")
+    @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = 1, commandUsage = "/iptempban <username|ip address> [period string] [reason..]")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+
        if(args.length == 1){
            PlayerInetAddress target;
-           getLogger().info("__INIT");
+          reply("Please specify the target");
            EPlayerChat.inputs.put(sender.get().getUUID(),content -> {
-               getLogger().info("-->"+content);
+              args[0] = content;
+               reply("Please specify the ban duration");
                EPlayerChat.inputs.put(sender.get().getUUID(),content1 -> {
-                   getLogger().info("!--->"+content1);
+                  args[1] = content1;
+                   reply("Please specify the ban reason");
+                  EPlayerChat.inputs.put(sender.get().getUUID(),content2 -> {
+                     args[2] = content2;
+                  });
                });
            });
+                debug(Arrays.toString(args));
            return;
        }
     }
@@ -44,8 +52,7 @@ public class inetTempBan extends CommandAdapter implements Loggable {
         if (args[0].startsWith("/")) {
             Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
             if (!optionalInetAddress.isPresent()) {
-                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
-                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "IP address not found"));
+                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player.sendMessage(ChatColor.RED+"That IP was not found."));
                 sender.orElseGet(() -> {
                     getLogger().warning("IP address not found!");
                     return null;
@@ -68,8 +75,6 @@ public class inetTempBan extends CommandAdapter implements Loggable {
             }
             target = optionalMythPlayer.get();
         }
-
-        getLogger().info("CHECK 1" + target.getMappedPlayers().size());
         Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATE_STRING);
         ActionInetTempBan actionInetTempBan = new ActionInetTempBan(REASON, (new DateTime())
                 .withPeriodAdded(p, 1), target, sender

@@ -30,6 +30,10 @@ public class mute extends CommandAdapter {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
             return;
         }
+        if(sender.isPresent() && target.get().equals(sender.get())){
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot mute yourself.");
+            return;
+        }
         target.get().mutePlayer(reason, sender.orElse(null));
         target.get().updatePlayer();
         String toSend = StringUtils.replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, sender.map(MythPlayer::getName)

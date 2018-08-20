@@ -192,4 +192,5 @@ public class IMythPlayer implements MythPlayer, Loggable {
     public void closeChannel(ChatChannel channel) {
         this.channelList.remove(channel);
     }
+
 }

@@ -26,3 +26,5 @@ BAN-PERMISSION: "sb.ban"
 # -IP Permissions
 BAN-IP-PERMISSION: "sb.ban.ip"
 VIEW-PLAYER-IPS-PERMISSION: "sb.view.ips"
+# - Server Administration
+IMPORT-JSON-DATA: "sb.json.import"
