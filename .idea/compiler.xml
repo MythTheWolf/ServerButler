@@ -9,8 +9,5 @@
         <module name="ServerButler" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="ServerButler" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>
