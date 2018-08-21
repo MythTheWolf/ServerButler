@@ -25,7 +25,7 @@ public enum PacketType {
     VIEW_PLAYER_IPS,
     VIEW_IP_OPTIONS,
     BAN_IP,
-    PARDON_IP, //TODO: Pardon IP
+    PARDON_IP,
     TEMPBAN_IP,
     DELETE_IP, //TODO: Delete IP
     LIST_PLAYERS,

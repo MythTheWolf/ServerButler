@@ -21,10 +21,20 @@ FORMAT-BAN-IP-CHAT: "IP Address '{0}' was banned by {1} for '{2}', affecting use
 FORMAT-TEMPBAN-IP-PLAYER: "Your IP, '{0} was banned by {1} until {2} for {3}"
 FORMAT-TEMPBAN-IP-CHAT: "IP Address '{0}' was temp-banned by {1} until {4} for '{2}', affecting users {3}"
 FORMAT-PARDON-IP-CHAT: "IP Address '{0}' was pardoned by {1} affecting users {2}"
-#--Permission
+#--User Permission
 BAN-PERMISSION: "sb.ban"
+TEMPBAN-PERMISSION: "sb.tempban"
+PARDON-PERMISSION: "sb.pardon"
+KICK-PERMISSION: "sb.kick"
 # -IP Permissions
 BAN-IP-PERMISSION: "sb.ban.ip"
-VIEW-PLAYER-IPS-PERMISSION: "sb.view.ips"
+VIEW-PLAYER-IPS-PERMISSION: "sb.view.ipList"
+TEMPBAN-IP-PERMISSION: "sb.tempban.ip"
+PARDON-IP-PERMISSION: "sb.pardon.ip"
+
+#Channel Permissions
+VIEW-ADMIN-CHANNEL-PERMISSION: "sb.chat.admin"
+
 # - Server Administration
 IMPORT-JSON-DATA: "sb.json.import"
+DEFAULT-CHANNEL: "global"

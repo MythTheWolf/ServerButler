@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin.InetAddr;
+package com.myththewolf.ServerButler.commands.admin.InetAddr.punishment;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -72,6 +72,7 @@ public class inetBan extends CommandAdapter implements Loggable {
 
         String affected = StringUtils.serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
                 .collect(Collectors.toList()));
+
         String CHAT_MESSAGE = StringUtils
                 .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, target.getAddress().toString(), sender
                         .map(MythPlayer::getName).orElse("CONSOLE"), REASON, affected);
@@ -79,6 +80,11 @@ public class inetBan extends CommandAdapter implements Loggable {
 
         target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
                 .forEachOrdered(player -> player.kickPlayerRaw(KICK_REASON));
+    }
+
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.BAN__IP_PERMISSION;
     }
 }
 

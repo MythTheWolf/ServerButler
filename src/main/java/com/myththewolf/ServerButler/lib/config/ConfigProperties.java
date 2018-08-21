@@ -160,9 +160,22 @@ public class ConfigProperties {
     /**
      * The permission node required to view/write to the admin chat
      */
-    public static String ADMIN_CHAT_PERMISSION = ServerButler.configuration.getString("ADMIN-CHAT-PERMISSION");
+    public static String ADMIN_CHAT_PERMISSION = ServerButler.configuration.getString("VIEW-ADMIN-CHANNEL-PERMISSION");
 
     public static String MUTE_PERMISSION = ServerButler.configuration.getString("MUTE-PERMISSION");
 
     public static String IMPORT_JSON_DATA = ServerButler.configuration.getString("IMPORT-JSON-DATA");
+
+    public static String PARDON_PERMISSION = ServerButler.configuration.getString("PARDON-PERMISSION");
+
+    public static String PARDON_IP_PERMISSION = ServerButler.configuration.getString("PARDON-IP-PERMISSION");
+
+    public static String TEMPBAN_IP_PERMISSION = ServerButler.configuration.getString("TEMPBAN-IP-PERMISSION");
+
+    public static String KICK_PERMISSION = ServerButler.configuration.getString("KICK-PERMISSION");
+
+    public static String TEMPBAN_PERMISSION = ServerButler.configuration.getString("TEMPBAN-PERMISSION");
+
+    public static String DEFAULT_CHAT_PATTERN = "{prefix} {player_name} : {text}";
+
 }

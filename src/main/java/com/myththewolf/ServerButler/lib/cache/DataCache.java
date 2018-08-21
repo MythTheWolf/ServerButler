@@ -42,7 +42,7 @@ public class DataCache {
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
 
     /**
-     * Gets a player from cache if presents, but makes a new player object, or inserts a player into the database if they don't
+     * Gets a player from cache if present, but makes a new player object
      *
      * @param UUID The UUID of which player to grab
      * @return A new MythPlayer object
@@ -55,26 +55,31 @@ public class DataCache {
         MythPlayer player = makeNewPlayerObj(UUID);
         if (player.playerExists()) {
             playerHashMap.put(UUID, player);
-        } else {
-            player = createPlayer(UUID);
-            playerHashMap.put(UUID, player);
         }
         return playerHashMap.get(UUID);
     }
+    private static MythPlayer createPlayer(String UUID){
 
-    /**
-     * This inserts a player into the database
-     *
-     * @param UUID The UUID of the player to create
-     * @return The created player
-     * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
-     */
-    private static MythPlayer createPlayer(String UUID) {
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in database. Inserting.");
         }
         MythPlayer MP = new IMythPlayer(new DateTime(), UUID);
         MP.updatePlayer();
+        return makeNewPlayerObj(UUID);
+    }
+    /**
+     * This inserts a player into the database
+     *
+     * @param UUID The UUID of the player to create
+     * @param name The name
+     * @return The created player
+     * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
+     */
+    public static MythPlayer createPlayer(String UUID,String name) {
+        if (ConfigProperties.DEBUG) {
+            getLogger().info("Player doesn't exist in database. Inserting w/ name.");
+        }
+        MythPlayer MP = new IMythPlayer(new DateTime(), UUID,name);
         return makeNewPlayerObj(UUID);
     }
 
@@ -90,6 +95,7 @@ public class DataCache {
             getLogger().info("Player doesn't exist in cache. Creating.");
         }
         MythPlayer MP = new IMythPlayer(UUID);
+        playerHashMap.put(UUID,MP);
         return MP;
     }
 
@@ -132,7 +138,7 @@ public class DataCache {
      * Empties the current cached channel list and re-populates it by a database selection
      */
     public static void rebuildChannelList() {
-        channelHashMap = new HashMap<>();
+        channelHashMap.clear();
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()
                     .prepareStatement("SELECT * FROM `SB_Channels`");
@@ -140,10 +146,23 @@ public class DataCache {
             while (rs.next()) {
                 channelHashMap.put(rs.getString("ID"), new ChatChannel(rs.getString("ID")));
             }
+         boolean adminCExist = channelHashMap.values().stream().anyMatch(chatChannel -> chatChannel.getName().equals("ADMIN"));
+            boolean globalCExist = channelHashMap.values().stream().anyMatch(chatChannel -> chatChannel.getName().equals("GLOBAL"));
+
+            if(!adminCExist){
+                makeAdminChatChannel();
+                rebuildChannelList();
+                return;
+            }
+            if(!globalCExist){
+                makeGlobalChatChannel();
+                rebuildChannelList();
+                return;
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        getAdminChannel();
     }
 
     /**
@@ -172,28 +191,28 @@ public class DataCache {
      */
     private static ChatChannel makeAdminChatChannel() {
         String pre = ChatColor.GRAY + "[" + ChatColor.RED + "#STAFF" + ChatColor.GRAY + "]";
-        ChatChannel admin = new ChatChannel("ADMIN", ConfigProperties.ADMIN_CHAT_PERMISSION, "#", pre);
+        ChatChannel admin = new ChatChannel("ADMIN", ConfigProperties.ADMIN_CHAT_PERMISSION, "#", pre,ConfigProperties.DEFAULT_CHAT_PATTERN);
+        admin.update();
         return admin;
     }
-
+    private static ChatChannel makeGlobalChatChannel() {
+        String pre = "";
+        ChatChannel global = new ChatChannel("GLOBAL", null, "@", pre,ConfigProperties.DEFAULT_CHAT_PATTERN);
+        global.update();
+        return global;
+    }
     /**
      * Pulls the hard-coded admin chat channel from cache
      *
      * @return The cached Admin chat channel
      */
     public static ChatChannel getAdminChannel() {
-        Optional<ChatChannel> admin = getOrMakeChannel("ADMIN");
-        if (!admin.isPresent()) {
-            ChatChannel c = makeAdminChatChannel();
-            c.update();
             return getOrMakeChannel("ADMIN").get();
-        }
-        if (admin.get().getID() == null) {
-            admin.get().update();
-            rebuildChannelList();
-            return getOrMakeChannel("ADMIN").get();
-        }
-        return admin.get();
+
+    }
+
+    public static  ChatChannel getGlobalChannel(){
+            return getOrMakeChannel("GLOBAL").get();
     }
 
     /**
@@ -287,5 +306,18 @@ public class DataCache {
         String dbId = src.getDatabaseId();
         ipHashMap.put(dbId, new PlayerInetAddress(dbId));
 
+    }
+
+    public static boolean playerExists(String UUID){
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection()
+                    .prepareStatement("SELECT * FROM `SB_Players` WHERE `UUID` = ?");
+            ps.setString(1, UUID);
+            ResultSet rs = ps.executeQuery();
+           return rs.next();
+        }catch (SQLException e){
+            e.printStackTrace();
+            return false;
+        }
     }
 }

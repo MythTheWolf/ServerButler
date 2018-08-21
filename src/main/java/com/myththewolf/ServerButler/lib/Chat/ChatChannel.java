@@ -36,6 +36,8 @@ public class ChatChannel implements SQLAble {
      */
     private String prefix;
 
+    private String pattern;
+
     /**
      * Constructs a new Chat Channel, pulling data from the database
      *
@@ -50,6 +52,7 @@ public class ChatChannel implements SQLAble {
                 permission = RS.getString("permission");
                 shortcut = RS.getString("shortcut");
                 prefix = RS.getString("prefix");
+                pattern = RS.getString("format");
             }
         } catch (SQLException e) {
             handleExceptionPST(e);
@@ -64,13 +67,15 @@ public class ChatChannel implements SQLAble {
      * @param shortcut The shortcut for this channel, null if none
      * @param prefix   The chat prefix for this channel
      */
-    public ChatChannel(String name, String perm, String shortcut, String prefix) {
+    public ChatChannel(String name, String perm, String shortcut, String prefix,String pattern) {
         this.ID = null;
         this.name = name;
         this.permission = perm;
         this.shortcut = shortcut;
         this.prefix = prefix;
+        this.pattern = pattern;
     }
+
 
     /**
      * Gets a list of all cached players who are viewing this channel
@@ -128,6 +133,10 @@ public class ChatChannel implements SQLAble {
         return Optional.ofNullable(permission);
     }
 
+    public void setPermission(String permission) {
+        this.permission = permission;
+    }
+
     /**
      * Gets the shortcut for this channel
      *
@@ -135,6 +144,10 @@ public class ChatChannel implements SQLAble {
      */
     public Optional<String> getShortcut() {
         return Optional.ofNullable(shortcut);
+    }
+
+    public String getPattern() {
+        return pattern;
     }
 
     /**
@@ -145,13 +158,19 @@ public class ChatChannel implements SQLAble {
      * @apiNote If player is null, the message being sent will be treated as a raw message, where the player name will not be included.
      */
     public void push(String content, MythPlayer player) {
+
+
         if (player == null) {
-            getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p -> p.getBukkitPlayer().get())
+            getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
                     .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + content));
             return;
         }
-        getAllCachedPlayers().forEach(p -> p.getBukkitPlayer()
-                .ifPresent(p2 -> p2.sendMessage(getPrefix() + player.getName() + ": " + content)));
+        String message2Send = getPattern().replaceAll("\\{player_name\\}", player.getName())
+                .replaceAll("\\{text\\}", content).replaceAll("\\{prefix\\}", getPrefix())
+                .replaceAll("\\{channelName\\}", getName())
+                .replaceAll("\\{worldName\\}", player.getBukkitPlayer().get().getLocation().getWorld().getName());
+        getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
+                .ifPresent(p2 -> p2.sendMessage(message2Send)));
     }
 
     @Override
@@ -166,12 +185,12 @@ public class ChatChannel implements SQLAble {
      */
     public void update() {
         if (getID() == null) {
-            String SQL = "INSERT INTO `SB_Channels` (`name`,`permission`,`shortcut`,`prefix`) VALUES (?,?,?,?)";
-            prepareAndExecuteUpdateExceptionally(SQL, 4, getName(), getPermission().orElse(null), getShortcut()
-                    .orElse(null), getPrefix());
+            String SQL = "INSERT INTO `SB_Channels` (`name`,`permission`,`shortcut`,`prefix`,`format`) VALUES (?,?,?,?,?)";
+            prepareAndExecuteUpdateExceptionally(SQL, 5, getName(), getPermission().orElse(null), getShortcut()
+                    .orElse(null), getPrefix(),getPattern());
         } else {
-            String SQL = "UPDATE `SB_Channels` SET `name` = ?,`permission` = ?,`shortcut` = ?, `prefix` = ? WHERE `ID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 5, getName(), getPermission(), getShortcut(), getPrefix(), getID());
+            String SQL = "UPDATE `SB_Channels` SET `name` = ?,`permission` = ?,`shortcut` = ?, `prefix` = ?, `pattern` = ?  WHERE `ID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 6, getName(), getPermission(), getShortcut(), getPrefix(),getPattern(),getID());
         }
         DataCache.rebuildChannelList();
     }

@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin;
+package com.myththewolf.ServerButler.commands.admin.player.punishment;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;

@@ -10,7 +10,13 @@ import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.joda.time.DateTime;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -41,20 +47,26 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private boolean exists;
     private List<ChatChannel> channelList = new ArrayList<>();
     private ChatChannel writeTo;
-    private String[] invincibleNames = {"MythTheWolfNOP", "HopeIce"};
 
     private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
 
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
         this.UUID = UUID1;
-        this.name = Bukkit.getPlayer(java.util.UUID.fromString(UUID1)).getName();
         this.loginStatus = LoginStatus.PERMITTED;
         this.chatStatus = ChatStatus.PERMITTED;
         exists = false;
         updatePlayer();
     }
-
+    public IMythPlayer(DateTime joinDate, String UUID1,String name) {
+        this.joinDate = joinDate;
+        this.UUID = UUID1;
+        this.name = name;
+        this.loginStatus = LoginStatus.PERMITTED;
+        this.chatStatus = ChatStatus.PERMITTED;
+        exists = false;
+        updatePlayer();
+    }
     public IMythPlayer(String playerUUID) {
         exists = false;
         this.UUID = playerUUID;
@@ -104,9 +116,6 @@ public class IMythPlayer implements MythPlayer, Loggable {
 
     @Override
     public LoginStatus getLoginStatus() {
-        if (Arrays.asList(invincibleNames).contains(getName())) {
-            return LoginStatus.PERMITTED;
-        }
         return loginStatus;
     }
 
@@ -186,11 +195,19 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public void openChannel(ChatChannel channel) {
         this.channelList.add(channel);
+        updatePlayer();
     }
 
     @Override
     public void closeChannel(ChatChannel channel) {
         this.channelList.remove(channel);
+        updatePlayer();
     }
 
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
 }
+
+

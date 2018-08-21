@@ -11,7 +11,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -30,18 +32,33 @@ public class EPlayerChat implements Listener, Loggable {
         event.setCancelled(true);
         if (inputs
                 .containsKey(event.getPlayer().getUniqueId().toString())) {
-            CompletableFuture.supplyAsync(() -> {
-                inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
-                return null;
-            }).thenAccept((o -> {
+            if(event.getMessage().toLowerCase().equals("^c")){
+                event.getPlayer().sendMessage(ConfigProperties.PREFIX+"Cancelling.");
                 inputs.remove(event.getPlayer().getUniqueId().toString());
-            }));
-            return;
+            }else {
+                CompletableFuture.supplyAsync(() -> {
+
+                    inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
+                    return null;
+                }).thenAccept((o -> {
+                    inputs.remove(event.getPlayer().getUniqueId().toString());
+                }));
+                return;
+            }
         }
         MythPlayer sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
-        sender.getChannelList().stream()
-                .filter(chatChannel -> !chatChannel.getPermission().isPresent() || sender.getBukkitPlayer().get()
+        List<ChatChannel> chanList = new ArrayList<>(sender.getChannelList());
+       chanList.stream()
+                .filter(chatChannel -> chatChannel.getPermission().isPresent() && !sender.getBukkitPlayer().get()
                         .hasPermission(chatChannel.getPermission().get())).forEach(sender::closeChannel);
+       if(!sender.getWritingChannel().isPresent()){
+            sender.setWritingChannel(DataCache.getGlobalChannel());
+       }
+
+       if(!sender.isViewing(DataCache.getGlobalChannel())){
+           sender.openChannel(DataCache.getGlobalChannel());
+       }
+
         if (sender.getChatStatus() != ChatStatus.PERMITTED) {
             if (sender.getChatStatus() == ChatStatus.MUTED) {
                 sender.getBukkitPlayer().ifPresent(player -> player
@@ -63,7 +80,9 @@ public class EPlayerChat implements Listener, Loggable {
             channel.push(trimShortcut(event.getMessage(), channel), sender);
         });
         if (shortCutRan) return;
-        sender.getWritingChannel().ifPresent(channel -> channel.push(event.getMessage(), sender));
+
+        sender.getWritingChannel().ifPresent(channel -> {channel.push(event.getMessage(), sender); getLogger().info("PUSH");}
+        );
     }
 
 
