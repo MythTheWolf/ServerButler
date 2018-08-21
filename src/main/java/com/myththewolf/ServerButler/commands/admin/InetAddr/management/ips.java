@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin.InetAddr;
+package com.myththewolf.ServerButler.commands.admin.InetAddr.management;
 
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;

@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin.InetAddr;
+package com.myththewolf.ServerButler.commands.admin.InetAddr.punishment;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -75,6 +75,11 @@ public class inetPardon extends CommandAdapter implements Loggable {
                 .replaceParameters(ConfigProperties.FORMAT_IP_PARDON, target.getAddress().toString(), sender
                         .map(MythPlayer::getName).orElse("CONSOLE"), REASON, affected);
         DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+    }
+
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.PARDON_IP_PERMISSION;
     }
 }
 

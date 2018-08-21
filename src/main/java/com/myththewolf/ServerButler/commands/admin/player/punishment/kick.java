@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin;
+package com.myththewolf.ServerButler.commands.admin.player.punishment;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 public class kick extends CommandAdapter {
     @Override
-    @CommandPolicy(commandUsage = "/kick <username> <reason>",userRequiredArgs = 1,consoleRequiredArgs = 2)
+    @CommandPolicy(commandUsage = "/kick <username> <reason>",userRequiredArgs = 2,consoleRequiredArgs = 2)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
@@ -37,6 +37,12 @@ public class kick extends CommandAdapter {
             String message = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_KICK_CHAT, modName, target.get().getName(), reason);
             DataCache.getAdminChannel().push(message, null);
+            target1.kickPlayer(reason,sender.orElse(null));
         });
+    }
+
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.KICK_PERMISSION;
     }
 }

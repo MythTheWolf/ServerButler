@@ -25,13 +25,27 @@ import java.util.Optional;
 public class EPlayerJoin implements Listener, Loggable {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        MythPlayer MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString()) : DataCache.createPlayer(event.getPlayer().getUniqueId().toString(),event.getPlayer().getName());
         Optional<PlayerInetAddress> ipAddress = DataCache
                 .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
+
+
+        if(!MP.getName().equals(event.getPlayer().getName())){
+           MP.setName(event.getPlayer().getName());
+           MP.updatePlayer();
+        }
         if (!ipAddress.isPresent()) {
             DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
             DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
             MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        }
+
+        if(!MP.getWritingChannel().isPresent()){
+            MP.setWritingChannel(DataCache.getGlobalChannel());
+        }
+
+        if(!MP.isViewing(DataCache.getGlobalChannel())){
+            MP.openChannel(DataCache.getGlobalChannel());
         }
         if (MP.getLoginStatus() != LoginStatus.PERMITTED) {
             if (MP.getLoginStatus() == LoginStatus.BANNED) {

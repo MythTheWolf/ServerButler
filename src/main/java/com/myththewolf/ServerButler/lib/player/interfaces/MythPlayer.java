@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.lib.player.interfaces;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
+import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.moderation.impl.User.*;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
@@ -11,6 +12,7 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.TargetType;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.joda.time.DateTime;
 
@@ -19,6 +21,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -153,6 +156,8 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     void setExistent(boolean existent);
 
+    void setName(String name);
+
     /**
      * Bans this player
      *
@@ -164,10 +169,6 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         ModerationAction ban = new ActionUserBan(reason, this, moderator);
         ((ActionUserBan) ban).update();
         updatePlayer();
-        String fin = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_BAN, reason, (moderator != null ? moderator
-                        .getName() : "CONSOLE"));
-        kickPlayerRaw(fin);
     }
 
     /**
@@ -240,7 +241,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         updatePlayer();
     }
 
-
+    default OfflinePlayer getOfflinePlayer(){
+        return Bukkit.getOfflinePlayer(UUID.fromString(getUUID()));
+    }
     default void tempbanPlayer(MythPlayer mod, String reason, DateTime expire) {
         ModerationAction tBan = new ActionUserTempBan(reason, expire, this, mod);
         ((ActionUserTempBan) tBan).update();
@@ -255,7 +258,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     }
 
     /**
-     * Updates or Inserts this player into the database
+     * Updates player in database
      */
     default void updatePlayer() {
         if (playerExists()) {
@@ -265,12 +268,13 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                     .serializeArray(getChannelList().stream().map(ChatChannel::getID)
                             .collect(Collectors.toList())), getUUID());
 
-        } else {
+        }else {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";
             prepareAndExecuteUpdateExceptionally(SQL, 5, LoginStatus.PERMITTED, ChatStatus.PERMITTED, getName(), TimeUtils
                     .dateToString(getJoinDate()), getUUID());
             setExistent(true);
         }
+        DataCache.rebuildPlayer(getUUID());
     }
 
     default void kickPlayerRaw(String reason) {
@@ -283,6 +287,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     Optional<PlayerInetAddress> getConnectionAddress();
 
     default boolean hasPermission(String node){
+        if(!getBukkitPlayer().isPresent()){
+            getLogger().warning("Method 'hasPermission' called on a unknown player for node: "+node);
+        }
         return getBukkitPlayer().isPresent() && getBukkitPlayer().get().hasPermission(node);
     }
 }

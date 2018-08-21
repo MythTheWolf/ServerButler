@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.commands.admin;
+package com.myththewolf.ServerButler.commands.admin.player.managemnet;
 
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -12,6 +12,7 @@ import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
+import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,6 +24,7 @@ public class player extends CommandAdapter {
     @Override
     @CommandPolicy(commandUsage = "/player <player name>", userRequiredArgs = 1, consoleRequiredArgs = 1)
     public void onCommand(Optional<MythPlayer> send, String[] args, JavaPlugin javaPlugin) {
+        reply(ConfigProperties.PREFIX + "Reading database..");
         send.ifPresent(player -> {
             Optional<MythPlayer> optionalMythPlayer = DataCache.getPlayerByName(args[0]);
             if (!optionalMythPlayer.isPresent()) {
@@ -32,15 +34,20 @@ public class player extends CommandAdapter {
             MythPlayer target = optionalMythPlayer.get();
             Inventory targetInventory = Bukkit.createInventory(null, 9, "Options for " + target.getName());
             player.getBukkitPlayer().ifPresent(sender -> {
-                targetInventory.setItem(0, target.getLoginStatus().equals(LoginStatus.PERMITTED) ? ItemUtils
-                        .makeBanUserItem(target, player) : ItemUtils.makePardonUserItem(target, player));
+                targetInventory.setItem(0, target.getLoginStatus().equals(LoginStatus.PERMITTED) ? player
+                        .hasPermission(ConfigProperties.BAN_PERMISSION) ? ItemUtils
+                        .makeBanUserItem(target, player) : (new ItemStack(Material.RED_STAINED_GLASS_PANE, 1)) : player
+                        .hasPermission(ConfigProperties.PARDON_PERMISSION) ? ItemUtils
+                        .makePardonUserItem(target, player) : (new ItemStack(Material.RED_STAINED_GLASS_PANE, 1)));
+
                 ItemStack tempBanItem = ItemUtils.woolForColor(DyeColor.ORANGE);
                 JSONObject tempBanPacket = new JSONObject();
                 tempBanPacket.put("packetType", PacketType.TEMPBAN_PLAYER);
                 tempBanPacket.put("PLAYER-NAME", target.getName());
                 targetInventory.setItem(1, ItemUtils
                         .nameItem("Temp Ban player", ItemUtils.applyJSON(tempBanPacket, tempBanItem)));
-                if (target.getChatStatus().equals(ChatStatus.MUTED)) {
+                if (target.getChatStatus().equals(ChatStatus.MUTED) && player
+                        .hasPermission(ConfigProperties.MUTE_PERMISSION)) {
                     targetInventory.setItem(2, ItemUtils.makeSoftmuteUserItem(target, player));
                     targetInventory.setItem(3, ItemUtils.makUnmuteUserItem(target, player));
                 } else if (target.getChatStatus().equals(ChatStatus.SOFTMUTED)) {
@@ -61,8 +68,4 @@ public class player extends CommandAdapter {
         });
     }
 
-    @Override
-    public String getRequiredPermission() {
-        return ConfigProperties.BAN_PERMISSION;
-    }
 }
