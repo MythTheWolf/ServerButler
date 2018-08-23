@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.eval;
 import com.myththewolf.ServerButler.commands.admin.jsonImport;
+import com.myththewolf.ServerButler.commands.admin.player.managemnet.about;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.player;
 import com.myththewolf.ServerButler.commands.admin.player.punishment.*;
 import com.myththewolf.ServerButler.commands.futureTest;
@@ -24,7 +25,8 @@ import com.myththewolf.ServerButler.lib.inventory.handlers.chat.CloseChannelPack
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.OpenChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.SetWriteChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.ViewChannelOptionsHandler;
-import com.myththewolf.ServerButler.lib.inventory.handlers.player.*;
+import com.myththewolf.ServerButler.lib.inventory.handlers.player.ViewPlayerExtraInfoHandler;
+import com.myththewolf.ServerButler.lib.inventory.handlers.player.punishment.*;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.ViewIpOptions;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.ViewPlayerIPs;
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.administration.DeleteIpHandler;
@@ -99,8 +101,10 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         Bukkit.getPluginManager().registerEvents(new EPlayerChat(), this);
         getLogger().info("Constructing database");
         checkTables();
-        getLogger().info("Starting token bot from token dir..");
-        API = new DiscordApiBuilder().setToken(ConfigProperties.DISCORD_BOT_TOKEN).login().join();
+        if (ConfigProperties.ENABLE_DISCORD_BOT) {
+            getLogger().info("Starting token bot from token dir..");
+            API = new DiscordApiBuilder().setToken(ConfigProperties.DISCORD_BOT_TOKEN).login().join();
+        }
         getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
         getLogger().info("Building command list");
@@ -110,7 +114,6 @@ public class ServerButler extends JavaPlugin implements SQLAble {
             if (!botFolder.exists()) {
                 botFolder.mkdir();
             }
-
             Server thisServer = API.getServers().stream().findFirst().get();
 
 
@@ -172,8 +175,10 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                 });
             });
         }
-        getLogger().info("Starting the Discord Command Engine");
-        API.addMessageCreateListener(new DiscordMessageEvent());
+        if (ConfigProperties.ENABLE_DISCORD_BOT) {
+            getLogger().info("Starting the Discord Command Engine");
+            API.addMessageCreateListener(new DiscordMessageEvent());
+        }
         getLogger().info("Creating command proxies");
         try {
             final Field f = Bukkit.getServer().getClass().getDeclaredField("commandMap");
@@ -221,7 +226,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("eval", new eval(this));
         registerCommand("createchannel", new ChannelBuilder());
         registerCommand("unmute", new unmute());
-
+        registerCommand("about", new about());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
@@ -248,6 +253,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.TEMPBAN_IP, new TempBanIpHandler());
         registerPacketHandler(PacketType.PARDON_IP, new PardonIPHandler());
         registerPacketHandler(PacketType.DELETE_IP, new DeleteIpHandler());
+        registerPacketHandler(PacketType.VIEW_PLAYER_EXTA_INFO, new ViewPlayerExtraInfoHandler());
 
     }
 

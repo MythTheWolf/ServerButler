@@ -63,6 +63,12 @@ public class player extends CommandAdapter {
                 ItemStack itemViewIPs = ItemUtils.applyJSON(viewPlayerIPsPacket, ItemUtils
                         .nameItem("View Player IPs", ItemUtils.getSkullofPlayer(target.getUUID())));
                 targetInventory.setItem(4, itemViewIPs);
+                ItemStack viewExtra = ItemUtils
+                        .nameItem("View Player Info", ItemUtils.getSkullofPlayer(target.getUUID()));
+                JSONObject viewExtraInfoPacket = new JSONObject();
+                viewExtraInfoPacket.put("PLAYER-NAME", target.getName());
+                viewExtraInfoPacket.put("packetType", PacketType.VIEW_PLAYER_EXTA_INFO);
+                targetInventory.setItem(5, ItemUtils.applyJSON(viewExtraInfoPacket, viewExtra));
                 sender.openInventory(targetInventory);
             });
         });
