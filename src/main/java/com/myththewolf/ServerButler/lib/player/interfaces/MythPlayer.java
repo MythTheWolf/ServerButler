@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.lib.player.interfaces;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
@@ -14,6 +15,10 @@ import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.javacord.api.entity.permission.PermissionType;
+import org.javacord.api.entity.permission.Permissions;
+import org.javacord.api.entity.permission.PermissionsBuilder;
+import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
 
 import java.sql.ResultSet;
@@ -117,6 +122,8 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     String getName();
 
+    void setName(String name);
+
     /**
      * Gets the date that this player joined
      *
@@ -156,11 +163,10 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     void setExistent(boolean existent);
 
-    void setName(String name);
-
     Optional<String> getDiscordID();
 
     void setDiscordID(String id);
+
     /**
      * Bans this player
      *
@@ -189,6 +195,16 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                 .replaceParameters(ConfigProperties.FORMAT_UNMUTE, reason, (moderator != null ? moderator
                         .getName() : "CONSOLE"));
         getBukkitPlayer().ifPresent(player -> player.sendMessage(fin));
+        if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordID().isPresent()) {
+            getChannelList().stream().filter(chatChannel -> chatChannel.getDiscordChannel() != null)
+                    .forEach(chatChannel -> {
+                        Permissions p = (new PermissionsBuilder()).setAllowed(PermissionType.SEND_MESSAGES).build();
+                        chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new)
+                                .createUpdater()
+                                .addPermissionOverwrite(ServerButler.API.getUserById(getDiscordID().get()).join(), p)
+                                .update().exceptionally(ExceptionLogger.get());
+                    });
+        }
     }
 
     /**
@@ -206,6 +222,16 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                 .replaceParameters(ConfigProperties.FORMAT_MUTE, reason, (moderator != null ? moderator
                         .getName() : "CONSOLE"));
         getBukkitPlayer().ifPresent(player -> player.sendMessage(fin));
+        if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordID().isPresent()) {
+            getChannelList().stream().filter(chatChannel -> chatChannel.getDiscordChannel() != null)
+                    .forEach(chatChannel -> {
+                        Permissions p = (new PermissionsBuilder()).setDenied(PermissionType.SEND_MESSAGES).build();
+                        chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new)
+                                .createUpdater()
+                                .addPermissionOverwrite(ServerButler.API.getUserById(getDiscordID().get()).join(), p)
+                                .update().exceptionally(ExceptionLogger.get());
+                    });
+        }
     }
 
     /**
@@ -219,6 +245,16 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         ModerationAction mute = new ActionUserSoftmute(reason, this, moderator);
         ((ActionUserSoftmute) mute).update();
         updatePlayer();
+        if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordID().isPresent()) {
+            getChannelList().stream().filter(chatChannel -> chatChannel.getDiscordChannel() != null)
+                    .forEach(chatChannel -> {
+                        Permissions p = (new PermissionsBuilder()).setDenied(PermissionType.SEND_MESSAGES).build();
+                        chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new)
+                                .createUpdater()
+                                .addPermissionOverwrite(ServerButler.API.getUserById(getDiscordID().get()).join(), p)
+                                .update().exceptionally(ExceptionLogger.get());
+                    });
+        }
     }
 
     /**
@@ -244,9 +280,10 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         updatePlayer();
     }
 
-    default OfflinePlayer getOfflinePlayer(){
+    default OfflinePlayer getOfflinePlayer() {
         return Bukkit.getOfflinePlayer(UUID.fromString(getUUID()));
     }
+
     default void tempbanPlayer(MythPlayer mod, String reason, DateTime expire) {
         ModerationAction tBan = new ActionUserTempBan(reason, expire, this, mod);
         ((ActionUserTempBan) tBan).update();
@@ -271,7 +308,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                     .serializeArray(getChannelList().stream().map(ChatChannel::getID)
                             .collect(Collectors.toList())), getDiscordID().orElse(null), getUUID());
 
-        }else {
+        } else {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";
             prepareAndExecuteUpdateExceptionally(SQL, 5, LoginStatus.PERMITTED, ChatStatus.PERMITTED, getName(), TimeUtils
                     .dateToString(getJoinDate()), getUUID());
@@ -289,9 +326,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
 
     Optional<PlayerInetAddress> getConnectionAddress();
 
-    default boolean hasPermission(String node){
-        if(!getBukkitPlayer().isPresent()){
-            getLogger().warning("Method 'hasPermission' called on a unknown player for node: "+node);
+    default boolean hasPermission(String node) {
+        if (!getBukkitPlayer().isPresent()) {
+            getLogger().warning("Method 'hasPermission' called on a unknown player for node: " + node);
         }
         return getBukkitPlayer().isPresent() && getBukkitPlayer().get().hasPermission(node);
     }
