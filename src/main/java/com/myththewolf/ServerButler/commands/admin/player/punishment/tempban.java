@@ -10,7 +10,10 @@ import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
-import org.bukkit.conversations.*;
+import org.bukkit.conversations.ConversationContext;
+import org.bukkit.conversations.Prompt;
+import org.bukkit.conversations.RegexPrompt;
+import org.bukkit.conversations.StringPrompt;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.joda.time.DateTime;
 
@@ -40,7 +43,6 @@ public class tempban extends CommandAdapter implements Loggable {
            }
            expireDate = new DateTime().withPeriodAdded(TimeUtils.TIME_INPUT_FORMAT().parsePeriod(args[1]),1);
            reason = StringUtils.arrayToString(2,args);
-           commit(sender.orElse(null));
         } else {
             ServerButler.conversationBuilder.withEscapeSequence("^c").withFirstPrompt(new RegexPrompt("((\\d{1,2}y\\s?)?(\\d{1,2}mo\\s?)?(\\d{1,2}w\\s?)?(\\d{1,2}d\\s?)?(\\d{1,2}h\\s?)?(\\d{1,2}m\\s?)?(\\d{1,2}s\\s?)?)|\\d{1,2}") {
                 @Override
@@ -55,7 +57,6 @@ public class tempban extends CommandAdapter implements Loggable {
                         @Override
                         public Prompt acceptInput(ConversationContext conversationContext, String s) {
                             reason = s;
-                            commit(sender.orElse(null));
                             return Prompt.END_OF_CONVERSATION;
                         }
                     };
@@ -69,17 +70,10 @@ public class tempban extends CommandAdapter implements Loggable {
             }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
 
         }
-
-    }
-    private void commit(MythPlayer mod){
-        try {
-            Thread.sleep(1000);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        target.tempbanPlayer(mod,reason,expireDate);
-        Optional<MythPlayer> modOp = Optional.ofNullable(mod);
-        String ChatMessage = StringUtils.replaceParameters(ConfigProperties.FORMAT_TEMPBAN_CHAT,modOp.map(MythPlayer::getName).orElse("CONSOLE"),target.getName(),reason,TimeUtils.dateToString(expireDate));
+        target.tempbanPlayer(sender.orElse(null), reason, expireDate);
+        String ChatMessage = StringUtils
+                .replaceParameters(ConfigProperties.FORMAT_TEMPBAN_CHAT, sender.map(MythPlayer::getName)
+                        .orElse("CONSOLE"), target.getName(), reason, TimeUtils.dateToString(expireDate));
         DataCache.getAdminChannel().push(ChatMessage,null);
     }
     @Override

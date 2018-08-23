@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.commands.admin.player.punishment;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -8,6 +9,9 @@ import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
+import org.bukkit.conversations.ConversationContext;
+import org.bukkit.conversations.Prompt;
+import org.bukkit.conversations.StringPrompt;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
@@ -16,10 +20,28 @@ import java.util.Optional;
  * This class represents the /ban command
  */
 public class Ban extends CommandAdapter {
+    String reason;
     @Override
-    @CommandPolicy(commandUsage = "/ban <username> <reason>", userRequiredArgs = 2, consoleRequiredArgs = 2)
+    @CommandPolicy(commandUsage = "/ban <username> <reason>", userRequiredArgs = 1, consoleRequiredArgs = 2)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
+        if (args.length == 1) {
+            ServerButler.conversationBuilder.withFirstPrompt(new StringPrompt() {
+                @Override
+                public String getPromptText(ConversationContext conversationContext) {
+                    return ConfigProperties.PREFIX + "Please specify the ban reason.";
+                }
+
+                @Override
+                public Prompt acceptInput(ConversationContext conversationContext, String s) {
+                    reason = s;
+                    return END_OF_CONVERSATION;
+                }
+            }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
+        } else {
+            reason = StringUtils.arrayToString(1, args);
+        }
+
         if (!target.isPresent()) {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
             return;
@@ -28,8 +50,6 @@ public class Ban extends CommandAdapter {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot ban yourself.");
             return;
         }
-
-        String reason = StringUtils.arrayToString(1, args);
         target.get().banPlayer(reason, sender.orElse(null));
         ChatChannel adminChat = DataCache.getAdminChannel();
         String CHAT_MESSAGE = StringUtils
@@ -40,7 +60,7 @@ public class Ban extends CommandAdapter {
 
         String KICK_MESSAGE = StringUtils.replaceParameters(ConfigProperties.FORMAT_BAN, sender.map(MythPlayer::getName)
                 .orElse("CONSOLE"), reason);
-        target.ifPresent(player -> player.kickPlayerRaw(KICK_MESSAGE));
+        target.get().kickPlayerRaw(KICK_MESSAGE);
     }
 
 

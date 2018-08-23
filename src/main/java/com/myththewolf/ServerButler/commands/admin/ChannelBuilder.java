@@ -73,13 +73,13 @@ public class ChannelBuilder extends CommandAdapter {
                                         return new StringPrompt() {
                                             @Override
                                             public String getPromptText(ConversationContext conversationContext) {
-                                                return ConfigProperties.PREFIX+"Please specify the channel parse pattern \n (see /help pattern for more info)";
+                                                return ConfigProperties.PREFIX + "Please specify the channel parse pattern \n (see /help pattern for more info, or type 'def' for default.)";
                                             }
 
                                             @Override
                                             public Prompt acceptInput(ConversationContext conversationContext, String s) {
                                                 conversationContext.getForWhom().sendRawMessage(ConfigProperties.PREFIX+"Channel created! :)");
-                                                FORMAT = s;
+                                                FORMAT = s.equals("def") ? ConfigProperties.DEFAULT_CHAT_PATTERN : s;
                                                 commit(sender.get());
                                                 return END_OF_CONVERSATION;
                                             }

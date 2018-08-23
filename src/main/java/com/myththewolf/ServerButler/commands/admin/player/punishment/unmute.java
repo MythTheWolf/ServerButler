@@ -6,8 +6,6 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.moderation.impl.User.ActionUserKick;
-import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.conversations.ConversationContext;
@@ -17,28 +15,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 
-/**
- * This class represents the /kick command
- */
-public class kick extends CommandAdapter {
+public class unmute extends CommandAdapter {
     String reason;
+
     @Override
-    @CommandPolicy(commandUsage = "/kick <username> <reason>", userRequiredArgs = 1, consoleRequiredArgs = 2)
+    @CommandPolicy(userRequiredArgs = 1, consoleRequiredArgs = 2, commandUsage = "/unmute <player> <reason>")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
-        if (!target.isPresent()) {
-            reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found.");
-            return;
-        }
-        if(sender.isPresent() && target.get().equals(sender.get())){
-            reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot kick yourself.");
-            return;
-        }
         if (args.length == 1) {
             ServerButler.conversationBuilder.withFirstPrompt(new StringPrompt() {
                 @Override
                 public String getPromptText(ConversationContext conversationContext) {
-                    return ConfigProperties.PREFIX + "Please specify the kick reason.";
+                    return ConfigProperties.PREFIX + "Please specify the unmute reason:";
                 }
 
                 @Override
@@ -50,20 +38,23 @@ public class kick extends CommandAdapter {
         } else {
             reason = StringUtils.arrayToString(1, args);
         }
-        target.ifPresent(target1 -> {
-
-            String modName = sender.map(MythPlayer::getName).orElse("CONSOLE");
-            ModerationAction action = new ActionUserKick(reason, target1, sender.orElse(null));
-            ((ActionUserKick) action).update();
-            String message = StringUtils
-                    .replaceParameters(ConfigProperties.FORMAT_KICK_CHAT, modName, target.get().getName(), reason);
-            DataCache.getAdminChannel().push(message, null);
-            target1.kickPlayer(reason,sender.orElse(null));
-        });
+        if (!target.isPresent()) {
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
+            return;
+        }
+        if (target.get().equals(sender.get())) {
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "You cannot mute yourself.");
+            return;
+        }
+        target.get().unmutePlayer(reason, sender.orElse(null));
+        target.get().updatePlayer();
+        String toSend = StringUtils.replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, sender.map(MythPlayer::getName)
+                .orElse("CONSOLE"), target.map(MythPlayer::getName).orElse("<ERROR: MythPlayer not present>"), reason);
+        DataCache.getAdminChannel().push(toSend, null);
     }
 
     @Override
     public String getRequiredPermission() {
-        return ConfigProperties.KICK_PERMISSION;
+        return ConfigProperties.MUTE_PERMISSION;
     }
 }

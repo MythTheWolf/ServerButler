@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.script.ScriptEngine;
@@ -31,7 +32,9 @@ public class eval extends CommandAdapter {
         engine.put("sb",inst);
         engine.put("pl",sender.get());
         engine.put("DataCacheClass",DataCache.class);
+        engine.put("BukkitClass", Bukkit.class);
         header.append("var dc = DataCacheClass.static;");
+        header.append("var bk = BukkitClass.static;");
         header.append(StringUtils.arrayToString(0, args));
 
         try {
@@ -44,5 +47,10 @@ public class eval extends CommandAdapter {
         }catch (ScriptException e){
             reply(e.getMessage());
         }
+    }
+
+    @Override
+    public String getRequiredPermission() {
+        return "sb.super.eval";
     }
 }

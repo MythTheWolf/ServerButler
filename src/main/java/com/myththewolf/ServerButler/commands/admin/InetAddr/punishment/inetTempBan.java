@@ -22,7 +22,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class inetTempBan extends CommandAdapter implements Loggable {
@@ -33,8 +32,7 @@ public class inetTempBan extends CommandAdapter implements Loggable {
     @Override
     @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = -1, commandUsage = "/iptempban <username|/{ip address}> [period string] [reason..]")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
-
-        if(args.length < 1) {
+        if (args.length <= 1) {
             ServerButler.conversationBuilder.withEscapeSequence("^c")
                     .thatExcludesNonPlayersWithMessage("Must be in-game for this command")
                     .withFirstPrompt(new RegexPrompt("((\\d{1,2}y\\s?)?(\\d{1,2}mo\\s?)?(\\d{1,2}w\\s?)?(\\d{1,2}d\\s?)?(\\d{1,2}h\\s?)?(\\d{1,2}m\\s?)?(\\d{1,2}s\\s?)?)|\\d{1,2}") {

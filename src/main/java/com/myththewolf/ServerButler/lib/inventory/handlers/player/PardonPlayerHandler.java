@@ -1,23 +1,21 @@
 package com.myththewolf.ServerButler.lib.inventory.handlers.player;
 
-import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
-import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
+
+import java.util.Optional;
 
 public class PardonPlayerHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
         MythPlayer target = DataCache.getOrMakePlayer(data.getString("PLAYER-UUID"));
-        player.getBukkitPlayer().ifPresent(pl -> pl.sendMessage(ConfigProperties.PREFIX + "Please type out the reason for the pardon:"));
-        EPlayerChat.inputs.put(player.getUUID(), content -> {
-            target.pardonPlayer(player, content);
-            String msg = StringUtils.replaceParameters(ConfigProperties.FORMAT_PARDON_CHAT, player.getName(), target
-                    .getName(), content);
-            DataCache.getAdminChannel().push(msg, null);
-        });
+        JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
+        String args[] = {target.getName()};
+        ServerButler.commands.get("pardon").onCommand(Optional.ofNullable(player), args, tar);
     }
 }
