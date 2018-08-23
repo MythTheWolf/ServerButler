@@ -30,19 +30,27 @@
   </build>
   <repositories>
     <repository>
-      <id>spigot-repo</id>
-      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        <id>pex-repo</id>
+        <url>http://pex-repo.aoeu.xyz</url>
     </repository>
+      <repository>
+          <id>spigot-repo</id>
+          <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+      </repository>
     <repository>
       <id>central</id>
       <url>http://central.maven.org/maven2/</url>
     </repository>
+      <repository>
+          <id>jitpack.io</id>
+          <url>https://jitpack.io</url>
+      </repository>
   </repositories>
   <dependencies>
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.13-R0.1-SNAPSHOT</version>
+        <version>1.12-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -71,6 +79,13 @@
         </exclusion>
       </exclusions>
     </dependency>
+      <dependency>
+          <groupId>org.javacord</groupId>
+          <artifactId>javacord</artifactId>
+          <version>3.0.0</version>
+          <type>pom</type>
+          <scope>compile</scope>
+      </dependency>
   </dependencies>
 </project>
 
