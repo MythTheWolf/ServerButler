@@ -1,4 +1,4 @@
-package com.myththewolf.ServerButler.lib.inventory.handlers.player;
+package com.myththewolf.ServerButler.lib.inventory.handlers.player.punishment;
 
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -10,12 +10,12 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
-public class SoftmutePlayerHandler implements ItemPacketHandler {
+public class KickPlayerHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
         MythPlayer target = DataCache.getOrMakePlayer(data.getString("PLAYER-UUID"));
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
         String args[] = {target.getName()};
-        ServerButler.commands.get("softmute").onCommand(Optional.ofNullable(player), args, tar);
+        ServerButler.commands.get("kick").onCommand(Optional.ofNullable(player), args, tar);
     }
 }

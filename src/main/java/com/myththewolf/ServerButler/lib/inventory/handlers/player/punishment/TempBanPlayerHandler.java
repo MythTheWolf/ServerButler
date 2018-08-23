@@ -1,7 +1,6 @@
-package com.myththewolf.ServerButler.lib.inventory.handlers.player;
+package com.myththewolf.ServerButler.lib.inventory.handlers.player.punishment;
 
 import com.myththewolf.ServerButler.ServerButler;
-import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
@@ -10,12 +9,13 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
-public class MutePlayerHandler implements ItemPacketHandler {
+public class TempBanPlayerHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
-        MythPlayer target = DataCache.getOrMakePlayer(data.getString("PLAYER-UUID"));
+        ServerButler.commands.get("tempban").setLastPlayer(player);
+        String[] args = new String[1];
+        args[0] = data.getString("PLAYER-NAME");
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
-        String args[] = {target.getName()};
-        ServerButler.commands.get("mute").onCommand(Optional.ofNullable(player), args, tar);
+        ServerButler.commands.get("tempban").onCommand(Optional.ofNullable(player), args, tar);
     }
 }
