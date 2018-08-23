@@ -20,7 +20,12 @@ public class EInventoryClick implements Listener, Loggable {
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
-        if(event.getCurrentItem().getItemMeta().getLore() == null || event.getCurrentItem().getItemMeta().getLore().size() == 0){
+        if (event.getCurrentItem() == null) {
+            return;
+        }
+
+        if (event.getCurrentItem().getItemMeta() == null || event.getCurrentItem().getItemMeta()
+                .getLore() == null || event.getCurrentItem().getItemMeta().getLore().size() == 0) {
             return;
         }
         if (!StringUtils.getEmeddedString(event.getCurrentItem()).isPresent()) {
