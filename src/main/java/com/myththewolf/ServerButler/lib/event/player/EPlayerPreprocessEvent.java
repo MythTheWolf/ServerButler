@@ -23,7 +23,6 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
     @EventHandler
     public void onPreCommand(PlayerCommandPreprocessEvent event) {
         String raw = event.getMessage();
-        event.getPlayer().sendMessage(raw);
         String[] split = raw.split(" ");
         if (!ServerButler.commands.containsKey(split[0].substring(1))) {
             return;

@@ -58,7 +58,8 @@ public class DataCache {
         }
         return playerHashMap.get(UUID);
     }
-    private static MythPlayer createPlayer(String UUID){
+
+    private static MythPlayer createPlayer(String UUID) {
 
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in database. Inserting.");
@@ -67,6 +68,7 @@ public class DataCache {
         MP.updatePlayer();
         return makeNewPlayerObj(UUID);
     }
+
     /**
      * This inserts a player into the database
      *
@@ -75,11 +77,11 @@ public class DataCache {
      * @return The created player
      * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
      */
-    public static MythPlayer createPlayer(String UUID,String name) {
+    public static MythPlayer createPlayer(String UUID, String name) {
         if (ConfigProperties.DEBUG) {
             getLogger().info("Player doesn't exist in database. Inserting w/ name.");
         }
-        MythPlayer MP = new IMythPlayer(new DateTime(), UUID,name);
+        MythPlayer MP = new IMythPlayer(new DateTime(), UUID, name);
         return makeNewPlayerObj(UUID);
     }
 
@@ -95,7 +97,7 @@ public class DataCache {
             getLogger().info("Player doesn't exist in cache. Creating.");
         }
         MythPlayer MP = new IMythPlayer(UUID);
-        playerHashMap.put(UUID,MP);
+        playerHashMap.put(UUID, MP);
         return MP;
     }
 
@@ -146,15 +148,17 @@ public class DataCache {
             while (rs.next()) {
                 channelHashMap.put(rs.getString("ID"), new ChatChannel(rs.getString("ID")));
             }
-         boolean adminCExist = channelHashMap.values().stream().anyMatch(chatChannel -> chatChannel.getName().equals("ADMIN"));
-            boolean globalCExist = channelHashMap.values().stream().anyMatch(chatChannel -> chatChannel.getName().equals("GLOBAL"));
+            boolean adminCExist = channelHashMap.values().stream()
+                    .anyMatch(chatChannel -> chatChannel.getName().equals("ADMIN"));
+            boolean globalCExist = channelHashMap.values().stream()
+                    .anyMatch(chatChannel -> chatChannel.getName().equals("GLOBAL"));
 
-            if(!adminCExist){
+            if (!adminCExist) {
                 makeAdminChatChannel();
                 rebuildChannelList();
                 return;
             }
-            if(!globalCExist){
+            if (!globalCExist) {
                 makeGlobalChatChannel();
                 rebuildChannelList();
                 return;
@@ -191,28 +195,30 @@ public class DataCache {
      */
     private static ChatChannel makeAdminChatChannel() {
         String pre = ChatColor.GRAY + "[" + ChatColor.RED + "#STAFF" + ChatColor.GRAY + "]";
-        ChatChannel admin = new ChatChannel("ADMIN", ConfigProperties.ADMIN_CHAT_PERMISSION, "#", pre,ConfigProperties.DEFAULT_CHAT_PATTERN);
+        ChatChannel admin = new ChatChannel("ADMIN", ConfigProperties.ADMIN_CHAT_PERMISSION, "#", pre, ConfigProperties.DEFAULT_CHAT_PATTERN);
         admin.update();
         return admin;
     }
+
     private static ChatChannel makeGlobalChatChannel() {
         String pre = "";
-        ChatChannel global = new ChatChannel("GLOBAL", null, "@", pre,ConfigProperties.DEFAULT_CHAT_PATTERN);
+        ChatChannel global = new ChatChannel("GLOBAL", null, "@", pre, ConfigProperties.DEFAULT_CHAT_PATTERN);
         global.update();
         return global;
     }
+
     /**
      * Pulls the hard-coded admin chat channel from cache
      *
      * @return The cached Admin chat channel
      */
     public static ChatChannel getAdminChannel() {
-            return getOrMakeChannel("ADMIN").get();
+        return getOrMakeChannel("ADMIN").get();
 
     }
 
-    public static  ChatChannel getGlobalChannel(){
-            return getOrMakeChannel("GLOBAL").get();
+    public static ChatChannel getGlobalChannel() {
+        return getOrMakeChannel("GLOBAL").get();
     }
 
     /**
@@ -244,6 +250,10 @@ public class DataCache {
      * @param rebuild The channel to rebuild
      */
     public static void rebuildChannel(ChatChannel rebuild) {
+
+        if (rebuild == null) {
+            getLogger().warning("Cannot rebuild NULL channel!");
+        }
         rebuildChannel(rebuild.getID());
     }
 
@@ -270,21 +280,22 @@ public class DataCache {
     }
 
     public static Optional<PlayerInetAddress> getPlayerInetAddressByIp(String IP) {
-        Optional<PlayerInetAddress> cache = ipHashMap.isEmpty() ? Optional.empty() : ipHashMap.entrySet().stream().map(Map.Entry::getValue).filter(add->add.getAddress().toString().equals(IP)).findAny();
-        if(cache.isPresent()){
+        Optional<PlayerInetAddress> cache = ipHashMap.isEmpty() ? Optional.empty() : ipHashMap.entrySet().stream()
+                .map(Map.Entry::getValue).filter(add -> add.getAddress().toString().equals(IP)).findAny();
+        if (cache.isPresent()) {
             return cache;
         }
         try {
             String SQL = "SELECT * FROM `SB_IPAddresses` WHERE `address` = ?";
             PreparedStatement ps = ServerButler.connector.getConnection()
                     .prepareStatement(SQL);
-            ps.setString(1,IP);
+            ps.setString(1, IP);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) {
                 return Optional.empty();
             }
-            PlayerInetAddress address= new PlayerInetAddress(rs.getString("ID"));
-            ipHashMap.put(address.getDatabaseId(),address);
+            PlayerInetAddress address = new PlayerInetAddress(rs.getString("ID"));
+            ipHashMap.put(address.getDatabaseId(), address);
             return Optional.of(address);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -308,16 +319,32 @@ public class DataCache {
 
     }
 
-    public static boolean playerExists(String UUID){
+    public static boolean playerExists(String UUID) {
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()
                     .prepareStatement("SELECT * FROM `SB_Players` WHERE `UUID` = ?");
             ps.setString(1, UUID);
             ResultSet rs = ps.executeQuery();
-           return rs.next();
-        }catch (SQLException e){
+            return rs.next();
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static Optional<MythPlayer> getPlayerByDiscordID(String ID) {
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection()
+                    .prepareStatement("SELECT * FROM `SB_Players` WHERE `discordID` = ?");
+            ps.setString(1, ID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return Optional.of(getOrMakePlayer(rs.getString("UUID")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Optional.empty();
+        }
+        return Optional.empty();
     }
 }

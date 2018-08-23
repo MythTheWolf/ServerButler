@@ -79,9 +79,12 @@ public class EPlayerChat implements Listener, Loggable {
             shortCutRan = true;
             channel.push(trimShortcut(event.getMessage(), channel), sender);
         });
-        if (shortCutRan) return;
-
-        sender.getWritingChannel().ifPresent(channel -> {channel.push(event.getMessage(), sender); getLogger().info("PUSH");}
+        if (shortCutRan) {
+            return;
+        }
+        sender.getWritingChannel().ifPresent(channel -> {
+                    channel.push(event.getMessage(), sender);
+                }
         );
     }
 

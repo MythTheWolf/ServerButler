@@ -178,4 +178,10 @@ public class ConfigProperties {
 
     public static String DEFAULT_CHAT_PATTERN = "{prefix} {player_name} : {text}";
 
+    public static String COLOR_CHAT_PERMISSION = ServerButler.configuration.getString("CHAT-COLOR-PERMISSION");
+
+    public static boolean ENABLE_DISCORD_BOT = ServerButler.configuration.getBoolean("ENABLE-DISCORD-BOT");
+
+    public static String DISCORD_BOT_TOKEN = ServerButler.configuration.getString("BOT-TOKEN");
+
 }

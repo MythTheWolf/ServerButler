@@ -158,6 +158,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
 
     void setName(String name);
 
+    Optional<String> getDiscordID();
+
+    void setDiscordID(String id);
     /**
      * Bans this player
      *
@@ -262,11 +265,11 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     default void updatePlayer() {
         if (playerExists()) {
-            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?,`writeChannel` = ?, `channels` = ? WHERE `UUID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 6, getLoginStatus(), getChatStatus(), getName(), getWritingChannel()
+            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ? WHERE `UUID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 7, getLoginStatus(), getChatStatus(), getName(), getWritingChannel()
                     .map(ChatChannel::getID).orElse(null), StringUtils
                     .serializeArray(getChannelList().stream().map(ChatChannel::getID)
-                            .collect(Collectors.toList())), getUUID());
+                            .collect(Collectors.toList())), getDiscordID().orElse(null), getUUID());
 
         }else {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";

@@ -2,7 +2,6 @@ package com.myththewolf.ServerButler.lib.MythUtils;
 
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -10,6 +9,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * This class contains various String utils
@@ -23,6 +23,10 @@ public class StringUtils {
      * The start sequence of a hidden string in a item's lore
      */
     private static final String SEQUENCE_FOOTER = "" + ChatColor.RESET + ChatColor.ITALIC + ChatColor.RESET;
+
+    private static final Random random = new Random();
+    private static final String CHARS = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ234567890!@#$";
+
 
     /**
      * Replaces parameters, denoted by the pattern "{x}" where x represents parameter indexes
@@ -223,5 +227,14 @@ public class StringUtils {
             jsonObject = null;
         }
         return Optional.ofNullable(jsonObject);
+    }
+
+
+    public static String getToken(int length) {
+        StringBuilder token = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            token.append(CHARS.charAt(random.nextInt(CHARS.length())));
+        }
+        return token.toString();
     }
 }

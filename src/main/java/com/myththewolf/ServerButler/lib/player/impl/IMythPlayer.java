@@ -8,19 +8,11 @@ import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.interfaces.ChatStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
-import org.bukkit.Bukkit;
 import org.joda.time.DateTime;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -47,7 +39,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private boolean exists;
     private List<ChatChannel> channelList = new ArrayList<>();
     private ChatChannel writeTo;
-
+    private String discordID;
     private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
 
     public IMythPlayer(DateTime joinDate, String UUID1) {
@@ -84,6 +76,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
                         .collect(Collectors.toList());
                 this.writeTo = RS.getString("writeChannel") != null ? DataCache
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
+                this.discordID = RS.getString("discordID");
             }
 
             String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE ?";
@@ -207,6 +200,16 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public Optional<String> getDiscordID() {
+        return Optional.ofNullable(discordID);
+    }
+
+    @Override
+    public void setDiscordID(String id) {
+        this.discordID = id;
     }
 }
 

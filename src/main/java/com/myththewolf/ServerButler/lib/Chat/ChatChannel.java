@@ -1,8 +1,13 @@
 package com.myththewolf.ServerButler.lib.Chat;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
+import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.ChatColor;
+import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,6 +42,7 @@ public class ChatChannel implements SQLAble {
     private String prefix;
 
     private String pattern;
+    private TextChannel channel;
 
     /**
      * Constructs a new Chat Channel, pulling data from the database
@@ -53,6 +59,10 @@ public class ChatChannel implements SQLAble {
                 shortcut = RS.getString("shortcut");
                 prefix = RS.getString("prefix");
                 pattern = RS.getString("format");
+                if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                    channel = RS.getString("discord_id") == null ? null : ServerButler.API
+                            .getTextChannelById(RS.getString("discord_id")).orElse(null);
+                }
             }
         } catch (SQLException e) {
             handleExceptionPST(e);
@@ -67,7 +77,7 @@ public class ChatChannel implements SQLAble {
      * @param shortcut The shortcut for this channel, null if none
      * @param prefix   The chat prefix for this channel
      */
-    public ChatChannel(String name, String perm, String shortcut, String prefix,String pattern) {
+    public ChatChannel(String name, String perm, String shortcut, String prefix, String pattern) {
         this.ID = null;
         this.name = name;
         this.permission = perm;
@@ -76,6 +86,14 @@ public class ChatChannel implements SQLAble {
         this.pattern = pattern;
     }
 
+    public void setChannel(TextChannel channel) {
+        this.channel = channel;
+        update();
+    }
+
+    public TextChannel getDiscordChannel() {
+        return channel;
+    }
 
     /**
      * Gets a list of all cached players who are viewing this channel
@@ -163,16 +181,54 @@ public class ChatChannel implements SQLAble {
         if (player == null) {
             getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
                     .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + content));
+            String con = ChatColor.translateAlternateColorCodes('&', content);
+            String whom = "[Server Message]";
+            getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
+                    .exceptionally(ExceptionLogger.get());
             return;
         }
-        String message2Send = getPattern().replaceAll("\\{player_name\\}", player.getName())
-                .replaceAll("\\{text\\}", content).replaceAll("\\{prefix\\}", getPrefix())
+        String parsed;
+        if (player.hasPermission(ConfigProperties.COLOR_CHAT_PERMISSION)) {
+            parsed = ChatColor.translateAlternateColorCodes('&', content);
+        } else {
+            parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
+        }
+
+        String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
+                .replaceAll("\\{player_name\\}", player.getBukkitPlayer().get().getDisplayName())
+                .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
                 .replaceAll("\\{channelName\\}", getName())
-                .replaceAll("\\{worldName\\}", player.getBukkitPlayer().get().getLocation().getWorld().getName());
+                .replaceAll("\\{worldName\\}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(message2Send)));
+        if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordChannel() != null) {
+            String con = ChatColor.translateAlternateColorCodes('&', content);
+            String whom = ChatColor.translateAlternateColorCodes('&', player.getBukkitPlayer().get().getDisplayName());
+            getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
+                    .exceptionally(ExceptionLogger.get());
+        }
     }
 
+    public void pushViaDiscord(String content, MythPlayer player) {
+        String parsed;
+        if (player.hasPermission(ConfigProperties.COLOR_CHAT_PERMISSION)) {
+            parsed = ChatColor.translateAlternateColorCodes('&', content);
+        } else {
+            parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
+        }
+        String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
+                .replaceAll("\\{player_name\\}", player.getName() + ChatColor
+                        .translateAlternateColorCodes('&', "&o via token&r"))
+                .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
+                .replaceAll("\\{channelName\\}", getName())
+                .replaceAll("\\{worldName\\}", ""));
+        getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
+                .ifPresent(p2 -> p2.sendMessage(message2Send)));
+        String con = ChatColor.translateAlternateColorCodes('&', content);
+        String whom = ChatColor.translateAlternateColorCodes('&', player.getName());
+        getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
+                .exceptionally(ExceptionLogger.get());
+    }
     @Override
     public boolean equals(Object o) {
         return (o instanceof ChatChannel) && (((ChatChannel) o).getID().equals(getID()));
@@ -187,10 +243,12 @@ public class ChatChannel implements SQLAble {
         if (getID() == null) {
             String SQL = "INSERT INTO `SB_Channels` (`name`,`permission`,`shortcut`,`prefix`,`format`) VALUES (?,?,?,?,?)";
             prepareAndExecuteUpdateExceptionally(SQL, 5, getName(), getPermission().orElse(null), getShortcut()
-                    .orElse(null), getPrefix(),getPattern());
+                    .orElse(null), getPrefix(), getPattern());
         } else {
-            String SQL = "UPDATE `SB_Channels` SET `name` = ?,`permission` = ?,`shortcut` = ?, `prefix` = ?, `pattern` = ?  WHERE `ID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 6, getName(), getPermission(), getShortcut(), getPrefix(),getPattern(),getID());
+            String SQL = "UPDATE `SB_Channels` SET `name` = ?,`permission` = ?,`shortcut` = ?, `prefix` = ?, `format` = ?, `discord_id` = ?  WHERE `ID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 7, getName(), getPermission().orElse(null), getShortcut()
+                    .orElse(null), getPrefix(), getPattern(), getDiscordChannel()
+                    .getIdAsString(), getID());
         }
         DataCache.rebuildChannelList();
     }

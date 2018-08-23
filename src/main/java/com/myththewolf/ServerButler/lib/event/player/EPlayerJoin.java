@@ -1,6 +1,6 @@
 package com.myththewolf.ServerButler.lib.event.player;
 
-import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
@@ -16,7 +16,11 @@ import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.javacord.api.entity.permission.PermissionType;
+import org.javacord.api.entity.permission.PermissionsBuilder;
+import org.javacord.api.util.logging.ExceptionLogger;
 
+import java.util.IllformedLocaleException;
 import java.util.Optional;
 
 /**
@@ -25,14 +29,31 @@ import java.util.Optional;
 public class EPlayerJoin implements Listener, Loggable {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        MythPlayer MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString()) : DataCache.createPlayer(event.getPlayer().getUniqueId().toString(),event.getPlayer().getName());
+
+
+        MythPlayer MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache
+                .getOrMakePlayer(event.getPlayer().getUniqueId().toString()) : DataCache
+                .createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
         Optional<PlayerInetAddress> ipAddress = DataCache
                 .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
 
+        if (ConfigProperties.ENABLE_DISCORD_BOT && MP.getDiscordID().isPresent()) {
+            final MythPlayer MPL = MP;
+            DataCache.getAllChannels().stream()
+                    .filter(chatChannel -> !chatChannel.getPermission().isPresent() || MPL
+                            .hasPermission(chatChannel.getPermission().get())).forEach(chatChannel -> {
+                ServerButler.API.getUserById(MPL.getDiscordID().get()).thenAccept(user -> {
+                    PermissionsBuilder pb = new PermissionsBuilder();
+                    pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.SEND_MESSAGES);
+                    chatChannel.getDiscordChannel().asServerTextChannel().get().createUpdater()
+                            .addPermissionOverwrite(user, pb.build()).update().exceptionally(ExceptionLogger.get());
+                });
+            });
+        }
 
-        if(!MP.getName().equals(event.getPlayer().getName())){
-           MP.setName(event.getPlayer().getName());
-           MP.updatePlayer();
+        if (!MP.getName().equals(event.getPlayer().getName())) {
+            MP.setName(event.getPlayer().getName());
+            MP.updatePlayer();
         }
         if (!ipAddress.isPresent()) {
             DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
@@ -40,11 +61,11 @@ public class EPlayerJoin implements Listener, Loggable {
             MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
         }
 
-        if(!MP.getWritingChannel().isPresent()){
+        if (!MP.getWritingChannel().isPresent()) {
             MP.setWritingChannel(DataCache.getGlobalChannel());
         }
 
-        if(!MP.isViewing(DataCache.getGlobalChannel())){
+        if (!MP.isViewing(DataCache.getGlobalChannel())) {
             MP.openChannel(DataCache.getGlobalChannel());
         }
         if (MP.getLoginStatus() != LoginStatus.PERMITTED) {
@@ -52,18 +73,27 @@ public class EPlayerJoin implements Listener, Loggable {
                 ModerationAction action = MP.getLatestActionOfType(ActionType.BAN).orElse(null);
                 if (action == null) {
                     MP.kickPlayer("You have been banned from the server", null);
+                    DataCache.getAdminChannel()
+                            .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                    .getName() + "'&b because they are banned.", null);
                     return;
                 }
                 String kickReason = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_BAN, action.getReason(), (action
                                 .getModeratorUser().isPresent() ? action.getModeratorUser().get()
                                 .getName() : "CONSOLE"));
+                DataCache.getAdminChannel()
+                        .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                .getName() + "'&b because they are banned.", null);
                 MP.kickPlayerRaw(kickReason);
                 return;
             } else if (MP.getLoginStatus() == LoginStatus.TEMP_BANNED) {
                 ModerationAction moderationAction = MP.getLatestActionOfType(ActionType.TEMP_BAN).orElse(null);
                 if (moderationAction == null) {
                     MP.kickPlayer("You have been temp banned from the server", null);
+                    DataCache.getAdminChannel()
+                            .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                    .getName() + "'&b because they are temp-banned. ", null);
                     return;
                 }
                 if (moderationAction.getExpireDate().get().isBeforeNow()) {
@@ -73,6 +103,11 @@ public class EPlayerJoin implements Listener, Loggable {
                 String REASON = moderationAction.getReason();
                 String MOD_NAME = moderationAction.getModeratorUser().map(MythPlayer::getName).orElse("CONSOLE");
                 String EXPIRE = moderationAction.getExpireDate().map(TimeUtils::dateToString).orElse("[error]");
+                DataCache.getAdminChannel()
+                        .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                .getName() + "'&b because they are temp-banned until" + TimeUtils
+                                .dateToString(moderationAction.getExpireDate()
+                                        .orElseThrow(IllegalStateException::new)), null);
                 MP.kickPlayerRaw(StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_TEMPBAN, MOD_NAME, REASON, EXPIRE));
                 return;
@@ -97,10 +132,10 @@ public class EPlayerJoin implements Listener, Loggable {
                                     .map(MythPlayer::getName).orElse("CONSOLE"), reason);
                     MP.kickPlayerRaw(KICK_REASON);
                     DataCache.getAdminChannel()
-                            .push(ConfigProperties.PREFIX + ChatColor.RED + "Rejected connection for player '" + MP
-                                    .getName() + "' because their IP," + MP.getConnectionAddress()
+                            .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                    .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
                                     .orElseThrow(IllegalStateException::new).getAddress()
-                                    .toString() + ", is banned.", null);
+                                    .toString() + "&b, is banned.", null);
                     break;
                 case TEMP_BANNED:
                     PlayerInetAddress src = MP.getConnectionAddress().orElseThrow(IllegalStateException::new);
@@ -122,17 +157,19 @@ public class EPlayerJoin implements Listener, Loggable {
                                     .dateToString(action.getExpireDate().orElseThrow(IllegalStateException::new)));
                     MP.kickPlayerRaw(KICK_REASON);
                     DataCache.getAdminChannel()
-                            .push(ConfigProperties.PREFIX + ChatColor.RED + "Rejected connection for player '" + MP
-                                    .getName() + "' because their IP," + MP.getConnectionAddress()
+                            .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                    .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
                                     .orElseThrow(IllegalStateException::new).getAddress()
-                                    .toString() + ", is temp banned until: " + TimeUtils
+                                    .toString() + "&b, is temp-banned until &6" + TimeUtils
                                     .dateToString(action.getExpireDate()
-                                            .orElseThrow(IllegalStateException::new)), null);
+                                            .orElseThrow(IllformedLocaleException::new)), null);
                     break;
             }
-            MP.getChannelList().stream().map(ChatChannel::getID).forEach(DataCache::rebuildChannel);
+            DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString()).getChannelList()
+                    .forEach(DataCache::rebuildChannel);
             return;
         } catch (Exception e) {
+            e.printStackTrace();
             event.getPlayer()
                     .kickPlayer(ConfigProperties.PREFIX + ChatColor.RED + "Internal error while accepting player connection event: " + e
                             .getMessage());
