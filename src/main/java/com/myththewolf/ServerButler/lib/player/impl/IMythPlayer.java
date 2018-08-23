@@ -33,7 +33,6 @@ public class IMythPlayer implements MythPlayer, Loggable {
      * The current chat status ofthe player
      */
     private ChatStatus chatStatus = null;
-
     private DateTime joinDate;
     private String name;
     private boolean exists;
@@ -41,6 +40,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private ChatChannel writeTo;
     private String discordID;
     private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
+    private List<String> badRefs;
 
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
@@ -50,7 +50,8 @@ public class IMythPlayer implements MythPlayer, Loggable {
         exists = false;
         updatePlayer();
     }
-    public IMythPlayer(DateTime joinDate, String UUID1,String name) {
+
+    public IMythPlayer(DateTime joinDate, String UUID1, String name) {
         this.joinDate = joinDate;
         this.UUID = UUID1;
         this.name = name;
@@ -59,6 +60,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
         exists = false;
         updatePlayer();
     }
+
     public IMythPlayer(String playerUUID) {
         exists = false;
         this.UUID = playerUUID;
@@ -72,7 +74,10 @@ public class IMythPlayer implements MythPlayer, Loggable {
                 this.name = RS.getString("name");
                 this.channelList = StringUtils.deserializeArray(RS.getString("channels")).stream()
                         .filter(s -> !s.isEmpty())
-                        .map(Integer::parseInt).map(integer -> DataCache.getOrMakeChannel(integer).orElse(null))
+                        .map(Integer::parseInt).map(integer -> DataCache.getOrMakeChannel(integer).orElseGet(() -> {
+                            getLogger().severe("Removing Reference to no-longer valid channel ID:" + integer);
+                            return null;
+                        })).filter(chatChannel -> !(chatChannel == null))
                         .collect(Collectors.toList());
                 this.writeTo = RS.getString("writeChannel") != null ? DataCache
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
@@ -128,6 +133,11 @@ public class IMythPlayer implements MythPlayer, Loggable {
     }
 
     @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
     public DateTime getJoinDate() {
         return joinDate;
     }
@@ -149,7 +159,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
 
     @Override
     public Optional<PlayerInetAddress> getConnectionAddress() {
-        if(!isOnline()){
+        if (!isOnline()) {
             //They can't have a connection address if they aren't online lol
             return Optional.empty();
         }
@@ -195,11 +205,6 @@ public class IMythPlayer implements MythPlayer, Loggable {
     public void closeChannel(ChatChannel channel) {
         this.channelList.remove(channel);
         updatePlayer();
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name = name;
     }
 
     @Override

@@ -114,65 +114,66 @@ public class EPlayerJoin implements Listener, Loggable {
             }
         }
         try {
-            switch (MP.getConnectionAddress().get().getLoginStatus()) {
-                case PERMITTED:
-                    break;
-                default:
-                    break;
-                case BANNED:
-                    PlayerInetAddress playerInetAddress = MP.getConnectionAddress()
-                            .orElseThrow(IllegalStateException::new);
-                    String reason = playerInetAddress.getLatestActionOfType(ActionType.BAN)
-                            .orElseThrow(IllegalStateException::new).getReason();
-                    Optional<MythPlayer> sender = playerInetAddress.getLatestActionOfType(ActionType.BAN)
-                            .orElseThrow(IllegalStateException::new).getModeratorUser();
-                    String KICK_REASON = StringUtils
-                            .replaceParameters(ConfigProperties.FORMAT_IP_BAN, playerInetAddress.getAddress()
-                                    .toString(), sender
-                                    .map(MythPlayer::getName).orElse("CONSOLE"), reason);
-                    MP.kickPlayerRaw(KICK_REASON);
-                    DataCache.getAdminChannel()
-                            .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
-                                    .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
-                                    .orElseThrow(IllegalStateException::new).getAddress()
-                                    .toString() + "&b, is banned.", null);
-                    break;
-                case TEMP_BANNED:
-                    PlayerInetAddress src = MP.getConnectionAddress().orElseThrow(IllegalStateException::new);
-                    ModerationAction action = src
-                            .getLatestActionOfType(ActionType.TEMP_BAN).orElseThrow(IllegalStateException::new);
-                    if (action.getExpireDate().orElseThrow(IllegalStateException::new).isBeforeNow()) {
-                        ModerationAction actionUnbanIp = new ActionInetPardon("The IP's tempban has expired.", src, null);
-                        ((ActionInetPardon) actionUnbanIp).update();
-                        src.setLoginStatus(LoginStatus.PERMITTED);
-                        src.update();
-                        DataCache.rebuildPlayerInetAddress(src);
-                        DataCache.rebuildPlayer(MP.getUUID());
-                        return;
-                    }
-                    KICK_REASON = StringUtils
-                            .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, src.getAddress()
-                                    .toString(), action.getModeratorUser().map(MythPlayer::getName)
-                                    .orElse("CONSOLE"), action.getReason(), TimeUtils
-                                    .dateToString(action.getExpireDate().orElseThrow(IllegalStateException::new)));
-                    MP.kickPlayerRaw(KICK_REASON);
-                    DataCache.getAdminChannel()
-                            .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
-                                    .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
-                                    .orElseThrow(IllegalStateException::new).getAddress()
-                                    .toString() + "&b, is temp-banned until &6" + TimeUtils
-                                    .dateToString(action.getExpireDate()
-                                            .orElseThrow(IllformedLocaleException::new)), null);
-                    break;
+            if (!MP.getConnectionAddress().get().getLoginStatus().equals(LoginStatus.PERMITTED)) {
+                switch (MP.getConnectionAddress().get().getLoginStatus()) {
+                    default:
+                        break;
+                    case BANNED:
+                        PlayerInetAddress playerInetAddress = MP.getConnectionAddress()
+                                .orElseThrow(IllegalStateException::new);
+                        String reason = playerInetAddress.getLatestActionOfType(ActionType.BAN)
+                                .orElseThrow(IllegalStateException::new).getReason();
+                        Optional<MythPlayer> sender = playerInetAddress.getLatestActionOfType(ActionType.BAN)
+                                .orElseThrow(IllegalStateException::new).getModeratorUser();
+                        String KICK_REASON = StringUtils
+                                .replaceParameters(ConfigProperties.FORMAT_IP_BAN, playerInetAddress.getAddress()
+                                        .toString(), sender
+                                        .map(MythPlayer::getName).orElse("CONSOLE"), reason);
+                        MP.kickPlayerRaw(KICK_REASON);
+                        DataCache.getAdminChannel()
+                                .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                        .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
+                                        .orElseThrow(IllegalStateException::new).getAddress()
+                                        .toString() + "&b, is banned.", null);
+                        break;
+                    case TEMP_BANNED:
+                        PlayerInetAddress src = MP.getConnectionAddress().orElseThrow(IllegalStateException::new);
+                        ModerationAction action = src
+                                .getLatestActionOfType(ActionType.TEMP_BAN).orElseThrow(IllegalStateException::new);
+                        if (action.getExpireDate().orElseThrow(IllegalStateException::new).isBeforeNow()) {
+                            ModerationAction actionUnbanIp = new ActionInetPardon("The IP's tempban has expired.", src, null);
+                            ((ActionInetPardon) actionUnbanIp).update();
+                            src.setLoginStatus(LoginStatus.PERMITTED);
+                            src.update();
+                            DataCache.rebuildPlayerInetAddress(src);
+                            DataCache.rebuildPlayer(MP.getUUID());
+                            return;
+                        }
+                        KICK_REASON = StringUtils
+                                .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, src.getAddress()
+                                        .toString(), action.getModeratorUser().map(MythPlayer::getName)
+                                        .orElse("CONSOLE"), action.getReason(), TimeUtils
+                                        .dateToString(action.getExpireDate().orElseThrow(IllegalStateException::new)));
+                        MP.kickPlayerRaw(KICK_REASON);
+                        DataCache.getAdminChannel()
+                                .push(ConfigProperties.PREFIX + ChatColor.RED + "&bRejected connection for player &6'" + MP
+                                        .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
+                                        .orElseThrow(IllegalStateException::new).getAddress()
+                                        .toString() + "&b, is temp-banned until &6" + TimeUtils
+                                        .dateToString(action.getExpireDate()
+                                                .orElseThrow(IllformedLocaleException::new)), null);
+                        break;
+                }
+                return;
+            } else {
+                MP.getChannelList().forEach(DataCache::rebuildChannel);
             }
-            DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString()).getChannelList()
-                    .forEach(DataCache::rebuildChannel);
-            return;
         } catch (Exception e) {
             e.printStackTrace();
             event.getPlayer()
                     .kickPlayer(ConfigProperties.PREFIX + ChatColor.RED + "Internal error while accepting player connection event: " + e
                             .getMessage());
         }
+
     }
 }
