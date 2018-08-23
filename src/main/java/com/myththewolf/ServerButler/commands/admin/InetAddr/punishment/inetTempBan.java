@@ -48,7 +48,6 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                                 @Override
                                 public Prompt acceptInput(ConversationContext conversationContext, String s) {
                                     REASON = s;
-                                    commit(sender);
                                     return Prompt.END_OF_CONVERSATION;
                                 }
                             };
@@ -59,12 +58,13 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                             return ConfigProperties.PREFIX + "Please specify the time for the ban. (Format: 1d 2h...)";
                         }
                     }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
-        }else {
-            if(!args[1].matches("((\\d{1,2}y\\s?)?(\\d{1,2}mo\\s?)?(\\d{1,2}w\\s?)?(\\d{1,2}d\\s?)?(\\d{1,2}h\\s?)?(\\d{1,2}m\\s?)?(\\d{1,2}s\\s?)?)|\\d{1,2}")){
-                reply(ConfigProperties.PREFIX+ChatColor.RED+"Invalid date string format: "+args[1]);
+        } else {
+            if (!args[1]
+                    .matches("((\\d{1,2}y\\s?)?(\\d{1,2}mo\\s?)?(\\d{1,2}w\\s?)?(\\d{1,2}d\\s?)?(\\d{1,2}h\\s?)?(\\d{1,2}m\\s?)?(\\d{1,2}s\\s?)?)|\\d{1,2}")) {
+                reply(ConfigProperties.PREFIX + ChatColor.RED + "Invalid date string format: " + args[1]);
                 return;
             }
-            REASON = StringUtils.arrayToString(2,args);
+            REASON = StringUtils.arrayToString(2, args);
             if (args[0].startsWith("/")) {
                 Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
                 if (!optionalInetAddress.isPresent()) {
@@ -93,9 +93,6 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                 target = optionalMythPlayer.get();
             }
         }
-    }
-
-    private void commit(Optional<MythPlayer> sender) {
         Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATE_STRING);
         ActionInetTempBan actionInetTempBan = new ActionInetTempBan(REASON, (new DateTime())
                 .withPeriodAdded(p, 1), target, sender
@@ -120,6 +117,7 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                 .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
         DataCache.rebuildPlayerInetAddress(target);
     }
+
 
     @Override
     public String getRequiredPermission() {
