@@ -29,7 +29,7 @@ pipeline {
     stage('Publish') {
       steps {
         archiveArtifacts 'target/*.jar'
-      publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'target/site/apidocs', reportFiles: 'index.html', reportName: 'JavaDocs', reportTitles: ''])
+     publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'target/site/apidocs', reportFiles: 'index.html', reportName: 'JavaDoc', reportTitles: 'JavaDoc'])
       }
     }
   }
