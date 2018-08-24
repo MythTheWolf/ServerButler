@@ -273,7 +273,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         getBukkitPlayer().ifPresent(p -> p.kickPlayer(formatted));
     }
 
-    default void pardonPlayer(MythPlayer mod, String reason) {
+    default void pardonPlayer(String reason, MythPlayer mod) {
         ModerationAction pardon = new ActionUserPardon(reason, this, mod);
         ((ActionUserPardon) pardon).update();
         setLoginStatus(LoginStatus.PERMITTED);
@@ -285,6 +285,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     }
 
     default void tempbanPlayer(MythPlayer mod, String reason, DateTime expire) {
+        if (expire == null) {
+            getLogger().info("Passed expireDate is null");
+        }
         ModerationAction tBan = new ActionUserTempBan(reason, expire, this, mod);
         ((ActionUserTempBan) tBan).update();
         setLoginStatus(LoginStatus.TEMP_BANNED);

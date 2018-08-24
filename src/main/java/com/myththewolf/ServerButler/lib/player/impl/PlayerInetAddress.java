@@ -97,6 +97,9 @@ public class PlayerInetAddress implements SQLAble {
         return mappedPlayers.stream().map(DataCache::getOrMakePlayer).collect(Collectors.toList());
     }
 
+    public void addPlayer(MythPlayer mythPlayer) {
+        mappedPlayers.add(mythPlayer.getUUID());
+    }
     public List<ModerationAction> getInetAddressHistory() {
         List<ModerationAction> theList = new ArrayList<>();
         ResultSet history = prepareAndExecuteSelectExceptionally("SELECT * FROM `SB_Actions` WHERE `targetType` = ? AND `target` = ? ORDER BY `ID` DESC", 2, TargetType.IP_ADDRESS, getAddress()

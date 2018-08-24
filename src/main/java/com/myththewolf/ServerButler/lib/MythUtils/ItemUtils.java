@@ -112,7 +112,7 @@ public class ItemUtils {
         stack.setItemMeta(meta);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.BAN_PLAYER.toString());
-        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("PLAYER-NAME", player.getName());
         packet.put("MOD-UUID", mod.getUUID());
         return applyJSON(packet, stack);
     }
@@ -131,7 +131,7 @@ public class ItemUtils {
         stack.setItemMeta(meta);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.PARDON_PLAYER.toString());
-        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("PLAYER-NAME", player.getName());
         packet.put("MOD-UUID", mod.getUUID());
         return applyJSON(packet, stack);
     }
@@ -150,7 +150,7 @@ public class ItemUtils {
         stack.setItemMeta(meta);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.MUTE_PLAYER.toString());
-        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("PLAYER-NAME", player.getName());
         packet.put("MOD-UUID", mod.getUUID());
         return applyJSON(packet, stack);
     }
@@ -169,7 +169,7 @@ public class ItemUtils {
         stack.setItemMeta(meta);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.SOFTMUTE_PLAYER.toString());
-        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("PLAYER-NAME", player.getName());
         packet.put("MOD-UUID", mod.getUUID());
         return applyJSON(packet, stack);
     }
@@ -188,7 +188,7 @@ public class ItemUtils {
         stack.setItemMeta(meta);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.UNMUTE_PLAYER.toString());
-        packet.put("PLAYER-UUID", player.getUUID());
+        packet.put("PLAYER-NAME", player.getName());
         packet.put("MOD-UUID", mod.getUUID());
         return applyJSON(packet, stack);
     }

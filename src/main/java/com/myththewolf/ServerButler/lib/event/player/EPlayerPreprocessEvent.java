@@ -20,6 +20,7 @@ import java.util.Optional;
  * This class captures all Pre-command events
  */
 public class EPlayerPreprocessEvent implements Listener, Loggable {
+    int spot = 0;
     @EventHandler
     public void onPreCommand(PlayerCommandPreprocessEvent event) {
         String raw = event.getMessage();
@@ -27,6 +28,7 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
         if (!ServerButler.commands.containsKey(split[0].substring(1))) {
             return;
         }
+
         event.setCancelled(true);
         String chop = split[0].substring(1);
         String[] args = Arrays.copyOfRange(split, 1, split.length);

@@ -30,9 +30,38 @@ public class inetTempBan extends CommandAdapter implements Loggable {
     PlayerInetAddress target;
 
     @Override
-    @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = -1, commandUsage = "/iptempban <username|/{ip address}> [period string] [reason..]")
+    @CommandPolicy(consoleRequiredArgs = 3, userRequiredArgs = 1, commandUsage = "/iptempban <username|/{ip address}> [period string] [reason..]")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+        if (args[0].startsWith("/")) {
+            Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
+            if (!optionalInetAddress.isPresent()) {
+                sender.flatMap(MythPlayer::getBukkitPlayer)
+                        .ifPresent(player -> player.sendMessage(ChatColor.RED + "That IP was not found."));
+                sender.orElseGet(() -> {
+                    getLogger().warning("IP address not found!");
+                    return null;
+                });
+                return;
+            }
+            target = optionalInetAddress.get();
+        } else {
+            Optional<PlayerInetAddress> optionalMythPlayer = DataCache.getPlayerByName(args[0])
+                    .flatMap(MythPlayer::getConnectionAddress);
+            if (!optionalMythPlayer.isPresent()) {
+                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
+                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Could not bind to player's connection address! (Are they offline or not existent?)"));
+                sender.orElseGet(() -> {
+                    getLogger()
+                            .warning("Could not bind to player's connection address! (Are they offline or not existent?)");
+                    return null;
+                });
+                return;
+            }
+            target = optionalMythPlayer.get();
+        }
+
         if (args.length <= 1) {
+
             ServerButler.conversationBuilder.withEscapeSequence("^c")
                     .thatExcludesNonPlayersWithMessage("Must be in-game for this command")
                     .withFirstPrompt(new RegexPrompt("((\\d{1,2}y\\s?)?(\\d{1,2}mo\\s?)?(\\d{1,2}w\\s?)?(\\d{1,2}d\\s?)?(\\d{1,2}h\\s?)?(\\d{1,2}m\\s?)?(\\d{1,2}s\\s?)?)|\\d{1,2}") {
@@ -57,7 +86,34 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                         public String getPromptText(ConversationContext conversationContext) {
                             return ConfigProperties.PREFIX + "Please specify the time for the ban. (Format: 1d 2h...)";
                         }
-                    }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
+                    }).addConversationAbandonedListener(conversationAbandonedEvent -> {
+                REASON = StringUtils.arrayToString(2, args);
+                Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATE_STRING);
+                ActionInetTempBan actionInetTempBan = new ActionInetTempBan(REASON, (new DateTime())
+                        .withPeriodAdded(p, 1), target, sender
+                        .orElse(null));
+                actionInetTempBan.update();
+
+                target.setLoginStatus(LoginStatus.TEMP_BANNED);
+                target.update();
+
+                String KICK_MESSAGE = StringUtils
+                        .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, target.getAddress().toString(), sender
+                                .map(MythPlayer::getName).orElse("CONSOLE"), TimeUtils
+                                .dateToString(actionInetTempBan.getExpireDate().get()), REASON);
+                String CHAT_MESSAGE = StringUtils
+                        .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN_CHAT, target.getAddress()
+                                .toString(), sender
+                                .map(MythPlayer::getName).orElse("CONSOLE"), REASON, StringUtils
+                                .serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
+                                        .collect(Collectors.toList())), TimeUtils
+                                .dateToString(actionInetTempBan.getExpireDate().get()));
+                DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+                target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
+                        .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
+                DataCache.rebuildPlayerInetAddress(target);
+
+            }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
         } else {
             if (!args[1]
                     .matches("((\\d{1,2}y\\s?)?(\\d{1,2}mo\\s?)?(\\d{1,2}w\\s?)?(\\d{1,2}d\\s?)?(\\d{1,2}h\\s?)?(\\d{1,2}m\\s?)?(\\d{1,2}s\\s?)?)|\\d{1,2}")) {
@@ -65,62 +121,40 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                 return;
             }
             REASON = StringUtils.arrayToString(2, args);
-            if (args[0].startsWith("/")) {
-                Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
-                if (!optionalInetAddress.isPresent()) {
-                    sender.flatMap(MythPlayer::getBukkitPlayer)
-                            .ifPresent(player -> player.sendMessage(ChatColor.RED + "That IP was not found."));
-                    sender.orElseGet(() -> {
-                        getLogger().warning("IP address not found!");
-                        return null;
-                    });
-                    return;
-                }
-                target = optionalInetAddress.get();
-            } else {
-                Optional<PlayerInetAddress> optionalMythPlayer = DataCache.getPlayerByName(args[0])
-                        .flatMap(MythPlayer::getConnectionAddress);
-                if (!optionalMythPlayer.isPresent()) {
-                    sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
-                            .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Could not bind to player's connection address! (Are they offline or not existent?)"));
-                    sender.orElseGet(() -> {
-                        getLogger()
-                                .warning("Could not bind to player's connection address! (Are they offline or not existent?)");
-                        return null;
-                    });
-                    return;
-                }
-                target = optionalMythPlayer.get();
-            }
+            Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATE_STRING);
+            ActionInetTempBan actionInetTempBan = new ActionInetTempBan(REASON, (new DateTime())
+                    .withPeriodAdded(p, 1), target, sender
+                    .orElse(null));
+            actionInetTempBan.update();
+
+            target.setLoginStatus(LoginStatus.TEMP_BANNED);
+            target.update();
+
+            String KICK_MESSAGE = StringUtils
+                    .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, target.getAddress().toString(), sender
+                            .map(MythPlayer::getName).orElse("CONSOLE"), TimeUtils
+                            .dateToString(actionInetTempBan.getExpireDate().get()), REASON);
+            String CHAT_MESSAGE = StringUtils
+                    .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN_CHAT, target.getAddress().toString(), sender
+                            .map(MythPlayer::getName).orElse("CONSOLE"), REASON, StringUtils
+                            .serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
+                                    .collect(Collectors.toList())), TimeUtils
+                            .dateToString(actionInetTempBan.getExpireDate().get()));
+            DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+            target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
+                    .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
+            DataCache.rebuildPlayerInetAddress(target);
+
         }
-        Period p = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(DATE_STRING);
-        ActionInetTempBan actionInetTempBan = new ActionInetTempBan(REASON, (new DateTime())
-                .withPeriodAdded(p, 1), target, sender
-                .orElse(null));
-        actionInetTempBan.update();
 
-        target.setLoginStatus(LoginStatus.TEMP_BANNED);
-        target.update();
-
-        String KICK_MESSAGE = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN, target.getAddress().toString(), sender
-                        .map(MythPlayer::getName).orElse("CONSOLE"), TimeUtils
-                        .dateToString(actionInetTempBan.getExpireDate().get()), REASON);
-        String CHAT_MESSAGE = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_IP_TEMPBAN_CHAT, target.getAddress().toString(), sender
-                        .map(MythPlayer::getName).orElse("CONSOLE"), REASON, StringUtils
-                        .serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
-                                .collect(Collectors.toList())), TimeUtils
-                        .dateToString(actionInetTempBan.getExpireDate().get()));
-        DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
-        target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
-                .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
-        DataCache.rebuildPlayerInetAddress(target);
     }
 
 
     @Override
     public String getRequiredPermission() {
         return ConfigProperties.TEMPBAN_IP_PERMISSION;
+
     }
+
+
 }

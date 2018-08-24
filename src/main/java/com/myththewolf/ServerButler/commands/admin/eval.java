@@ -27,7 +27,7 @@ public class eval extends CommandAdapter {
         header.append("load(\"nashorn:mozilla_compat.js\");");
         String[] packagesToImport = { "com.myththewolf.ServerButler.lib.cache;","com.myththewolf.ServerButler.lib.MythUtils","com.myththewolf.ServerButler.lib.config"};
         for(String packagE : packagesToImport){
-            header.append("importPackage('packagE');");
+            header.append("importPackage('" + packagE + "');");
         }
         engine.put("sb",inst);
         engine.put("pl",sender.get());

@@ -160,7 +160,6 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public Optional<PlayerInetAddress> getConnectionAddress() {
         if (!isOnline()) {
-            //They can't have a connection address if they aren't online lol
             return Optional.empty();
         }
         return playerAddresses.stream()

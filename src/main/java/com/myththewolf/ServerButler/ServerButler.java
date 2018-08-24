@@ -74,7 +74,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static ChannelCategory channelCategory;
     public static DiscordApi API;
     private CommandMap commandMap = null;
-
+    public static List<Integer> blackListedListerners = new ArrayList<>();
     public static boolean isAlive(Process p) {
         try {
             p.exitValue();
@@ -86,6 +86,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
 
     public void onEnable() {
         conversationBuilder = new ConversationFactory(this);
+        conversationBuilder.addConversationAbandonedListener(new PlayerConversationAbandonedEvent());
         Arrays.stream(PacketType.values()).forEach(packetType -> itemPacketHandlers.put(packetType, new ArrayList<>()));
         getLogger().info("Received enable command");
         DataCache.makeMaps();
@@ -227,6 +228,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("createchannel", new ChannelBuilder());
         registerCommand("unmute", new unmute());
         registerCommand("about", new about());
+        registerCommand("pardon", new pardon());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());

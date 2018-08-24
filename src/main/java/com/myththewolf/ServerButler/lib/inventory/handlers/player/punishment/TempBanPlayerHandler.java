@@ -16,6 +16,7 @@ public class TempBanPlayerHandler implements ItemPacketHandler {
         String[] args = new String[1];
         args[0] = data.getString("PLAYER-NAME");
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
+        ServerButler.commands.get("tempban").setLastPlayer(player);
         ServerButler.commands.get("tempban").onCommand(Optional.ofNullable(player), args, tar);
     }
 }

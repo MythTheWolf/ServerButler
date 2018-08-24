@@ -13,9 +13,10 @@ import java.util.Optional;
 public class KickPlayerHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
-        MythPlayer target = DataCache.getOrMakePlayer(data.getString("PLAYER-UUID"));
+        MythPlayer target = DataCache.getOrMakePlayer(data.getString("PLAYER-NAME"));
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
         String args[] = {target.getName()};
+        ServerButler.commands.get("kick").setLastPlayer(player);
         ServerButler.commands.get("kick").onCommand(Optional.ofNullable(player), args, tar);
     }
 }
