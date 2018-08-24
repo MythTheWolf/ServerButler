@@ -183,8 +183,10 @@ public class ChatChannel implements SQLAble {
                     .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + content));
             String con = ChatColor.translateAlternateColorCodes('&', content);
             String whom = "[Server Message]";
-            getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
-                    .exceptionally(ExceptionLogger.get());
+            if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
+                        .exceptionally(ExceptionLogger.get());
+            }
             return;
         }
         String parsed;
@@ -211,11 +213,7 @@ public class ChatChannel implements SQLAble {
 
     public void pushViaDiscord(String content, MythPlayer player) {
         String parsed;
-        if (player.hasPermission(ConfigProperties.COLOR_CHAT_PERMISSION)) {
-            parsed = ChatColor.translateAlternateColorCodes('&', content);
-        } else {
             parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
-        }
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
                 .replaceAll("\\{player_name\\}", player.getName() + ChatColor
                         .translateAlternateColorCodes('&', "&o via token&r"))
