@@ -30,13 +30,9 @@
   </build>
   <repositories>
     <repository>
-        <id>pex-repo</id>
-        <url>http://pex-repo.aoeu.xyz</url>
+        <id>spigot-repo</id>
+        <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
     </repository>
-      <repository>
-          <id>spigot-repo</id>
-          <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-      </repository>
     <repository>
       <id>central</id>
       <url>http://central.maven.org/maven2/</url>

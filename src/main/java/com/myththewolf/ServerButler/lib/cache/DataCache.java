@@ -316,7 +316,6 @@ public class DataCache {
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
         String dbId = src.getDatabaseId();
         ipHashMap.put(dbId, new PlayerInetAddress(dbId));
-
     }
 
     public static boolean playerExists(String UUID) {

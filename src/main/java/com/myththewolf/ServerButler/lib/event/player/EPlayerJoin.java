@@ -59,6 +59,21 @@ public class EPlayerJoin implements Listener, Loggable {
             DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
             DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
             MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+            ipAddress = DataCache
+                    .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
+        }
+
+        if (!ipAddress.get().getMappedPlayers().contains(MP)) {
+            getLogger().info("Adding " + MP.getUUID() + " to " + ipAddress.get().toString());
+            ipAddress.get().addPlayer(MP);
+            ipAddress.get().update();
+            DataCache.rebuildPlayerInetAddress(ipAddress.get());
+            DataCache.rebuildPlayer(MP.getUUID());
+            MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache
+                    .getOrMakePlayer(event.getPlayer().getUniqueId().toString()) : DataCache
+                    .createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
+            ipAddress = DataCache
+                    .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
         }
 
         if (!MP.getWritingChannel().isPresent()) {
@@ -97,7 +112,7 @@ public class EPlayerJoin implements Listener, Loggable {
                     return;
                 }
                 if (moderationAction.getExpireDate().get().isBeforeNow()) {
-                    MP.pardonPlayer(null, "The tempban has expired.");
+                    MP.pardonPlayer("The tempban has expired.", null);
                     return;
                 }
                 String REASON = moderationAction.getReason();
