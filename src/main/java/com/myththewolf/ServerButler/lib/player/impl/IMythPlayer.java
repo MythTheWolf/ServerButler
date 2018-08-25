@@ -40,6 +40,9 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private ChatChannel writeTo;
     private String discordID;
     private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
+    /**
+     * Bukkit display name
+     */
     private String displayName;
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
