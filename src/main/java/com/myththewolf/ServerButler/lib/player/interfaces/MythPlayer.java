@@ -167,6 +167,11 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     void setExistent(boolean existent);
 
+    /**
+     * Gets the User's discord ID
+     *
+     * @return The ID, if the user is linked
+     */
     Optional<String> getDiscordID();
 
     void setDiscordID(String id);
