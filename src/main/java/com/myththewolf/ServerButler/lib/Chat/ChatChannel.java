@@ -177,11 +177,10 @@ public class ChatChannel implements SQLAble {
      */
     public void push(String content, MythPlayer player) {
 
-
         if (player == null) {
-            getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
-                    .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + content));
             String con = ChatColor.translateAlternateColorCodes('&', content);
+            getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
+                    .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + con));
             String whom = "[Server Message]";
             if (ConfigProperties.ENABLE_DISCORD_BOT) {
                 getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))

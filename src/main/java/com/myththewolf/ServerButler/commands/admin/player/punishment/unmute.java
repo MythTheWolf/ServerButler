@@ -59,6 +59,6 @@ public class unmute extends CommandAdapter {
 
     @Override
     public String getRequiredPermission() {
-        return ConfigProperties.MUTE_PERMISSION;
+        return ConfigProperties.UNMUTE_PERMISSION;
     }
 }

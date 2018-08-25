@@ -164,6 +164,8 @@ public class ConfigProperties {
 
     public static String MUTE_PERMISSION = ServerButler.configuration.getString("MUTE-PERMISSION");
 
+    public static String UNMUTE_PERMISSION = ServerButler.configuration.getString("UNMUTE-PERMISSION");
+
     public static String IMPORT_JSON_DATA = ServerButler.configuration.getString("IMPORT-JSON-DATA");
 
     public static String PARDON_PERMISSION = ServerButler.configuration.getString("PARDON-PERMISSION");

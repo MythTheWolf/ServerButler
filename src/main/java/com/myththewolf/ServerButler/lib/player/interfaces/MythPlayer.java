@@ -122,6 +122,10 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     String getName();
 
+    String getDisplayName();
+
+    void setDisplayName(String displayName);
+
     void setName(String name);
 
     /**
@@ -299,14 +303,13 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
             kickPlayerRaw(StringUtils.replaceParameters(ConfigProperties.FORMAT_TEMPBAN, MOD_NAME, REASON, EXPIRE));
         });
     }
-
     /**
      * Updates player in database
      */
     default void updatePlayer() {
         if (playerExists()) {
-            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ? WHERE `UUID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 7, getLoginStatus(), getChatStatus(), getName(), getWritingChannel()
+            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?, `displayName` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ? WHERE `UUID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 8, getLoginStatus(), getChatStatus(), getName(), getDisplayName(), getWritingChannel()
                     .map(ChatChannel::getID).orElse(null), StringUtils
                     .serializeArray(getChannelList().stream().map(ChatChannel::getID)
                             .collect(Collectors.toList())), getDiscordID().orElse(null), getUUID());

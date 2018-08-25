@@ -40,8 +40,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private ChatChannel writeTo;
     private String discordID;
     private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
-    private List<String> badRefs;
-
+    private String displayName;
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
         this.UUID = UUID1;
@@ -82,6 +81,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
                 this.writeTo = RS.getString("writeChannel") != null ? DataCache
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
                 this.discordID = RS.getString("discordID");
+                this.displayName = RS.getString("displayName");
             }
 
             String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE ?";
@@ -100,6 +100,10 @@ public class IMythPlayer implements MythPlayer, Loggable {
         }
     }
 
+    @Override
+    public String getDisplayName() {
+        return displayName == null ? getName() : displayName;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -150,6 +154,11 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public void setExistent(boolean existant) {
         this.exists = existant;
+    }
+
+    @Override
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     @Override

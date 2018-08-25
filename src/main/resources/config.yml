@@ -26,6 +26,8 @@ BAN-PERMISSION: "sb.ban"
 TEMPBAN-PERMISSION: "sb.tempban"
 PARDON-PERMISSION: "sb.pardon"
 KICK-PERMISSION: "sb.kick"
+MUTE-PERMISSION: "sb.mute"
+UNMUTE-PERMISSION: "sb.unmute"
 # -IP Permissions
 BAN-IP-PERMISSION: "sb.ban.ip"
 VIEW-PLAYER-IPS-PERMISSION: "sb.view.ipList"
