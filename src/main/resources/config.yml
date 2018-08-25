@@ -44,3 +44,12 @@ DEFAULT-CHANNEL: "global"
 
 #Discord bot
 ENABLE-DISCORD-BOT: false
+
+
+#MySQL Connection
+
+SQL-HOST: 'locahost'
+SQL-PORT: '3306'
+SQL-USERNAME: 'mysql'
+SQL-PASSWORD: 'whale'
+SQL-DATABASE: 'database'

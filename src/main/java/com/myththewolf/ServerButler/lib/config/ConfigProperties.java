@@ -186,4 +186,13 @@ public class ConfigProperties {
 
     public static String DISCORD_BOT_TOKEN = ServerButler.configuration.getString("BOT-TOKEN");
 
+    public static String SQL_HOST = ServerButler.configuration.getString("SQL-HOST");
+
+    public static String SQL_PORT = ServerButler.configuration.getString("SQL-PORT");
+
+    public static String SQL_USER = ServerButler.configuration.getString("SQL-USERNAME");
+
+    public static String SQL_PASS = ServerButler.configuration.getString("SQL-PASSWORD");
+
+    public static String SQL_DATABASE = ServerButler.configuration.getString("SQL-DATABSE");
 }
