@@ -16,11 +16,6 @@
             <id>central</id>
             <url>http://central.maven.org/maven2/</url>
         </repository>
-
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
     </repositories>
     <dependencies>
         <!--Spigot API-->
@@ -28,7 +23,7 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <scope>provided</scope>
-            <version>1.12-R0.1-SNAPSHOT</version>
+            <version>1.13-R0.1-SNAPSHOT</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>
@@ -57,7 +52,7 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}-${git.commit.id.describe-short}</finalName>
+        <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
         <plugins>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
