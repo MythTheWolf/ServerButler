@@ -214,15 +214,15 @@ public class ChatChannel implements SQLAble {
         String parsed;
             parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replaceAll("\\{player_name\\}", player.getName() + ChatColor
-                        .translateAlternateColorCodes('&', "&o via token&r"))
+                .replaceAll("\\{player_name\\}", player.getDisplayName() + ChatColor
+                        .translateAlternateColorCodes('&', "&o via discord&r"))
                 .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
                 .replaceAll("\\{channelName\\}", getName())
                 .replaceAll("\\{worldName\\}", ""));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(message2Send)));
         String con = ChatColor.translateAlternateColorCodes('&', content);
-        String whom = ChatColor.translateAlternateColorCodes('&', player.getName());
+        String whom = ChatColor.translateAlternateColorCodes('&', player.getDisplayName());
         getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
                 .exceptionally(ExceptionLogger.get());
     }
