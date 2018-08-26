@@ -45,6 +45,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
@@ -75,6 +76,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static DiscordApi API;
     private CommandMap commandMap = null;
     public static List<Integer> blackListedListerners = new ArrayList<>();
+    public static Plugin plugin;
     public static boolean isAlive(Process p) {
         try {
             p.exitValue();
@@ -85,6 +87,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void onEnable() {
+        plugin = this;
         conversationBuilder = new ConversationFactory(this);
         conversationBuilder.addConversationAbandonedListener(new PlayerConversationAbandonedEvent());
         Arrays.stream(PacketType.values()).forEach(packetType -> itemPacketHandlers.put(packetType, new ArrayList<>()));
