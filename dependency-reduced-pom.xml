@@ -3,33 +3,57 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.myththewolf</groupId>
   <artifactId>ServerButler</artifactId>
-    <version>2.0</version>
+  <version>2.0</version>
   <build>
-      <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
+    <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
     <plugins>
-        <plugin>
-            <groupId>pl.project13.maven</groupId>
-            <artifactId>git-commit-id-plugin</artifactId>
-            <executions>
-                <execution>
-                    <id>get-the-git-infos</id>
-                    <phase>validate</phase>
-                    <goals>
-                        <goal>revision</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-            </configuration>
-        </plugin>
-        <plugin>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.10.4</version>
-            <configuration>
-                <additionalparam>-Xdoclint:none</additionalparam>
-            </configuration>
-        </plugin>
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>replacer</artifactId>
+        <version>1.5.3</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <includes>
+            <include>${basedir}/src/main/resources/plugin.yml</include>
+          </includes>
+          <replacements>
+            <replacement>
+              <token>{@plugin-version}</token>
+              <value>${git.branch}-${git.commit.id.abbrev}</value>
+            </replacement>
+          </replacements>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.4</version>
+        <configuration>
+          <additionalparam>-Xdoclint:none</additionalparam>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.7.0</version>
@@ -54,8 +78,8 @@
   </build>
   <repositories>
     <repository>
-        <id>spigot-repo</id>
-        <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+      <id>spigot-repo</id>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
     </repository>
     <repository>
       <id>central</id>
@@ -66,7 +90,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-        <version>1.13-R0.1-SNAPSHOT</version>
+      <version>1.13-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -95,13 +119,13 @@
         </exclusion>
       </exclusions>
     </dependency>
-      <dependency>
-          <groupId>org.javacord</groupId>
-          <artifactId>javacord</artifactId>
-          <version>3.0.0</version>
-          <type>pom</type>
-          <scope>compile</scope>
-      </dependency>
+    <dependency>
+      <groupId>org.javacord</groupId>
+      <artifactId>javacord</artifactId>
+      <version>3.0.0</version>
+      <type>pom</type>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 </project>
 

@@ -1,4 +1,4 @@
 name: ServerButler
-version: 1.0
+version: {@plugin-version}
 main: com.myththewolf.ServerButler.ServerButler
 api-version: 1.13
