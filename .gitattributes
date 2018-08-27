@@ -1,2 +1,2 @@
-src/main/java/com/myththewolf/ServerButler/commands/admin/player/managemnet/player.java merge=ours
-pom.xml merge=ours
+src/main/java/com/myththewolf/ServerButler/commands/admin/player/managemnet/player.java merge=theirs
+pom.xml merge=theirs
