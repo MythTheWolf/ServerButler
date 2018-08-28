@@ -22,7 +22,7 @@ public class unmute extends CommandAdapter {
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
-            reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found");
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "Player not found: " + args[0]);
             return;
         }
         if (target.get().equals(sender.get())) {
@@ -54,7 +54,12 @@ public class unmute extends CommandAdapter {
                             .orElse("CONSOLE"), target.map(MythPlayer::getName)
                             .orElse("<ERROR: MythPlayer not present>"), reason);
             DataCache.getAdminChannel().push(toSend, null);
+            String playerMessage = StringUtils
+                    .replaceParameters(ConfigProperties.FORMAT_UNMUTE, sender.map(MythPlayer::getName)
+                            .orElse("CONSOLE"), reason);
+            target.get().getBukkitPlayer().ifPresent(player -> player.sendMessage(playerMessage));
         }
+
     }
 
     @Override

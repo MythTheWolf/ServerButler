@@ -46,17 +46,11 @@ public class player extends CommandAdapter {
                 tempBanPacket.put("PLAYER-NAME", target.getName());
                 targetInventory.setItem(1, ItemUtils
                         .nameItem("Temp Ban player", ItemUtils.applyJSON(tempBanPacket, tempBanItem)));
-                if (target.getChatStatus().equals(ChatStatus.MUTED) && player
-                        .hasPermission(ConfigProperties.MUTE_PERMISSION)) {
-                    targetInventory.setItem(2, ItemUtils.makeSoftmuteUserItem(target, player));
-                    targetInventory.setItem(3, ItemUtils.makUnmuteUserItem(target, player));
-                } else if (target.getChatStatus().equals(ChatStatus.SOFTMUTED)) {
-                    targetInventory.setItem(2, ItemUtils.makeMuteUserItem(target, player));
-                    targetInventory.setItem(3, ItemUtils.makUnmuteUserItem(target, player));
-                } else {
-                    targetInventory.setItem(2, ItemUtils.makeMuteUserItem(target, player));
-                    targetInventory.setItem(3, ItemUtils.makeSoftmuteUserItem(target, player));
-                }
+                ItemStack muteUnmute = target.getChatStatus().equals(ChatStatus.MUTED) || target.getChatStatus()
+                        .equals(ChatStatus.SOFTMUTED) ? ItemUtils.makeUnmuteUserItem(target, send.get()) : ItemUtils
+                        .makeMuteUserItem(target, send.get());
+                targetInventory.setItem(2, muteUnmute);
+                targetInventory.setItem(3, ItemUtils.makeSoftmuteUserItem(target, send.get()));
                 JSONObject viewPlayerIPsPacket = new JSONObject();
                 viewPlayerIPsPacket.put("packetType", PacketType.VIEW_PLAYER_IPS);
                 viewPlayerIPsPacket.put("PLAYER-UUID", target.getUUID());

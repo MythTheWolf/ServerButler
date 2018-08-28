@@ -72,8 +72,8 @@
                     </includes>
                     <replacements>
                         <replacement>
-                            <token>{@plugin-version}</token>
-                            <value>${git.branch}-${git.commit.id.abbrev}</value>
+                            <token>@plugin-version</token>
+                            <value>"${git.branch}-${git.commit.id.abbrev}"</value>
                         </replacement>
                     </replacements>
                 </configuration>

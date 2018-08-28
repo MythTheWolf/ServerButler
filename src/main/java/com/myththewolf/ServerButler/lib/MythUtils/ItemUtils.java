@@ -181,7 +181,7 @@ public class ItemUtils {
      * @param mod    The moderator
      * @return The new ItemStack, with JSON applied
      */
-    public static ItemStack makUnmuteUserItem(MythPlayer player, MythPlayer mod) {
+    public static ItemStack makeUnmuteUserItem(MythPlayer player, MythPlayer mod) {
         ItemStack stack = new ItemStack(Material.BOOK_AND_QUILL);
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName("Unmute Player");
