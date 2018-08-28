@@ -196,10 +196,10 @@ public class ChatChannel implements SQLAble {
         }
 
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replaceAll("\\{player_name\\}", player.getBukkitPlayer().get().getDisplayName())
-                .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
-                .replaceAll("\\{channelName\\}", getName())
-                .replaceAll("\\{worldName\\}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
+                .replace("{player_name}", player.getBukkitPlayer().get().getDisplayName())
+                .replace("{text}", parsed).replace("{prefix}", getPrefix())
+                .replace("{channelName}", getName())
+                .replace("{worldName}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(message2Send)));
         if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordChannel() != null) {
@@ -214,11 +214,11 @@ public class ChatChannel implements SQLAble {
         String parsed;
             parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replaceAll("\\{player_name\\}", player.getDisplayName() + ChatColor
+                .replace("{player_name}", player.getDisplayName() + ChatColor
                         .translateAlternateColorCodes('&', "&o via discord&r"))
-                .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
-                .replaceAll("\\{channelName\\}", getName())
-                .replaceAll("\\{worldName\\}", ""));
+                .replace("{text}", parsed).replace("{prefix}", getPrefix())
+                .replace("{channelName}", getName())
+                .replace("{worldName}", ""));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(message2Send)));
         String con = ChatColor.translateAlternateColorCodes('&', content);
