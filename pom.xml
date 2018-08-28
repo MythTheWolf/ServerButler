@@ -6,7 +6,7 @@
 
     <groupId>com.myththewolf</groupId>
     <artifactId>ServerButler</artifactId>
-    <version>1.13</version>
+    <version>1.12</version>
     <repositories>
         <repository>
             <id>spigot-repo</id>
