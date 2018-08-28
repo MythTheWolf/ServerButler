@@ -69,7 +69,7 @@ public class ItemUtils {
      * @return The new ItemStack, with JSON applied
      */
     public static ItemStack makeWriteToChannelItemStack(ChatChannel channel) {
-        ItemStack stack = new ItemStack(Material.BOOK_AND_QUILL);
+        ItemStack stack = new ItemStack(Material.WRITABLE_BOOK);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.SET_WRITE_CHANNEL);
         packet.put("channelID", channel.getID());
@@ -163,7 +163,7 @@ public class ItemUtils {
      * @return The new ItemStack, with JSON applied
      */
     public static ItemStack makeSoftmuteUserItem(MythPlayer player, MythPlayer mod) {
-        ItemStack stack = new ItemStack(Material.EYE_OF_ENDER);
+        ItemStack stack = new ItemStack(Material.ENDER_EYE);
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName("Softmute User");
         stack.setItemMeta(meta);
@@ -182,7 +182,7 @@ public class ItemUtils {
      * @return The new ItemStack, with JSON applied
      */
     public static ItemStack makeUnmuteUserItem(MythPlayer player, MythPlayer mod) {
-        ItemStack stack = new ItemStack(Material.BOOK_AND_QUILL);
+        ItemStack stack = new ItemStack(Material.ENDER_EYE);
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName("Unmute Player");
         stack.setItemMeta(meta);
@@ -224,9 +224,9 @@ public class ItemUtils {
     }
 
     public static ItemStack getSkullofPlayer(String playerUUID) {
-        ItemStack raw = new ItemStack(Material.SKULL_ITEM, (short) 3);
+        ItemStack raw = new ItemStack(Material.PLAYER_HEAD, (short) 3);
         SkullMeta skullMeta = (SkullMeta) raw.getItemMeta();
-        skullMeta.setOwner(Bukkit.getOfflinePlayer(UUID.fromString(playerUUID)).getName());
+        skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(UUID.fromString(playerUUID)));
         raw.setItemMeta(skullMeta);
         return raw;
     }
