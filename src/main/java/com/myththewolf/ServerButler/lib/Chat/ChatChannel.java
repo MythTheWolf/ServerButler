@@ -226,6 +226,10 @@ public class ChatChannel implements SQLAble {
         getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
                 .exceptionally(ExceptionLogger.get());
     }
+
+    public void push(ChatAnnoucement annoucement) {
+
+    }
     @Override
     public boolean equals(Object o) {
         return (o instanceof ChatChannel) && (((ChatChannel) o).getID().equals(getID()));

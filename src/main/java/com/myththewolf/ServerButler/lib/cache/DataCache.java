@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.cache;
 
 import com.myththewolf.ServerButler.ServerButler;
+import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
@@ -38,10 +39,10 @@ public class DataCache {
      * @Note This list is populated by a selection of * in the SB_Channels database,so all chat channels exist in this list.
      */
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
-
+    public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
-
     private static HashMap<String, String> playerNameMap = new HashMap<>();
+
     /**
      * Gets a player from cache if present, but makes a new player object
      *
@@ -104,6 +105,7 @@ public class DataCache {
         playerHashMap = new HashMap<>();
         channelHashMap = new HashMap<>();
         playerNameMap = new HashMap<>();
+        annoucementHashMap = new HashMap<>();
     }
 
     /**
@@ -226,6 +228,21 @@ public class DataCache {
             e.printStackTrace();
         }
     }
+
+    public static void rebuildTaskList() {
+        DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::stopTask);
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection()
+                    .prepareStatement("SELECT * FROM `SB_Announcements`");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                annoucementHashMap.put(rs.getString("ID"), new ChatAnnoucement(rs.getString("ID")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static ChatChannel getGlobalChannel() {
         return getOrMakeChannel("GLOBAL").get();
     }

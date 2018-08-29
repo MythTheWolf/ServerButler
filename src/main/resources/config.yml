@@ -40,6 +40,7 @@ CHAT-COLOR-PERMISSION: "sb.chat.color"
 # - Server Administration
 IMPORT-JSON-DATA: "sb.json.import"
 DEFAULT-CHANNEL: "global"
+VIEW-ANNOUNCEMENT-GUI: "sb.annouce.view"
 
 
 #Discord bot

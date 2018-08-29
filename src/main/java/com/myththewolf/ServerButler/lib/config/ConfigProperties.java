@@ -195,4 +195,6 @@ public class ConfigProperties {
     public static String SQL_PASS = ServerButler.configuration.getString("SQL-PASSWORD");
 
     public static String SQL_DATABASE = ServerButler.configuration.getString("SQL-DATABASE");
+
+    public static String VIEW_ANNOUNCEMENT_GUI = ServerButler.configuration.getString("VIEW-ANNOUNCEMENT-GUI");
 }
