@@ -12,6 +12,7 @@ import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -55,10 +56,17 @@ public class EPlayerJoin implements Listener, Loggable {
             MP.setName(event.getPlayer().getName());
             MP.updatePlayer();
         }
-        if (!MP.getDisplayName().equals(event.getPlayer().getDisplayName())) {
-            MP.setDisplayName(event.getPlayer().getDisplayName());
-            MP.updatePlayer();
-        }
+        Bukkit.getScheduler().scheduleSyncDelayedTask(ServerButler.plugin, new Runnable() {
+            public void run() {
+                MythPlayer mp = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+                if (!mp.getDisplayName().equals(event.getPlayer().getDisplayName())) {
+                    mp.setDisplayName(event.getPlayer().getDisplayName());
+                    mp.updatePlayer();
+                    DataCache.rebuildPlayer(mp.getUUID());
+                }
+            }
+        }, 20L);
+        MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
         if (!ipAddress.isPresent()) {
             DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
             DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());

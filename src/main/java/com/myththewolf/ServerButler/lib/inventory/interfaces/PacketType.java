@@ -5,11 +5,24 @@ package com.myththewolf.ServerButler.lib.inventory.interfaces;
  *
  */
 public enum PacketType {
+    //CHAT
     TOGGLE_CHANNEL_ON,
     TOGGLE_CHANNEL_OFF,
     VIEW_CHANNEL_OPTIONS,
     SET_WRITE_CHANNEL,
     VIEW_PLAYER_OPTIONS,
+    //ANNOUCEMENT
+    CREATE_ANNOUNCEMENT,
+    DELETE_ANNOUNCEMENT,
+    STOP_ANNOUNCEMENT, //
+    START_ANNOUNCEMENT, //
+    VIEW_ANNOUNCEMENT_OPTIONS, //
+    ADD_CHANNEL, //
+    REMOVE_CHANNEL, //
+    UPDATE_CONTENT,
+    UPDATE_PERMISSION,
+    UPDATE_INTERVAL,
+    COMMIT_CHANNEL,
     //PLAYER
     BAN_PLAYER,
     TEMPBAN_PLAYER,
@@ -20,7 +33,7 @@ public enum PacketType {
     DELETE_PLAYER, //TODO: Delete player
     KICK_PLAYER,
     VIEW_PLAYER_HISTORY, //TODO: Player History
-    VIEW_PLAYER_EXTA_INFO, //TODO: Player extra info
+    VIEW_PLAYER_EXTA_INFO,
     //IPS
     VIEW_PLAYER_IPS,
     VIEW_IP_OPTIONS,

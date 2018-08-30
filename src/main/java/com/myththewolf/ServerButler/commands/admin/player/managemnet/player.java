@@ -36,9 +36,9 @@ public class player extends CommandAdapter {
             player.getBukkitPlayer().ifPresent(sender -> {
                 targetInventory.setItem(0, target.getLoginStatus().equals(LoginStatus.PERMITTED) ? player
                         .hasPermission(ConfigProperties.BAN_PERMISSION) ? ItemUtils
-                        .makeBanUserItem(target, player) : (new ItemStack(Material.RED_STAINED_GLASS_PANE, 1)) : player
+                        .makeBanUserItem(target, player) : (new ItemStack(Material.STAINED_GLASS_PANE, 1)) : player
                         .hasPermission(ConfigProperties.PARDON_PERMISSION) ? ItemUtils
-                        .makePardonUserItem(target, player) : (new ItemStack(Material.RED_STAINED_GLASS_PANE, 1)));
+                        .makePardonUserItem(target, player) : (new ItemStack(Material.STAINED_GLASS_PANE, 1)));
 
                 ItemStack tempBanItem = ItemUtils.woolForColor(DyeColor.ORANGE);
                 JSONObject tempBanPacket = new JSONObject();
@@ -46,17 +46,11 @@ public class player extends CommandAdapter {
                 tempBanPacket.put("PLAYER-NAME", target.getName());
                 targetInventory.setItem(1, ItemUtils
                         .nameItem("Temp Ban player", ItemUtils.applyJSON(tempBanPacket, tempBanItem)));
-                if (target.getChatStatus().equals(ChatStatus.MUTED) && player
-                        .hasPermission(ConfigProperties.MUTE_PERMISSION)) {
-                    targetInventory.setItem(2, ItemUtils.makeSoftmuteUserItem(target, player));
-                    targetInventory.setItem(3, ItemUtils.makUnmuteUserItem(target, player));
-                } else if (target.getChatStatus().equals(ChatStatus.SOFTMUTED)) {
-                    targetInventory.setItem(2, ItemUtils.makeMuteUserItem(target, player));
-                    targetInventory.setItem(3, ItemUtils.makUnmuteUserItem(target, player));
-                } else {
-                    targetInventory.setItem(2, ItemUtils.makeMuteUserItem(target, player));
-                    targetInventory.setItem(3, ItemUtils.makeSoftmuteUserItem(target, player));
-                }
+                ItemStack muteUnmute = target.getChatStatus().equals(ChatStatus.MUTED) || target.getChatStatus()
+                        .equals(ChatStatus.SOFTMUTED) ? ItemUtils.makeUnmuteUserItem(target, send.get()) : ItemUtils
+                        .makeMuteUserItem(target, send.get());
+                targetInventory.setItem(2, muteUnmute);
+                targetInventory.setItem(3, ItemUtils.makeSoftmuteUserItem(target, send.get()));
                 JSONObject viewPlayerIPsPacket = new JSONObject();
                 viewPlayerIPsPacket.put("packetType", PacketType.VIEW_PLAYER_IPS);
                 viewPlayerIPsPacket.put("PLAYER-UUID", target.getUUID());

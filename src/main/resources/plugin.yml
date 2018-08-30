@@ -1,4 +1,5 @@
 name: ServerButler
-version: 1.0
+version: "dev-spigot-1.12-6097aaf"
 main: com.myththewolf.ServerButler.ServerButler
 api-version: 1.13
+loadbefore: [Essentials]

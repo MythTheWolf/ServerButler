@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.cache;
 
 import com.myththewolf.ServerButler.ServerButler;
+import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
@@ -38,8 +39,9 @@ public class DataCache {
      * @Note This list is populated by a selection of * in the SB_Channels database,so all chat channels exist in this list.
      */
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
-
+    public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
+    private static HashMap<String, String> playerNameMap = new HashMap<>();
 
     /**
      * Gets a player from cache if present, but makes a new player object
@@ -56,17 +58,11 @@ public class DataCache {
         if (player.playerExists()) {
             playerHashMap.put(UUID, player);
         }
-        return playerHashMap.get(UUID);
-    }
-
-    private static MythPlayer createPlayer(String UUID) {
-
-        if (ConfigProperties.DEBUG) {
-            getLogger().info("Player doesn't exist in database. Inserting.");
+        if (!playerNameMap.containsKey(player.getName())) {
+            debug("Player doesn't exist in name list,adding: " + player.getName());
+            playerNameMap.put(player.getName(), player.getUUID());
         }
-        MythPlayer MP = new IMythPlayer(new DateTime(), UUID);
-        MP.updatePlayer();
-        return makeNewPlayerObj(UUID);
+        return playerHashMap.get(UUID);
     }
 
     /**
@@ -82,6 +78,7 @@ public class DataCache {
             getLogger().info("Player doesn't exist in database. Inserting w/ name.");
         }
         MythPlayer MP = new IMythPlayer(new DateTime(), UUID, name);
+        MP.updatePlayer();
         return makeNewPlayerObj(UUID);
     }
 
@@ -107,6 +104,8 @@ public class DataCache {
     public static void makeMaps() {
         playerHashMap = new HashMap<>();
         channelHashMap = new HashMap<>();
+        playerNameMap = new HashMap<>();
+        annoucementHashMap = new HashMap<>();
     }
 
     /**
@@ -217,6 +216,39 @@ public class DataCache {
 
     }
 
+    public static void rebuildNameList() {
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection()
+                    .prepareStatement("SELECT * FROM `SB_Players`");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                playerNameMap.put(rs.getString("name"), rs.getString("UUID"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void rebuildTaskList() {
+        getLogger().info("RUN");
+        DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::stopTask);
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection()
+                    .prepareStatement("SELECT * FROM `SB_Announcements`");
+            ResultSet rs = ps.executeQuery();
+            getLogger().info("ASK");
+            while (rs.next()) {
+                getLogger().info("PUT: " + rs.getString("ID"));
+                annoucementHashMap.put(rs.getString("ID"), new ChatAnnoucement(rs.getString("ID")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Optional<ChatAnnoucement> getAnnouncement(String ID) {
+        return Optional.ofNullable(annoucementHashMap.get(ID));
+    }
     public static ChatChannel getGlobalChannel() {
         return getOrMakeChannel("GLOBAL").get();
     }
@@ -229,19 +261,13 @@ public class DataCache {
      * @apiNote This performs a database selection to convert their name into a UUID, but pulls their MythPlayer object from cache (or creates it if not present)
      */
     public static Optional<MythPlayer> getPlayerByName(String name) {
-        MythPlayer mythPlayer = null;
-        try {
-            PreparedStatement ps = ServerButler.connector.getConnection()
-                    .prepareStatement("SELECT * FROM `SB_Players` WHERE `name` = ?");
-            ps.setString(1, name);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                mythPlayer = getOrMakePlayer(rs.getString("UUID"));
-            }
-        } catch (SQLException excep) {
-            excep.printStackTrace();
+        if (!playerNameMap.containsKey(name)) {
+            return Optional.empty();
         }
-        return Optional.ofNullable(mythPlayer);
+        if (!DataCache.getOrMakePlayer(playerNameMap.get(name)).playerExists()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(DataCache.getOrMakePlayer(playerNameMap.get(name)));
     }
 
     /**
@@ -345,5 +371,15 @@ public class DataCache {
             return Optional.empty();
         }
         return Optional.empty();
+    }
+
+    private static void debug(String out) {
+        if (ConfigProperties.DEBUG) {
+            getLogger().info(out);
+        }
+    }
+
+    public static HashMap<String, String> getPlayerNameMap() {
+        return playerNameMap;
     }
 }

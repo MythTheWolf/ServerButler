@@ -11,6 +11,7 @@ import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -196,10 +197,10 @@ public class ChatChannel implements SQLAble {
         }
 
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replaceAll("\\{player_name\\}", player.getBukkitPlayer().get().getDisplayName())
-                .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
-                .replaceAll("\\{channelName\\}", getName())
-                .replaceAll("\\{worldName\\}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
+                .replace("{player_name}", player.getBukkitPlayer().get().getDisplayName())
+                .replace("{text}", parsed).replace("{prefix}", getPrefix())
+                .replace("{channelName}", getName())
+                .replace("{worldName}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(message2Send)));
         if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordChannel() != null) {
@@ -214,17 +215,28 @@ public class ChatChannel implements SQLAble {
         String parsed;
             parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replaceAll("\\{player_name\\}", player.getName() + ChatColor
-                        .translateAlternateColorCodes('&', "&o via token&r"))
-                .replaceAll("\\{text\\}", parsed).replaceAll("\\{prefix\\}", getPrefix())
-                .replaceAll("\\{channelName\\}", getName())
-                .replaceAll("\\{worldName\\}", ""));
+                .replace("{player_name}", player.getDisplayName() + ChatColor
+                        .translateAlternateColorCodes('&', "&o via discord&r"))
+                .replace("{text}", parsed).replace("{prefix}", getPrefix())
+                .replace("{channelName}", getName())
+                .replace("{worldName}", ""));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(message2Send)));
         String con = ChatColor.translateAlternateColorCodes('&', content);
-        String whom = ChatColor.translateAlternateColorCodes('&', player.getName());
+        String whom = ChatColor.translateAlternateColorCodes('&', player.getDisplayName());
         getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
                 .exceptionally(ExceptionLogger.get());
+    }
+
+    public void push(ChatAnnoucement annoucement) {
+        List<MythPlayer> pingedPlayers = new ArrayList<>();
+        getAllCachedPlayers().forEach(mythPlayer -> {
+            if (mythPlayer.isOnline() && !pingedPlayers.contains(mythPlayer)) {
+                mythPlayer.getBukkitPlayer().ifPresent(player -> player
+                        .sendMessage(ChatColor.translateAlternateColorCodes('&', annoucement.getContent())));
+                pingedPlayers.add(mythPlayer);
+            }
+        });
     }
     @Override
     public boolean equals(Object o) {

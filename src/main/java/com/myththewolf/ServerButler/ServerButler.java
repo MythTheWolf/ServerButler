@@ -4,6 +4,8 @@ import com.myththewolf.ServerButler.commands.admin.ChannelBuilder;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.management.ips;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetTempBan;
+import com.myththewolf.ServerButler.commands.admin.annoucement.task;
+import com.myththewolf.ServerButler.commands.admin.annoucement.tasks;
 import com.myththewolf.ServerButler.commands.admin.eval;
 import com.myththewolf.ServerButler.commands.admin.jsonImport;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.about;
@@ -17,10 +19,12 @@ import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
+import com.myththewolf.ServerButler.lib.command.impl.SpigotTabCompleter;
 import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.Discord.DiscordMessageEvent;
 import com.myththewolf.ServerButler.lib.event.player.*;
+import com.myththewolf.ServerButler.lib.inventory.handlers.annoucement.*;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.CloseChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.OpenChannelPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.handlers.chat.SetWriteChannelPacketHandler;
@@ -39,12 +43,13 @@ import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.mySQL.SQLConnector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
@@ -58,6 +63,7 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -73,8 +79,11 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static ConversationFactory conversationBuilder;
     public static ChannelCategory channelCategory;
     public static DiscordApi API;
-    private CommandMap commandMap = null;
     public static List<Integer> blackListedListerners = new ArrayList<>();
+    public static Plugin plugin;
+    private CommandMap commandMap = null;
+    private TabCompleter mythTabCompleter;
+
     public static boolean isAlive(Process p) {
         try {
             p.exitValue();
@@ -85,8 +94,10 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void onEnable() {
+        plugin = this;
         conversationBuilder = new ConversationFactory(this);
         conversationBuilder.addConversationAbandonedListener(new PlayerConversationAbandonedEvent());
+        mythTabCompleter = new SpigotTabCompleter();
         Arrays.stream(PacketType.values()).forEach(packetType -> itemPacketHandlers.put(packetType, new ArrayList<>()));
         getLogger().info("Received enable command");
         DataCache.makeMaps();
@@ -94,7 +105,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandlers();
         configuration = getConfig();
         getLogger().info("Connecting to SQL server");
-        connector = new SQLConnector("70.139.52.7", 3306, "Myth", "00163827", "MB_REWRITE");
+        connector = new SQLConnector(ConfigProperties.SQL_HOST, Integer
+                .parseInt(ConfigProperties.SQL_PORT), ConfigProperties.SQL_USER, ConfigProperties.SQL_PASS, ConfigProperties.SQL_DATABASE);
         Bukkit.getPluginManager().registerEvents(new EPlayerJoin(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
@@ -108,8 +120,13 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         }
         getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
+        getLogger().info("Caching all player names");
+        DataCache.rebuildNameList();
+        getLogger().info("Caching all announcement tasks");
+        DataCache.rebuildTaskList();
         getLogger().info("Building command list");
         registerCommands();
+
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             File botFolder = new File(getDataFolder().getAbsolutePath() + File.separator + "discordBot");
             if (!botFolder.exists()) {
@@ -182,21 +199,41 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         }
         getLogger().info("Creating command proxies");
         try {
-            final Field f = Bukkit.getServer().getClass().getDeclaredField("commandMap");
-            f.setAccessible(true);
-            commandMap = (org.bukkit.command.CommandMap) f.get(Bukkit.getServer());
+
+            final Field bukkitCommandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+
+            bukkitCommandMap.setAccessible(true);
+            CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
+
+            commands.forEach((trigger, runner) -> {
+                try {
+                    Constructor<PluginCommand> c = PluginCommand.class
+                            .getDeclaredConstructor(String.class, Plugin.class);
+                    c.setAccessible(true);
+                    PluginCommand pluginCommand = c.newInstance(trigger, plugin);
+                    pluginCommand.setTabCompleter(mythTabCompleter);
+                    pluginCommand.setExecutor((commandSender, command1, s, strings) -> {
+                        String[] arr = new String[strings.length + 1];
+                        arr[0] = "/" + command1.getLabel();
+                        int spot = 1;
+                        for (String S : strings) {
+                            arr[spot] = S;
+                            spot++;
+                        }
+                        checkAndRun(StringUtils.arrayToString(0, arr), ((Player) commandSender));
+                        return true;
+                    });
+                    commandMap.register(trigger, pluginCommand);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        commands.forEach((trigger, runner) -> {
-            commandMap.register(trigger, new Command(trigger) {
-                @Override
-                public boolean execute(CommandSender commandSender, String s, String[] args) {
-                    checkAndRun(StringUtils.arrayToString(0, args), (Player) commandSender);
-                    return true;
-                }
-            });
-        });
+
     }
 
     @Override
@@ -229,6 +266,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("unmute", new unmute());
         registerCommand("about", new about());
         registerCommand("pardon", new pardon());
+        registerCommand("tasks", new tasks());
+        registerCommand("task", new task());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
@@ -256,7 +295,15 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.PARDON_IP, new PardonIPHandler());
         registerPacketHandler(PacketType.DELETE_IP, new DeleteIpHandler());
         registerPacketHandler(PacketType.VIEW_PLAYER_EXTA_INFO, new ViewPlayerExtraInfoHandler());
-
+        registerPacketHandler(PacketType.VIEW_ANNOUNCEMENT_OPTIONS, new ViewAnnouncementOptionsHandler());
+        registerPacketHandler(PacketType.DELETE_ANNOUNCEMENT, new DeleteHandler());
+        registerPacketHandler(PacketType.UPDATE_CONTENT, new UpdateContentHandler());
+        registerPacketHandler(PacketType.UPDATE_INTERVAL, new UpdateIntervalHandler());
+        registerPacketHandler(PacketType.COMMIT_CHANNEL, new CommitChannelHandler());
+        registerPacketHandler(PacketType.START_ANNOUNCEMENT, new StartTaskHandler());
+        registerPacketHandler(PacketType.STOP_ANNOUNCEMENT, new StopTaskHandler());
+        registerPacketHandler(PacketType.ADD_CHANNEL, new AddChannelHandler());
+        registerPacketHandler(PacketType.REMOVE_CHANNEL, new RemoveChannelHandler());
     }
 
     public void checkConfiguration() {
@@ -273,11 +320,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void checkTables() {
-        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
+        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Actions` ( `ID` INT NOT NULL AUTO_INCREMENT , `type` VARCHAR(255) NULL DEFAULT NULL , `reason` VARCHAR(255) NULL DEFAULT NULL , `expireDate` VARCHAR(255) NULL DEFAULT NULL, `target` VARCHAR(255) NULL DEFAULT NULL , `moderator` VARCHAR(255) NULL DEFAULT NULL , `targetType` VARCHAR(255) NULL DEFAULT NULL , `dateApplied` VARCHAR(255) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Channels` ( `ID` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , `shortcut` VARCHAR(255) NULL DEFAULT NULL , `prefix` VARCHAR(255) NULL DEFAULT NULL , `permission` VARCHAR(255) NULL DEFAULT NULL ,`format` VARCHAR(255) NOT NULL , `discord_id` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Discord` ( `ID` INT NOT NULL AUTO_INCREMENT , `token` VARCHAR(255) NOT NULL , `UUID` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_IPAddresses` ( `ID` INT NULL AUTO_INCREMENT , `address` VARCHAR(255) NOT NULL , `playerUUIDs` TEXT NOT NULL, `loginStatus` VARCHAR(255) NOT NULL , `dateJoined` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
+        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Announcements` ( `ID` INT NOT NULL AUTO_INCREMENT , `content` TEXT NOT NULL , `channels` VARCHAR(255) NOT NULL , `permission` VARCHAR(255) NULL , `interval` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
     }
 
     public void registerCommand(String cmd, CommandAdapter executor) {
@@ -295,13 +343,17 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void checkAndRun(String raw, Player sender) {
-        sender.sendMessage(raw);
         String[] split = raw.split(" ");
         if (!ServerButler.commands.containsKey(split[0].substring(1))) {
             return;
         }
         String chop = split[0].substring(1);
-        String[] args = Arrays.copyOfRange(split, 1, split.length);
+        String[] args;
+        if (split.length < 2) {
+            args = new String[0];
+        } else {
+            args = Arrays.copyOfRange(split, 1, split.length);
+        }
         ServerButler.commands.entrySet().stream()
                 .filter(stringCommandAdapterEntry -> stringCommandAdapterEntry.getKey().equals(chop))
                 .map(Map.Entry::getValue).forEach(commandAdapter -> {
@@ -318,18 +370,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                             .getName() + "', no checks will be made by the system!");
                 }
                 int commandUserReq = isAnnoPresent ? CP.userRequiredArgs() : -1;
-                int commandConsoleReq = isAnnoPresent ? CP.consoleRequiredArgs() : -1;
                 String usage = isAnnoPresent ? CP.commandUsage() : "<<NOT DEFINED>>";
                 String permission = commandAdapter.getRequiredPermission();
-                if (args.length < commandConsoleReq) {
-                    getLogger().warning("Could not run command '" + split[0]
-                            .substring(1) + "': Required args do not match supplied args. Usage (optional args are required in this context): " + usage);
-                    return;
-                } else if (args.length >= commandConsoleReq) {
-                    commandAdapter.onCommand(Optional.empty(), args, (JavaPlugin) Bukkit.getPluginManager()
-                            .getPlugin("ServerButler"));
-                    return;
-                }
                 if (args.length < commandUserReq) {
                     sender
                             .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "This command requires " + commandUserReq + " arguments, got " + args.length + ".");
@@ -341,16 +383,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                             .sendMessage(ConfigProperties.PREFIX + "You do not have permission for this command.");
                     return;
                 }
+                commandAdapter.onCommand(Optional.ofNullable(DataCache
+                        .getOrMakePlayer(sender.getUniqueId().toString())), args, this);
             } catch (NoSuchMethodException ex) {
                 getLogger().severe("Could not find runner for command executor class: '" + commandAdapter.getClass()
                         .getName() + "'");
             }
-
-            commandAdapter.onCommand(Optional.ofNullable(DataCache
-                    .getOrMakePlayer(sender.getUniqueId().toString())), args, this);
         });
-
-
     }
-
 }

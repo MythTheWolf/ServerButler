@@ -25,7 +25,7 @@ public class EPlayerChat implements Listener, Loggable {
      * Used to return if the message was used to send a channel message via the channel's shortcut
      */
     private boolean shortCutRan = false;
-
+    MythPlayer sender;
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         shortCutRan = false;
@@ -46,7 +46,14 @@ public class EPlayerChat implements Listener, Loggable {
                 return;
             }
         }
-        MythPlayer sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        if (!sender.getDisplayName().equals(event.getPlayer().getDisplayName())) {
+            sender.setDisplayName(event.getPlayer().getDisplayName());
+            sender.updatePlayer();
+            DataCache.rebuildPlayer(sender.getUUID());
+            sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        }
+
         List<ChatChannel> chanList = new ArrayList<>(sender.getChannelList());
        chanList.stream()
                 .filter(chatChannel -> chatChannel.getPermission().isPresent() && !sender.getBukkitPlayer().get()
