@@ -1,7 +1,6 @@
 package com.myththewolf.ServerButler.commands.admin.annoucement;
 
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
-import com.myththewolf.ServerButler.lib.MythUtils.CustomDyeColor;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
@@ -42,12 +41,12 @@ public class task extends CommandAdapter {
         packetUpdateContent.put("packetType", PacketType.UPDATE_CONTENT);
         packetUpdateContent.put("ID", target.getId());
         ItemStack itemUpdateContent = ItemUtils.nameItem("Update Content", ItemUtils
-                .applyJSON(packetUpdateContent, new ItemStack(Material.BOOK_AND_QUILL, 1)));
+                .applyJSON(packetUpdateContent, new ItemStack(Material.WRITABLE_BOOK, 1)));
         JSONObject packetUpdateInterval = new JSONObject();
         packetUpdateInterval.put("packetType", PacketType.UPDATE_INTERVAL);
         packetUpdateInterval.put("ID", target.getId());
         ItemStack itemUpdateInterval = ItemUtils.nameItem("Update Interval", ItemUtils
-                .applyJSON(packetUpdateInterval, new ItemStack(Material.WATCH, 1)));
+                .applyJSON(packetUpdateInterval, new ItemStack(Material.CLOCK, 1)));
         JSONObject packetUpdatePermission = new JSONObject();
         packetUpdatePermission.put("packetType", PacketType.UPDATE_PERMISSION);
         packetUpdatePermission.put("ID", target.getId());
@@ -57,12 +56,12 @@ public class task extends CommandAdapter {
         packetStartTask.put("packetType", PacketType.START_ANNOUNCEMENT);
         packetStartTask.put("ID", target.getId());
         ItemStack itemStartTask = ItemUtils.nameItem("Start task", ItemUtils
-                .applyJSON(packetStartTask, new ItemStack(Material.INK_SACK, 1, CustomDyeColor.LIME.getData())));
+                .applyJSON(packetStartTask, new ItemStack(Material.LIME_DYE, 1)));
         JSONObject packetStopTask = new JSONObject();
         packetStopTask.put("packetType", PacketType.STOP_ANNOUNCEMENT);
         packetStopTask.put("ID", target.getId());
         ItemStack itemStopTask = ItemUtils.nameItem("Stop task", ItemUtils
-                .applyJSON(packetStopTask, new ItemStack(Material.INK_SACK, 1, CustomDyeColor.RED.getData())));
+                .applyJSON(packetStopTask, new ItemStack(Material.ROSE_RED)));
         JSONObject packetDeleteItem = new JSONObject();
         packetDeleteItem.put("packetType", PacketType.DELETE_ANNOUNCEMENT);
         packetDeleteItem.put("ID", target.getId());
