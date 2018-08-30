@@ -9,6 +9,7 @@ import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
+import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -35,7 +36,10 @@ public class tasks extends CommandAdapter {
             woolColor = ItemUtils.applyJSON(packet, woolColor);
             I.setItem(i, woolColor);
         });
-
+        JSONObject packetCreateAnnouncement = new JSONObject();
+        ItemStack itemCreateAnnouncement = ItemUtils.nameItem("Create new Announcement", ItemUtils
+                .applyJSON(packetCreateAnnouncement, new ItemStack(Material.LIME_DYE, 1)));
+        I.setItem(i + 1, itemCreateAnnouncement);
         sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player.openInventory(I));
     }
     @Override
