@@ -6,7 +6,7 @@
 
     <groupId>com.myththewolf</groupId>
     <artifactId>ServerButler</artifactId>
-    <version>1.13</version>
+    <version>1.12</version>
     <repositories>
         <repository>
             <id>spigot-repo</id>
@@ -23,7 +23,7 @@
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <scope>provided</scope>
-            <version>1.13-R0.1-SNAPSHOT</version>
+            <version>1.12-R0.1-SNAPSHOT</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>

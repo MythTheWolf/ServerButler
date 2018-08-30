@@ -11,6 +11,7 @@ import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -228,7 +229,14 @@ public class ChatChannel implements SQLAble {
     }
 
     public void push(ChatAnnoucement annoucement) {
-
+        List<MythPlayer> pingedPlayers = new ArrayList<>();
+        getAllCachedPlayers().forEach(mythPlayer -> {
+            if (mythPlayer.isOnline() && !pingedPlayers.contains(mythPlayer)) {
+                mythPlayer.getBukkitPlayer().ifPresent(player -> player
+                        .sendMessage(ChatColor.translateAlternateColorCodes('&', annoucement.getContent())));
+                pingedPlayers.add(mythPlayer);
+            }
+        });
     }
     @Override
     public boolean equals(Object o) {

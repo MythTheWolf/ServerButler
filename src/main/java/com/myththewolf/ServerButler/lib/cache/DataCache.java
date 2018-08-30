@@ -230,12 +230,15 @@ public class DataCache {
     }
 
     public static void rebuildTaskList() {
+        getLogger().info("RUN");
         DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::stopTask);
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()
                     .prepareStatement("SELECT * FROM `SB_Announcements`");
             ResultSet rs = ps.executeQuery();
+            getLogger().info("ASK");
             while (rs.next()) {
+                getLogger().info("PUT: " + rs.getString("ID"));
                 annoucementHashMap.put(rs.getString("ID"), new ChatAnnoucement(rs.getString("ID")));
             }
         } catch (SQLException e) {
@@ -243,6 +246,9 @@ public class DataCache {
         }
     }
 
+    public static Optional<ChatAnnoucement> getAnnouncement(String ID) {
+        return Optional.ofNullable(annoucementHashMap.get(ID));
+    }
     public static ChatChannel getGlobalChannel() {
         return getOrMakeChannel("GLOBAL").get();
     }

@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.lib.event.player;
 
+import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
@@ -21,6 +22,8 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
         MythPlayer target = (MythPlayer) conversationAbandonedEvent.getContext().getSessionData("target");
         Optional<MythPlayer> sender = Optional
                 .ofNullable((MythPlayer) conversationAbandonedEvent.getContext().getSessionData("sender"));
+        Optional<ChatAnnoucement> annoucement = DataCache
+                .getAnnouncement((String) conversationAbandonedEvent.getContext().getSessionData("ID"));
         switch ((PacketType) conversationAbandonedEvent.getContext().getSessionData("packetType")) {
             case BAN_PLAYER:
                 target.banPlayer(reason, sender.orElse(null));
@@ -82,6 +85,21 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                         .replaceParameters(ConfigProperties.FORMAT_UNMUTE, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), reason);
                 target.getBukkitPlayer().ifPresent(player -> player.sendMessage(playerMessage));
+                break;
+            case UPDATE_CONTENT:
+                annoucement.get()
+                        .setContent((String) conversationAbandonedEvent.getContext().getSessionData("content"));
+                annoucement.get().update();
+                break;
+            case UPDATE_PERMISSION:
+                annoucement.get()
+                        .setRequiredPerm((String) conversationAbandonedEvent.getContext().getSessionData("permission"));
+                annoucement.get().update();
+                break;
+            case UPDATE_INTERVAL:
+                annoucement.get().setInterval(TimeUtils.TIME_INPUT_FORMAT()
+                        .parsePeriod((String) conversationAbandonedEvent.getContext().getSessionData("interval")));
+                annoucement.get().update();
                 break;
             default:
                 break;

@@ -38,6 +38,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
                         .forEach(destinations::add);
                 this.requiredPerm = resultSet.getString("permission");
                 interval = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(resultSet.getString("time"));
+                id = resultSet.getString("ID");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -49,11 +50,11 @@ public class ChatAnnoucement implements SQLAble, Loggable {
     }
 
     public String getContent() {
-        return content;
+        return this.content;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setContent(String con) {
+        this.content = con;
     }
 
     public Period getInterval() {
@@ -72,10 +73,12 @@ public class ChatAnnoucement implements SQLAble, Loggable {
         this.requiredPerm = requiredPerm;
     }
 
-    public void createTask() {
-        long ticks = (getInterval().getDays() * 20);
-        taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(ServerButler.plugin, () -> getDestinations()
-                .forEach(chatChannel -> chatChannel.push(this)), ticks, 2) + "";
+    public void startTask() {
+        if (taskID == null) {
+            long ticks = (getInterval().getSeconds() * 20);
+            taskID = Bukkit.getScheduler().runTaskTimerAsynchronously(ServerButler.plugin, () -> getDestinations()
+                    .forEach(chatChannel -> chatChannel.push(this)), 2, ticks).getTaskId() + "";
+        }
     }
 
     public String getId() {
@@ -109,7 +112,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
                     .serializeArray(getDestinations().stream().map(ChatChannel::getID).collect(Collectors
                             .toList())), getRequiredPerm(), TimeUtils.TIME_INPUT_FORMAT().print(getInterval())) + "";
         } else {
-            prepareAndExecuteUpdateExceptionally("UPDATE `SB_Announcements` SET `content` = ? , `channels` = ? , `permission` =  ? , `time` = ? WHERE `ID` = ? ", 4, getContent(), StringUtils
+            prepareAndExecuteUpdateExceptionally("UPDATE `SB_Announcements` SET `content` = ? , `channels` = ? , `permission` =  ? , `time` = ? WHERE `ID` = ? ", 5, getContent(), StringUtils
                     .serializeArray(getDestinations().stream().map(ChatChannel::getID).collect(Collectors
                             .toList())), getRequiredPerm(), TimeUtils.TIME_INPUT_FORMAT()
                     .print(getInterval()), getId());
