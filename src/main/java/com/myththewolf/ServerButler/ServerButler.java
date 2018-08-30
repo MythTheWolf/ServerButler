@@ -299,7 +299,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.DELETE_ANNOUNCEMENT, new DeleteHandler());
         registerPacketHandler(PacketType.UPDATE_CONTENT, new UpdateContentHandler());
         registerPacketHandler(PacketType.UPDATE_INTERVAL, new UpdateIntervalHandler());
-        registerPacketHandler(PacketType.COMMIT_CHANNEL, new CommitChannelHandler());
+        registerPacketHandler(PacketType.CHANNEL_SELECTION_CONTINUE, new CommitChannelHandler());
         registerPacketHandler(PacketType.START_ANNOUNCEMENT, new StartTaskHandler());
         registerPacketHandler(PacketType.STOP_ANNOUNCEMENT, new StopTaskHandler());
         registerPacketHandler(PacketType.ADD_CHANNEL, new AddChannelHandler());

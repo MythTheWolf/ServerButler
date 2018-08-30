@@ -1,8 +1,8 @@
 package com.myththewolf.ServerButler.lib.inventory.handlers.annoucement;
 
-import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
+import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CommitChannelHandler implements ItemPacketHandler {
     @Override
@@ -24,19 +25,23 @@ public class CommitChannelHandler implements ItemPacketHandler {
         }
         player.getBukkitPlayer().get().sendMessage(ConfigProperties.PREFIX + "Reading Database..");
         Inventory I = Bukkit.createInventory(null, ItemUtils
-                .findInventorySize(DataCache.getAllChannels().size()), "Please select a channel");
-        PacketType packetType = PacketType.valueOf(data.getString("targetPacketType"));
-        ChatAnnoucement target = DataCache.getAnnouncement(data.getString("ID")).get();
+                .findInventorySize(DataCache.getAllChannels().size() + 1), "Please select a channel");
         List<ChatChannel> allChannelList = DataCache.getAllChannels();
-        for (int i = 0; i < allChannelList.size(); i++) {
-            JSONObject packet = new JSONObject();
-            packet.put("packetType", packetType);
-            packet.put("ID", target.getId());
-            packet.put("channelID", allChannelList.get(i).getID());
-            ItemStack itemStack = ItemUtils.nameItem(allChannelList.get(i).getName(), ItemUtils
-                    .applyJSON(packet, ItemUtils.woolForColor(DyeColor.CYAN)));
-            I.setItem(i, itemStack);
-        }
+        List<ChatChannel> selectedChannels = StringUtils.deserializeArray(data.getString("selected")).stream()
+                .map(ChatChannel::new).collect(Collectors.toList());
+        if (data.getBoolean("isAdd"))
+            for (int i = 0; i < allChannelList.size(); i++) {
+                JSONObject packet = new JSONObject();
+                ChatChannel c = allChannelList.get(i);
+                packet.put("raw-data", data);
+                packet.put("packetType", PacketType.CHANNEL_SELECTION_CONTINUE);
+                packet.put("isAdd", selectedChannels.contains(c));
+                packet.put("id", c.getID());
+                ItemStack stack = ItemUtils.applyJSON(packet, selectedChannels.contains(c) ? ItemUtils
+                        .nameItem("Deselect " + c.getName(), ItemUtils.woolForColor(DyeColor.LIME)) : ItemUtils
+                        .nameItem("Select " + c.getName(), ItemUtils.woolForColor(DyeColor.RED)));
+                I.setItem(i, stack);
+            }
         player.getBukkitPlayer().get().openInventory(I);
     }
 }
