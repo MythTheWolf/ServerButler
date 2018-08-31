@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.lib.event.player;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
@@ -9,21 +10,29 @@ import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.conversations.Conversable;
 import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.conversations.ConversationAbandonedListener;
 import org.joda.time.DateTime;
+import org.json.JSONObject;
 
 import java.util.Optional;
 
 public class PlayerConversationAbandonedEvent implements ConversationAbandonedListener, Loggable {
     @Override
     public void conversationAbandoned(ConversationAbandonedEvent conversationAbandonedEvent) {
+        if (!conversationAbandonedEvent.gracefulExit()) {
+            conversationAbandonedEvent.getContext().getForWhom()
+                    .sendRawMessage(ConfigProperties.PREFIX + "Cancelling.");
+            return;
+        }
         String reason = (String) conversationAbandonedEvent.getContext().getSessionData("reason");
         MythPlayer target = (MythPlayer) conversationAbandonedEvent.getContext().getSessionData("target");
         Optional<MythPlayer> sender = Optional
                 .ofNullable((MythPlayer) conversationAbandonedEvent.getContext().getSessionData("sender"));
         Optional<ChatAnnoucement> annoucement = DataCache
                 .getAnnouncement((String) conversationAbandonedEvent.getContext().getSessionData("ID"));
+        Conversable conversable = conversationAbandonedEvent.getContext().getForWhom();
         switch ((PacketType) conversationAbandonedEvent.getContext().getSessionData("packetType")) {
             case BAN_PLAYER:
                 target.banPlayer(reason, sender.orElse(null));
@@ -90,16 +99,32 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                 annoucement.get()
                         .setContent((String) conversationAbandonedEvent.getContext().getSessionData("content"));
                 annoucement.get().update();
+                conversable.sendRawMessage(ConfigProperties.PREFIX + "Updated.");
                 break;
             case UPDATE_PERMISSION:
                 annoucement.get()
                         .setRequiredPerm((String) conversationAbandonedEvent.getContext().getSessionData("permission"));
                 annoucement.get().update();
+                conversable.sendRawMessage(ConfigProperties.PREFIX + "Updated.");
                 break;
             case UPDATE_INTERVAL:
                 annoucement.get().setInterval(TimeUtils.TIME_INPUT_FORMAT()
                         .parsePeriod((String) conversationAbandonedEvent.getContext().getSessionData("interval")));
                 annoucement.get().update();
+                conversable.sendRawMessage(ConfigProperties.PREFIX + "Updated.");
+                break;
+            case CREATE_ANNOUNCEMENT:
+                ServerButler.itemPacketHandlers.get(PacketType.CREATE_ANNOUNCEMENT)
+                        .forEach(itemPacketHandler -> itemPacketHandler
+                                .onPacketReceived((MythPlayer) conversationAbandonedEvent.getContext()
+                                        .getSessionData("player"), (JSONObject) conversationAbandonedEvent.getContext()
+                                        .getSessionData("packet")));
+            case CHANNEL_SELECTION_CONTINUE:
+                ServerButler.itemPacketHandlers.get(PacketType.CHANNEL_SELECTION_CONTINUE)
+                        .forEach(itemPacketHandler -> itemPacketHandler
+                                .onPacketReceived((MythPlayer) conversationAbandonedEvent.getContext()
+                                        .getSessionData("player"), (JSONObject) conversationAbandonedEvent.getContext()
+                                        .getSessionData("packet")));
                 break;
             default:
                 break;

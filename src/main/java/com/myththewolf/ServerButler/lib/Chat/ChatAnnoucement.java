@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.joda.time.Period;
 
@@ -45,6 +46,12 @@ public class ChatAnnoucement implements SQLAble, Loggable {
         }
     }
 
+    public ChatAnnoucement(String content, Period interval, String permission) {
+        this.requiredPerm = permission;
+        this.content = content;
+        this.interval = interval;
+    }
+
     public List<ChatChannel> getDestinations() {
         return destinations;
     }
@@ -73,11 +80,37 @@ public class ChatAnnoucement implements SQLAble, Loggable {
         this.requiredPerm = requiredPerm;
     }
 
+    public void startTaskNow() {
+        if (taskID == null) {
+            long ticks = (getInterval().getSeconds() * 20);
+            taskID = Bukkit.getScheduler()
+                    .runTaskTimerAsynchronously(ServerButler.plugin, () -> {
+                        List<MythPlayer> pingedPlayers = new ArrayList<>();
+                        getDestinations().forEach(chatChannel -> {
+                            chatChannel.getAllCachedPlayers().stream().filter(MythPlayer::isOnline)
+                                    .filter(player -> !pingedPlayers.contains(player)).forEach(player -> {
+                                chatChannel.messagePlayer(player, getContent());
+                                pingedPlayers.add(player);
+                            });
+                        });
+                    }, 0, ticks).getTaskId() + "";
+        }
+    }
+
     public void startTask() {
         if (taskID == null) {
             long ticks = (getInterval().getSeconds() * 20);
-            taskID = Bukkit.getScheduler().runTaskTimerAsynchronously(ServerButler.plugin, () -> getDestinations()
-                    .forEach(chatChannel -> chatChannel.push(this)), 2, ticks).getTaskId() + "";
+            taskID = Bukkit.getScheduler()
+                    .runTaskTimerAsynchronously(ServerButler.plugin, () -> {
+                        List<MythPlayer> pingedPlayers = new ArrayList<>();
+                        getDestinations().forEach(chatChannel -> {
+                            chatChannel.getAllCachedPlayers().stream().filter(MythPlayer::isOnline)
+                                    .filter(player -> !pingedPlayers.contains(player)).forEach(player -> {
+                                chatChannel.messagePlayer(player, getContent());
+                                pingedPlayers.add(player);
+                            });
+                        });
+                    }, ticks, ticks).getTaskId() + "";
         }
     }
 
@@ -120,6 +153,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
     }
 
     public void delete() {
+        stopTask();
         prepareAndExecuteUpdateExceptionally("DELETE FROM `SB_Announcements` WHERE `ID` = ?", 1, getId());
         DataCache.annoucementHashMap.remove(getId());
     }

@@ -21,7 +21,7 @@ public class StopTaskHandler implements ItemPacketHandler {
             return;
         }
         ChatAnnoucement chatAnnoucement = annoucement.get();
+        sender.sendMessage(ConfigProperties.PREFIX + ChatColor.GREEN + "Stopped task #" + chatAnnoucement.getTaskID());
         chatAnnoucement.stopTask();
-        sender.sendMessage(ConfigProperties.PREFIX + ChatColor.GREEN + "Stopped task");
     }
 }

@@ -11,7 +11,6 @@ import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -211,9 +210,14 @@ public class ChatChannel implements SQLAble {
         }
     }
 
+    public void messagePlayer(MythPlayer player, String content) {
+        String con = ChatColor.translateAlternateColorCodes('&', getPrefix() + content);
+        player.getBukkitPlayer().ifPresent(player1 -> player1.sendMessage(con));
+    }
+
     public void pushViaDiscord(String content, MythPlayer player) {
         String parsed;
-            parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
+        parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
                 .replace("{player_name}", player.getDisplayName() + ChatColor
                         .translateAlternateColorCodes('&', "&o via discord&r"))
@@ -228,16 +232,6 @@ public class ChatChannel implements SQLAble {
                 .exceptionally(ExceptionLogger.get());
     }
 
-    public void push(ChatAnnoucement annoucement) {
-        List<MythPlayer> pingedPlayers = new ArrayList<>();
-        getAllCachedPlayers().forEach(mythPlayer -> {
-            if (mythPlayer.isOnline() && !pingedPlayers.contains(mythPlayer)) {
-                mythPlayer.getBukkitPlayer().ifPresent(player -> player
-                        .sendMessage(ChatColor.translateAlternateColorCodes('&', annoucement.getContent())));
-                pingedPlayers.add(mythPlayer);
-            }
-        });
-    }
     @Override
     public boolean equals(Object o) {
         return (o instanceof ChatChannel) && (((ChatChannel) o).getID().equals(getID()));

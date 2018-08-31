@@ -15,6 +15,7 @@ import com.myththewolf.ServerButler.commands.futureTest;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.commands.player.discord.link;
 import com.myththewolf.ServerButler.commands.player.token;
+import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
@@ -124,6 +125,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         DataCache.rebuildNameList();
         getLogger().info("Caching all announcement tasks");
         DataCache.rebuildTaskList();
+        getLogger().info("Starting all announcement tasks");
+        DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::startTask);
         getLogger().info("Building command list");
         registerCommands();
 
@@ -304,6 +307,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.STOP_ANNOUNCEMENT, new StopTaskHandler());
         registerPacketHandler(PacketType.ADD_CHANNEL, new AddChannelHandler());
         registerPacketHandler(PacketType.REMOVE_CHANNEL, new RemoveChannelHandler());
+        registerPacketHandler(PacketType.CREATE_ANNOUNCEMENT, new CreateAnnouncementHandler());
+        registerPacketHandler(PacketType.INSERT_ANNOUNCEMENT, new InsertAnnouncementHandler());
     }
 
     public void checkConfiguration() {

@@ -2,11 +2,14 @@ package com.myththewolf.ServerButler.commands.admin.annoucement;
 
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
+import com.myththewolf.ServerButler.lib.MythUtils.CustomDyeColor;
 import com.myththewolf.ServerButler.lib.MythUtils.ItemUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
+import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -24,10 +27,12 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
-public class task extends CommandAdapter {
+public class task extends CommandAdapter implements Loggable {
     @Override
+    @CommandPolicy(userRequiredArgs = 1, consoleRequiredArgs = -1)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         if (args[0].equals("create")) {
+            assert sender.orElse(null) != null;
             create(sender.orElse(null));
             return;
         }
@@ -44,24 +49,24 @@ public class task extends CommandAdapter {
         packetAddChannel.put("packetType", PacketType.CHANNEL_SELECTION_CONTINUE);
         packetAddChannel.put("targetPacketType", PacketType.ADD_CHANNEL);
         packetAddChannel.put("ID", target.getId());
-        ItemStack itemAddChannel = ItemUtils.nameItem("Add a channel", ItemUtils
+        ItemStack itemAddChannel = ItemUtils.nameItem("Add channels", ItemUtils
                 .applyJSON(packetAddChannel, ItemUtils.woolForColor(DyeColor.LIME)));
         JSONObject packetRemoveChannel = new JSONObject();
         packetRemoveChannel.put("packetType", PacketType.CHANNEL_SELECTION_CONTINUE);
         packetRemoveChannel.put("targetPacketType", PacketType.REMOVE_CHANNEL);
         packetRemoveChannel.put("ID", target.getId());
-        ItemStack itemRemoveChannel = ItemUtils.nameItem("Remove a channel", ItemUtils
+        ItemStack itemRemoveChannel = ItemUtils.nameItem("Remove Channels", ItemUtils
                 .applyJSON(packetRemoveChannel, ItemUtils.woolForColor(DyeColor.RED)));
         JSONObject packetUpdateContent = new JSONObject();
         packetUpdateContent.put("packetType", PacketType.UPDATE_CONTENT);
         packetUpdateContent.put("ID", target.getId());
         ItemStack itemUpdateContent = ItemUtils.nameItem("Update Content", ItemUtils
-                .applyJSON(packetUpdateContent, new ItemStack(Material.WRITABLE_BOOK, 1)));
+                .applyJSON(packetUpdateContent, new ItemStack(Material.BOOK_AND_QUILL, 1)));
         JSONObject packetUpdateInterval = new JSONObject();
         packetUpdateInterval.put("packetType", PacketType.UPDATE_INTERVAL);
         packetUpdateInterval.put("ID", target.getId());
         ItemStack itemUpdateInterval = ItemUtils.nameItem("Update Interval", ItemUtils
-                .applyJSON(packetUpdateInterval, new ItemStack(Material.CLOCK, 1)));
+                .applyJSON(packetUpdateInterval, new ItemStack(Material.WATCH, 1)));
         JSONObject packetUpdatePermission = new JSONObject();
         packetUpdatePermission.put("packetType", PacketType.UPDATE_PERMISSION);
         packetUpdatePermission.put("ID", target.getId());
@@ -71,12 +76,12 @@ public class task extends CommandAdapter {
         packetStartTask.put("packetType", PacketType.START_ANNOUNCEMENT);
         packetStartTask.put("ID", target.getId());
         ItemStack itemStartTask = ItemUtils.nameItem("Start task", ItemUtils
-                .applyJSON(packetStartTask, new ItemStack(Material.LIME_DYE, 1)));
+                .applyJSON(packetStartTask, new ItemStack(Material.INK_SACK, 1, CustomDyeColor.LIME.getData())));
         JSONObject packetStopTask = new JSONObject();
         packetStopTask.put("packetType", PacketType.STOP_ANNOUNCEMENT);
         packetStopTask.put("ID", target.getId());
         ItemStack itemStopTask = ItemUtils.nameItem("Stop task", ItemUtils
-                .applyJSON(packetStopTask, new ItemStack(Material.ROSE_RED)));
+                .applyJSON(packetStopTask, new ItemStack(Material.INK_SACK, 1, CustomDyeColor.RED.getData())));
         JSONObject packetDeleteItem = new JSONObject();
         packetDeleteItem.put("packetType", PacketType.DELETE_ANNOUNCEMENT);
         packetDeleteItem.put("ID", target.getId());
@@ -116,10 +121,17 @@ public class task extends CommandAdapter {
                             }
 
                             @Override
-                            public Prompt acceptInput(ConversationContext conversationContext, String s) {
-                                conversationContext.setSessionData("packetType", PacketType.CHANNEL_SELECTION_CONTINUE);
-                                conversationContext.setSessionData("targetPacketType", PacketType.CREATE_ANNOUNCEMENT);
-                                conversationContext.setSessionData("permission", s.equals("none") ? null : s);
+                            public Prompt acceptInput(ConversationContext con, String s) {
+                                JSONObject packet = new JSONObject();
+                                packet.put("targetPacketType", PacketType.INSERT_ANNOUNCEMENT.toString());
+                                packet.put("permission", s.equals("none") ? null : s);
+                                packet.put("interval", con.getSessionData("interval"));
+                                packet.put("content", con.getSessionData("content"));
+                                packet.put("packetType", PacketType.CHANNEL_SELECTION_CONTINUE);
+                                con.setSessionData("packet", packet);
+                                con.setSessionData("player", src);
+                                con.setSessionData("packetType", PacketType.CHANNEL_SELECTION_CONTINUE);
+                                getLogger().info(packet.toString());
                                 conversationContext.getForWhom()
                                         .sendRawMessage(ConfigProperties.PREFIX + "Opening channel menu, please select all channels that this announcement applies to.");
                                 try {
@@ -139,6 +151,6 @@ public class task extends CommandAdapter {
                     }
                 };
             }
-        });
+        }).buildConversation(player).begin();
     }
 }
