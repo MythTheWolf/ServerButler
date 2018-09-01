@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.annoucement.task;
 import com.myththewolf.ServerButler.commands.admin.annoucement.tasks;
+import com.myththewolf.ServerButler.commands.admin.chat.ChatClear;
 import com.myththewolf.ServerButler.commands.admin.eval;
 import com.myththewolf.ServerButler.commands.admin.jsonImport;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.about;
@@ -271,6 +272,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("pardon", new pardon());
         registerCommand("tasks", new tasks());
         registerCommand("task", new task());
+        registerCommand("clearchat", new ChatClear());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());

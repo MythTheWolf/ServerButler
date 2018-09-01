@@ -215,6 +215,13 @@ public class ChatChannel implements SQLAble {
         player.getBukkitPlayer().ifPresent(player1 -> player1.sendMessage(con));
     }
 
+    public void pushRaw(String raw) {
+        getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(player -> player.getBukkitPlayer().get())
+                .forEach(player -> {
+                    player.sendMessage(raw);
+                });
+    }
+
     public void pushViaDiscord(String content, MythPlayer player) {
         String parsed;
         parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
