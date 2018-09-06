@@ -76,7 +76,7 @@ public class inetBan extends CommandAdapter implements Loggable {
         String CHAT_MESSAGE = StringUtils
                 .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, target.getAddress().toString(), sender
                         .map(MythPlayer::getName).orElse("CONSOLE"), REASON, affected);
-        DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+        DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
 
         target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
                 .forEachOrdered(player -> player.kickPlayerRaw(KICK_REASON));

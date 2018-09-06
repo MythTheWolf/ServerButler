@@ -5,7 +5,10 @@ import org.bukkit.inventory.ItemStack;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -31,14 +34,14 @@ public class StringUtils {
     /**
      * Replaces parameters, denoted by the pattern "{x}" where x represents parameter indexes
      *
-     * @param raw       The raw String
-     * @param values    The values to replace
+     * @param raw    The raw String
+     * @param values The values to replace
      * @return The replaced String
      */
-    public static String replaceParameters(String raw,  String... values) {
+    public static String replaceParameters(String raw, String... values) {
         String rep = raw;
-        int pos =0;
-        for (String val: values) {
+        int pos = 0;
+        for (String val : values) {
             rep = rep.replace("{" + pos + "}", val);
             pos++;
         }
@@ -62,8 +65,9 @@ public class StringUtils {
 
     /**
      * Converts a String to to a encoded/hidden String for a ItemStack
+     *
      * @param hiddenString The String to hide
-     * @return  The new hidden String
+     * @return The new hidden String
      */
     public static String encodeStringForItemStack(String hiddenString) {
         return quote(stringToColors(hiddenString));
@@ -71,6 +75,7 @@ public class StringUtils {
 
     /**
      * Checks if a String is hidden
+     *
      * @param input The String to check
      * @return true if the String is hidden
      */
@@ -82,6 +87,7 @@ public class StringUtils {
 
     /**
      * Decodes a hidden String
+     *
      * @param input The Sting to decode
      * @return The decoded String
      */
@@ -92,6 +98,7 @@ public class StringUtils {
 
     /**
      * Attaches the SEQUENCE_HEADER and the SEQUENCE_FOOTER to a given string
+     *
      * @param input The string to quote
      * @return The String, with the headers
      */
@@ -102,6 +109,7 @@ public class StringUtils {
 
     /**
      * Extracts the String between the two headers
+     *
      * @param input The String to extract from
      * @return The extracted String
      */
@@ -117,6 +125,7 @@ public class StringUtils {
 
         return input.substring(start + SEQUENCE_HEADER.length(), end);
     }
+
     private static String stringToColors(String normal) {
         if (normal == null) return null;
 
@@ -184,6 +193,7 @@ public class StringUtils {
 
     /**
      * Converts a ArrayList into a String, seperated by ","
+     *
      * @param array The ArrayList to serialize
      * @return The serialized ArrayList String
      */
@@ -197,6 +207,7 @@ public class StringUtils {
 
     /**
      * Converts a ArrayList serial string to an array
+     *
      * @param in The serialized ArrayList string
      * @return The new ArrayList
      */
@@ -206,6 +217,7 @@ public class StringUtils {
 
     /**
      * Extracts a hidden string from a ItemStack
+     *
      * @param item The item to extract the String from
      * @return A optional, empty if no hidden String is present
      */
@@ -216,6 +228,7 @@ public class StringUtils {
 
     /**
      * Parses a JSONObject string
+     *
      * @param in The JSON String to parse
      * @return A optional, empty if the JSON String is invalid.
      */
@@ -237,4 +250,14 @@ public class StringUtils {
         }
         return token.toString();
     }
+
+    public static Optional<String> readFile(String path, Charset encoding) {
+        try {
+            byte[] encoded = Files.readAllBytes(Paths.get(path));
+            return Optional.of(new String(encoded, encoding));
+        } catch (IOException exception) {
+            return Optional.empty();
+        }
+    }
+
 }

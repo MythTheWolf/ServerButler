@@ -32,9 +32,12 @@ public class EPlayerJoin implements Listener, Loggable {
     public void onJoin(PlayerJoinEvent event) {
 
 
-        MythPlayer MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache
-                .getOrMakePlayer(event.getPlayer().getUniqueId().toString()) : DataCache
-                .createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
+        MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        if (!MP.playerExists()) {
+            MP = DataCache.createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
+            ConfigProperties.EULA
+                    .ifPresent(s -> event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', s)));
+        }
         Optional<PlayerInetAddress> ipAddress = DataCache
                 .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
 
@@ -102,7 +105,7 @@ public class EPlayerJoin implements Listener, Loggable {
                     MP.kickPlayer("You have been banned from the server", null);
                     DataCache.getAdminChannel()
                             .push(ChatColor.RED + "&bRejected connection for player &6'" + MP
-                                    .getName() + "'&b because they are banned.", null);
+                                    .getName() + "'&b because they are banned.");
                     return;
                 }
                 String kickReason = StringUtils
@@ -111,7 +114,7 @@ public class EPlayerJoin implements Listener, Loggable {
                                 .getName() : "CONSOLE"));
                 DataCache.getAdminChannel()
                         .push(ChatColor.RED + "&bRejected connection for player &6'" + MP
-                                .getName() + "'&b because they are banned.", null);
+                                .getName() + "'&b because they are banned.");
                 MP.kickPlayerRaw(kickReason);
                 return;
             } else if (MP.getLoginStatus() == LoginStatus.TEMP_BANNED) {
@@ -120,7 +123,7 @@ public class EPlayerJoin implements Listener, Loggable {
                     MP.kickPlayer("You have been temp banned from the server", null);
                     DataCache.getAdminChannel()
                             .push(ChatColor.RED + "&bRejected connection for player &6'" + MP
-                                    .getName() + "'&b because they are temp-banned. ", null);
+                                    .getName() + "'&b because they are temp-banned. ");
                     return;
                 }
                 if (moderationAction.getExpireDate().get().isBeforeNow()) {
@@ -134,7 +137,7 @@ public class EPlayerJoin implements Listener, Loggable {
                         .push(ChatColor.RED + "&bRejected connection for player &6'" + MP
                                 .getName() + "'&b because they are temp-banned until" + TimeUtils
                                 .dateToString(moderationAction.getExpireDate()
-                                        .orElseThrow(IllegalStateException::new)), null);
+                                        .orElseThrow(IllegalStateException::new)));
                 MP.kickPlayerRaw(StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_TEMPBAN, MOD_NAME, REASON, EXPIRE));
                 return;
@@ -161,7 +164,7 @@ public class EPlayerJoin implements Listener, Loggable {
                                 .push(ChatColor.RED + "&bRejected connection for player &6'" + MP
                                         .getName() + "'&b because their IP,&6" + MP.getConnectionAddress()
                                         .orElseThrow(IllegalStateException::new).getAddress()
-                                        .toString() + "&b, is banned.", null);
+                                        .toString() + "&b, is banned.");
                         break;
                     case TEMP_BANNED:
                         PlayerInetAddress src = MP.getConnectionAddress().orElseThrow(IllegalStateException::new);
@@ -188,7 +191,7 @@ public class EPlayerJoin implements Listener, Loggable {
                                         .orElseThrow(IllegalStateException::new).getAddress()
                                         .toString() + "&b, is temp-banned until &6" + TimeUtils
                                         .dateToString(action.getExpireDate()
-                                                .orElseThrow(IllformedLocaleException::new)), null);
+                                                .orElseThrow(IllformedLocaleException::new)));
                         break;
                 }
                 return;

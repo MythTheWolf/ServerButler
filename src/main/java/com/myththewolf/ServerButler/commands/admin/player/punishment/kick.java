@@ -54,7 +54,7 @@ public class kick extends CommandAdapter {
             String modName = sender.map(MythPlayer::getName).orElse("CONSOLE");
             String message = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_KICK_CHAT, modName, target.get().getName(), reason);
-            DataCache.getAdminChannel().push(message, null);
+            DataCache.getPunishmentInfoChannel().push(message);
             target.get().kickPlayer(reason, sender.orElse(null));
         }
     }

@@ -1,7 +1,13 @@
 package com.myththewolf.ServerButler.lib.config;
 
 import com.myththewolf.ServerButler.ServerButler;
+import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import org.bukkit.ChatColor;
+
+import java.io.File;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * This class represents config.yml keys and values
@@ -197,4 +203,15 @@ public class ConfigProperties {
     public static String SQL_DATABASE = ServerButler.configuration.getString("SQL-DATABASE");
 
     public static String VIEW_ANNOUNCEMENT_GUI = ServerButler.configuration.getString("VIEW-ANNOUNCEMENT-GUI");
+
+    public static String PUNISHMENT_INFO_CHANNEL = ServerButler.configuration.getString("PUNISHMENT-INFO-CHANNEL");
+
+    public static Optional<String> EULA = StringUtils
+            .readFile(ServerButler.plugin.getDataFolder() + File.separator + "eula.txt", Charset
+                    .defaultCharset());
+
+    public static List<String> postEulaCommands = (List<String>) ServerButler.configuration
+            .getList("POST-EULA-COMMANDS");
+
+
 }

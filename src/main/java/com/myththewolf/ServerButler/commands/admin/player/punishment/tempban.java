@@ -46,7 +46,7 @@ public class tempban extends CommandAdapter implements Loggable {
             String ChatMessage = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_TEMPBAN_CHAT, sender.map(MythPlayer::getName)
                             .orElse("CONSOLE"), target.getName(), reason, TimeUtils.dateToString(expireDate));
-            DataCache.getAdminChannel().push(ChatMessage, null);
+            DataCache.getPunishmentInfoChannel().push(ChatMessage);
         } else {
 
             ServerButler.conversationBuilder.withEscapeSequence("^c")

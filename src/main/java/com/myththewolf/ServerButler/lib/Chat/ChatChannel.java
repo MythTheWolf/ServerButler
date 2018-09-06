@@ -174,13 +174,15 @@ public class ChatChannel implements SQLAble {
      * @param content The message to send
      * @param player  The player who is sending the message
      * @apiNote If player is null, the message being sent will be treated as a raw message, where the player name will not be included.
+     * @deprecated We now just remove players from the recipent list via AsyncPlayerChatEvent
      */
     public void push(String content, MythPlayer player) {
 
         if (player == null) {
             String con = ChatColor.translateAlternateColorCodes('&', content);
             getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
-                    .forEach(bukkitPlayer -> bukkitPlayer.sendMessage(getPrefix() + con));
+                    .forEach(bukkitPlayer -> bukkitPlayer
+                            .sendMessage(ChatColor.translateAlternateColorCodes('&', getPrefix()) + con));
             String whom = "[Server Message]";
             if (ConfigProperties.ENABLE_DISCORD_BOT) {
                 getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
@@ -195,19 +197,36 @@ public class ChatChannel implements SQLAble {
             parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
         }
 
-        String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replace("{player_name}", player.getBukkitPlayer().get().getDisplayName())
-                .replace("{text}", parsed).replace("{prefix}", getPrefix())
+        String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern().replace("{prefix}", getPrefix())
                 .replace("{channelName}", getName())
                 .replace("{worldName}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
-                .ifPresent(p2 -> p2.sendMessage(message2Send)));
+                .ifPresent(p2 -> p2.sendMessage(String.format(message2Send, player.getDisplayName(), content))));
         if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordChannel() != null) {
             String con = ChatColor.translateAlternateColorCodes('&', content);
             String whom = ChatColor.translateAlternateColorCodes('&', player.getBukkitPlayer().get().getDisplayName());
             getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
                     .exceptionally(ExceptionLogger.get());
         }
+    }
+
+    public String getMessageFromContext(MythPlayer player) {
+        return ChatColor.translateAlternateColorCodes('&', getPattern().replace("{prefix}", getPrefix())
+                .replace("{channelName}", getName())
+                .replace("{worldName}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
+    }
+
+    public void push(String content) {
+        String con = ChatColor.translateAlternateColorCodes('&', content);
+        getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
+                .forEach(bukkitPlayer -> bukkitPlayer
+                        .sendMessage(ChatColor.translateAlternateColorCodes('&', getPrefix()) + con));
+        String whom = "[Server Message]";
+        if (ConfigProperties.ENABLE_DISCORD_BOT) {
+            getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
+                    .exceptionally(ExceptionLogger.get());
+        }
+        return;
     }
 
     public void messagePlayer(MythPlayer player, String content) {

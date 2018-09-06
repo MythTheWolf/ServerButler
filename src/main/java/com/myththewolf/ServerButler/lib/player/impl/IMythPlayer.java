@@ -69,7 +69,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
         try {
             ResultSet RS = prepareAndExecuteSelectThrow("SELECT * FROM `SB_Players` WHERE `UUID` = ?", 1, UUID);
             while (RS.next()) {
-                exists = true;
+                this.exists = true;
                 this.loginStatus = LoginStatus.valueOf(RS.getString("loginStatus"));
                 this.chatStatus = ChatStatus.valueOf(RS.getString("chatStatus"));
                 this.joinDate = TimeUtils.timeFromString(RS.getString("joinDate"));

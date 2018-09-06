@@ -15,6 +15,7 @@ import com.myththewolf.ServerButler.commands.admin.player.punishment.*;
 import com.myththewolf.ServerButler.commands.futureTest;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.commands.player.discord.link;
+import com.myththewolf.ServerButler.commands.player.eula;
 import com.myththewolf.ServerButler.commands.player.token;
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
@@ -273,6 +274,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("tasks", new tasks());
         registerCommand("task", new task());
         registerCommand("clearchat", new ChatClear());
+        registerCommand("eula", new eula());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());

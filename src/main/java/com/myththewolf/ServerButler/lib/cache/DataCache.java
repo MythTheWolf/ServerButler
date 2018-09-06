@@ -211,9 +211,15 @@ public class DataCache {
      *
      * @return The cached Admin chat channel
      */
+
+    public static ChatChannel getPunishmentInfoChannel() {
+        Optional<ChatChannel> optionalChatChannel = DataCache
+                .getOrMakeChannel(ConfigProperties.PUNISHMENT_INFO_CHANNEL);
+        return optionalChatChannel.orElseGet(DataCache::getAdminChannel);
+    }
+
     public static ChatChannel getAdminChannel() {
         return getOrMakeChannel("ADMIN").get();
-
     }
 
     public static void rebuildNameList() {
@@ -250,6 +256,7 @@ public class DataCache {
     public static Optional<ChatAnnoucement> getAnnouncement(String ID) {
         return Optional.ofNullable(annoucementHashMap.get(ID));
     }
+
     public static ChatChannel getGlobalChannel() {
         return getOrMakeChannel("GLOBAL").get();
     }

@@ -36,12 +36,12 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
         switch ((PacketType) conversationAbandonedEvent.getContext().getSessionData("packetType")) {
             case BAN_PLAYER:
                 target.banPlayer(reason, sender.orElse(null));
-                ChatChannel adminChat = DataCache.getAdminChannel();
+                ChatChannel adminChat = DataCache.getPunishmentInfoChannel();
                 String CHAT_MESSAGE = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_BAN_CHAT, (sender.isPresent() ? sender.get()
                                 .getName() : "CONSOLE"), target.getName(), reason);
 
-                adminChat.push(CHAT_MESSAGE, null);
+                adminChat.push(CHAT_MESSAGE);
                 String KICK_MESSAGE = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_BAN, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), reason);
@@ -53,23 +53,23 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                 String ChatMessage = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_TEMPBAN_CHAT, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), target.getName(), reason, TimeUtils.dateToString(expireDate));
-                DataCache.getAdminChannel().push(ChatMessage, null);
+                DataCache.getPunishmentInfoChannel().push(ChatMessage);
                 break;
             case PARDON_PLAYER:
                 target.pardonPlayer(reason, sender.orElse(null));
-                adminChat = DataCache.getAdminChannel();
+                adminChat = DataCache.getPunishmentInfoChannel();
                 CHAT_MESSAGE = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_PARDON_CHAT, (sender.isPresent() ? sender.get()
                                 .getName() : "CONSOLE"), target.getName(), reason);
 
-                adminChat.push(CHAT_MESSAGE, null);
+                adminChat.push(CHAT_MESSAGE);
                 break;
             case KICK_PLAYER:
                 String modName = sender.map(MythPlayer::getName).orElse("CONSOLE");
                 String message = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_KICK_CHAT, modName, target
                                 .getName(), reason);
-                DataCache.getAdminChannel().push(message, null);
+                DataCache.getPunishmentInfoChannel().push(message);
                 target.kickPlayer(reason, sender.orElse(null));
                 break;
             case MUTE_PLAYER:
@@ -78,7 +78,7 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                 String toSend = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), target.getName(), reason);
-                DataCache.getAdminChannel().push(toSend, null);
+                DataCache.getPunishmentInfoChannel().push(toSend);
                 String playerMuteMessage = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_MUTE, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), reason);
@@ -89,7 +89,7 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                 String unmuteMessage = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_UNMUTE_CHAT, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), target.getName(), reason);
-                DataCache.getAdminChannel().push(unmuteMessage, null);
+                DataCache.getPunishmentInfoChannel().push(unmuteMessage);
                 String playerMessage = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_UNMUTE, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), reason);

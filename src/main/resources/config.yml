@@ -41,11 +41,13 @@ CHAT-COLOR-PERMISSION: "sb.chat.color"
 IMPORT-JSON-DATA: "sb.json.import"
 DEFAULT-CHANNEL: "global"
 VIEW-ANNOUNCEMENT-GUI: "sb.annouce.view"
-
-
+PUNISHMENT-INFO-CHANNEL: "ADMIN"
+POST-EULA-COMMANDS:
+  - "msg {player} Hello"
+  - "pex user {player} add sb.chat.admin"
 #Discord bot
 ENABLE-DISCORD-BOT: false
-
+DISCORD-BOT-TOKEN: "bread"
 
 #MySQL Connection
 

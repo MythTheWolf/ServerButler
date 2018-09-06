@@ -20,14 +20,14 @@ public class ChatClear extends CommandAdapter {
             for (int i = 0; i < 45; i++) {
                 sender.get().getWritingChannel().get().pushRaw("");
             }
-            sender.get().getWritingChannel().get().push(ChatColor.AQUA + "[This chat has been cleared]", null);
+            sender.get().getWritingChannel().get().push(ChatColor.AQUA + "[This chat has been cleared]");
         } else {
             if (args[0].toLowerCase().equals("all-channels")) {
                 DataCache.getAllChannels().forEach(chatChannel -> {
                     for (int i = 0; i < 45; i++) {
                         chatChannel.pushRaw("");
                     }
-                    chatChannel.push(ChatColor.AQUA + "[This chat has been cleared]", null);
+                    chatChannel.push(ChatColor.AQUA + "[This chat has been cleared]");
                 });
                 return;
             }
@@ -39,7 +39,7 @@ public class ChatClear extends CommandAdapter {
             for (int i = 0; i < 45; i++) {
                 optionalChatChannel.get().pushRaw("");
             }
-            optionalChatChannel.get().push(ChatColor.AQUA + "[This chat has been cleared]", null);
+            optionalChatChannel.get().push(ChatColor.AQUA + "[This chat has been cleared]");
         }
 
     }

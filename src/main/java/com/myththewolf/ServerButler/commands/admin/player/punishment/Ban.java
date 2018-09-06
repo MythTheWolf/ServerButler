@@ -53,12 +53,12 @@ public class Ban extends CommandAdapter implements Loggable {
         } else {
             String reason = StringUtils.arrayToString(1, args);
             target.get().banPlayer(reason, sender.orElse(null));
-            ChatChannel adminChat = DataCache.getAdminChannel();
+            ChatChannel adminChat = DataCache.getPunishmentInfoChannel();
             String CHAT_MESSAGE = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_BAN_CHAT, (sender.isPresent() ? sender.get()
                             .getName() : "CONSOLE"), target.get().getName(), reason);
 
-            adminChat.push(CHAT_MESSAGE, null);
+            adminChat.push(CHAT_MESSAGE);
             String KICK_MESSAGE = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_BAN, sender.map(MythPlayer::getName)
                             .orElse("CONSOLE"), reason);
