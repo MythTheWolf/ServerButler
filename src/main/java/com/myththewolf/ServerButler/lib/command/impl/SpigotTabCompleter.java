@@ -14,6 +14,12 @@ public class SpigotTabCompleter implements TabCompleter, Loggable {
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String string, String[] strings) {
         List<String> ret = new ArrayList<>();
+        if (strings[strings.length - 1].startsWith("/")) {
+            DataCache.getAllIps().stream()
+                    .filter(s -> s.toLowerCase().startsWith(strings[strings.length - 1].toLowerCase()))
+                    .forEach(ret::add);
+            return ret;
+        }
         DataCache.getPlayerNameMap().keySet().stream()
                 .filter(s -> s.toLowerCase().startsWith(strings[strings.length - 1].toLowerCase())).forEach(ret::add);
         return ret;

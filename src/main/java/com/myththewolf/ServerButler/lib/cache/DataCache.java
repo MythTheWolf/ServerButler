@@ -16,10 +16,7 @@ import java.net.InetAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -42,7 +39,7 @@ public class DataCache {
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
     private static HashMap<String, String> playerNameMap = new HashMap<>();
-
+    private static List<String> allIps = new ArrayList<>();
     /**
      * Gets a player from cache if present, but makes a new player object
      *
@@ -106,6 +103,7 @@ public class DataCache {
         channelHashMap = new HashMap<>();
         playerNameMap = new HashMap<>();
         annoucementHashMap = new HashMap<>();
+        allIps = new ArrayList<>();
     }
 
     /**
@@ -168,6 +166,10 @@ public class DataCache {
         }
     }
 
+    public static List<String> getAllIps() {
+        return allIps;
+    }
+
     /**
      * Converts the channelHashMap to a list
      *
@@ -177,6 +179,18 @@ public class DataCache {
         return channelHashMap.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
+    public static void rebuildIPList() {
+        allIps.clear();
+        try {
+            ResultSet rs = ServerButler.connector.getConnection().prepareStatement("SELECT * FROM SB_IPAddresses")
+                    .executeQuery();
+            while (rs.next()) {
+                allIps.add(rs.getString("address"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * Gets the plugin logger. We can't use {@link Loggable#getLogger()} because all methods here are static
      *
@@ -234,7 +248,6 @@ public class DataCache {
             e.printStackTrace();
         }
     }
-
     public static void rebuildTaskList() {
         List<ChatAnnoucement> runnning = DataCache.annoucementHashMap.values().stream()
                 .filter(ChatAnnoucement::isRunning).collect(Collectors.toList());

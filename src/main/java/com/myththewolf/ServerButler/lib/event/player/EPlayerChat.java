@@ -92,7 +92,9 @@ public class EPlayerChat implements Listener, Loggable {
             }).forEach(o -> event.getRecipients().remove(o));
             event.setFormat(chatChannel.getMessageFromContext(sender));
             event.setMessage(event.getMessage().substring(chatChannel.getShortcut().get().length()));
+            chatChannel.sendToDiscord(sender, event.getMessage());
         });
+
         if (shortCutRan) {
             return;
         }
@@ -102,6 +104,7 @@ public class EPlayerChat implements Listener, Loggable {
                 return !chatChannel.getAllCachedPlayers().contains(mp);
             }).forEach(o -> event.getRecipients().remove(o));
             event.setFormat(chatChannel.getMessageFromContext(sender));
+            chatChannel.sendToDiscord(sender, event.getMessage());
         });
 
     }

@@ -37,7 +37,7 @@ public class eval extends CommandAdapter {
         engine.put("ConfigClass", ConfigProperties.class);
         header.append("var dc = DataCacheClass.static;");
         header.append("var bk = BukkitClass.static;");
-        header.append("var cp = ConfigClass.static");
+        header.append("var cp = ConfigClass.static;");
         header.append(StringUtils.arrayToString(0, args));
 
         try {

@@ -206,6 +206,8 @@ public class ConfigProperties {
 
     public static String PUNISHMENT_INFO_CHANNEL = ServerButler.configuration.getString("PUNISHMENT-INFO-CHANNEL");
 
+    public static String PROBATE_PERMISSION = ServerButler.configuration.getString("PROBATE-PERMISSION");
+
     public static Optional<String> EULA = StringUtils
             .readFile(ServerButler.plugin.getDataFolder() + File.separator + "eula.txt", Charset
                     .defaultCharset());

@@ -20,7 +20,8 @@ public class DiscordMessageEvent implements MessageCreateListener {
             return;
         }
         boolean isMcChannel = DataCache.getAllChannels().stream()
-                .anyMatch(chatChannel -> chatChannel.getDiscordChannel().getId() == messageCreateEvent.getChannel()
+                .anyMatch(chatChannel -> chatChannel.getDiscordChannel() != null && chatChannel.getDiscordChannel()
+                        .getId() == messageCreateEvent.getChannel()
                         .getId());
 
         if (!isMcChannel) {

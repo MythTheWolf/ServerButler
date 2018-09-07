@@ -210,10 +210,20 @@ public class ChatChannel implements SQLAble {
         }
     }
 
+    public void sendToDiscord(MythPlayer player, String content) {
+        if (ConfigProperties.ENABLE_DISCORD_BOT && getDiscordChannel() != null) {
+            String con = ChatColor.translateAlternateColorCodes('&', content);
+            String whom = ChatColor.translateAlternateColorCodes('&', player.getBukkitPlayer().get().getDisplayName());
+            getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
+                    .exceptionally(ExceptionLogger.get());
+        }
+    }
+
     public String getMessageFromContext(MythPlayer player) {
         return ChatColor.translateAlternateColorCodes('&', getPattern().replace("{prefix}", getPrefix())
                 .replace("{channelName}", getName())
-                .replace("{worldName}", player.getBukkitPlayer().get().getLocation().getWorld().getName()));
+                .replace("{worldName}", player.getBukkitPlayer().get().getLocation().getWorld().getName())
+                .replace("{isProbated}", player.isProbated() ? ChatColor.RED + "*" + "" : ""));
     }
 
     public void push(String content) {
@@ -242,16 +252,14 @@ public class ChatChannel implements SQLAble {
     }
 
     public void pushViaDiscord(String content, MythPlayer player) {
-        String parsed;
-        parsed = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', content));
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
-                .replace("{player_name}", player.getDisplayName() + ChatColor
-                        .translateAlternateColorCodes('&', "&o via discord&r"))
-                .replace("{text}", parsed).replace("{prefix}", getPrefix())
+                .replace("{prefix}", getPrefix())
                 .replace("{channelName}", getName())
                 .replace("{worldName}", ""));
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
-                .ifPresent(p2 -> p2.sendMessage(message2Send)));
+                .ifPresent(p2 -> p2.sendMessage(String
+                        .format(message2Send, player
+                                .getDisplayName() + ChatColor.ITALIC + " (discord)" + ChatColor.RESET, content))));
         String con = ChatColor.translateAlternateColorCodes('&', content);
         String whom = ChatColor.translateAlternateColorCodes('&', player.getDisplayName());
         getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))

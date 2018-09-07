@@ -9,6 +9,9 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetBan;
+import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
+import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.conversations.Conversable;
 import org.bukkit.conversations.ConversationAbandonedEvent;
@@ -17,6 +20,7 @@ import org.joda.time.DateTime;
 import org.json.JSONObject;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class PlayerConversationAbandonedEvent implements ConversationAbandonedListener, Loggable {
     @Override
@@ -125,6 +129,29 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                                 .onPacketReceived((MythPlayer) conversationAbandonedEvent.getContext()
                                         .getSessionData("player"), (JSONObject) conversationAbandonedEvent.getContext()
                                         .getSessionData("packet")));
+                break;
+            case BAN_IP:
+                PlayerInetAddress targetIp = (PlayerInetAddress) conversationAbandonedEvent.getContext()
+                        .getSessionData("target-ip");
+                ActionInetBan actionInetBan = new ActionInetBan(reason, targetIp, sender.orElse(null));
+                actionInetBan.update();
+                targetIp.setLoginStatus(LoginStatus.BANNED);
+                DataCache.rebuildPlayerInetAddress(targetIp);
+                String KICK_REASON = StringUtils
+                        .replaceParameters(ConfigProperties.FORMAT_IP_BAN, targetIp.getAddress().toString(), sender
+                                .map(MythPlayer::getName).orElse("CONSOLE"), reason);
+
+                String affected = StringUtils
+                        .serializeArray(targetIp.getMappedPlayers().stream().map(MythPlayer::getName)
+                                .collect(Collectors.toList()));
+
+                CHAT_MESSAGE = StringUtils
+                        .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, targetIp.getAddress().toString(), sender
+                                .map(MythPlayer::getName).orElse("CONSOLE"), reason, affected);
+                DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
+
+                targetIp.getMappedPlayers().stream().filter(MythPlayer::isOnline)
+                        .forEachOrdered(player -> player.kickPlayerRaw(KICK_REASON));
                 break;
             default:
                 break;
