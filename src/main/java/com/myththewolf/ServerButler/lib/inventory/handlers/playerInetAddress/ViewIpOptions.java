@@ -53,7 +53,7 @@ public class ViewIpOptions implements ItemPacketHandler, Loggable {
         packet_list_players.put("ADDRESS", address.getAddress().toString());
         packet_list_players.put("PAGE", 0);
         ItemStack stack_list_players = ItemUtils.applyJSON(packet_list_players, ItemUtils
-                .nameItem("List players who have this IP", new ItemStack(Material.SKULL_ITEM, 1)));
+                .nameItem("List players who have this IP", new ItemStack(Material.PLAYER_HEAD, 1)));
         JSONObject packet_delete_ip = new JSONObject();
         packet_delete_ip.put("packetType", PacketType.DELETE_IP);
         packet_delete_ip.put("ADDRESS", address.getAddress().toString());
