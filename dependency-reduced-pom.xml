@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.myththewolf</groupId>
   <artifactId>ServerButler</artifactId>
-    <version>1.12</version>
+  <version>1.12</version>
   <build>
     <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
     <plugins>
@@ -25,8 +25,8 @@
           </includes>
           <replacements>
             <replacement>
-                <token>@plugin-version</token>
-                <value>"${git.branch}-${git.commit.id.abbrev}"</value>
+              <token>@plugin-version</token>
+              <value>"${git.branch}-${git.commit.id.abbrev}"</value>
             </replacement>
           </replacements>
         </configuration>
@@ -90,7 +90,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-        <version>1.12-R0.1-SNAPSHOT</version>
+      <version>1.12-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
