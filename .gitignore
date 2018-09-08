@@ -1,4 +1,3 @@
-pom.xml
 .idea/
 Jenkinsfile
 dependency-reduced-pom.xml
