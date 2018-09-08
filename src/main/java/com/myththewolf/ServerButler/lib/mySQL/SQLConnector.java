@@ -72,7 +72,7 @@ public class SQLConnector {
      */
     private Connection openConnection() throws SQLException {
         connection = DriverManager
-                .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName, username, password);
+                .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName + "?autoReconnect=true&useUnicode=yes", username, password);
         return connection;
     }
 }
