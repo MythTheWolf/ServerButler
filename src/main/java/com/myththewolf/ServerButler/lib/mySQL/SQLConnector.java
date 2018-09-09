@@ -1,5 +1,7 @@
 package com.myththewolf.ServerButler.lib.mySQL;
 
+import com.myththewolf.ServerButler.lib.logging.Loggable;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -7,7 +9,7 @@ import java.sql.SQLException;
 /**
  * This class represents a SQL connector
  */
-public class SQLConnector {
+public class SQLConnector implements Loggable {
     /**
      * The connection object to the server
      */
@@ -71,8 +73,9 @@ public class SQLConnector {
      * @throws SQLException If a error occurred while connecting
      */
     private Connection openConnection() throws SQLException {
+        debug("Opening new connection");
         connection = DriverManager
-                .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName + "?autoReconnect=true&useUnicode=yes", username, password);
+                .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName + "?autoReconnect=true", username, password);
         return connection;
     }
 }
