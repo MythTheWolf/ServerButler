@@ -59,10 +59,10 @@ public class SQLConnector implements Loggable {
      */
     public Connection getConnection() {
         try {
+            connection = ((connection == null) || connection.isClosed()) ? openConnection() : connection;
             PreparedStatement ps = this.connection.prepareStatement("SELECT * FROM `SB_Players` LIMIT 1");
             ResultSet rs = ps.executeQuery();
             rs.next();
-            return ((connection == null) || connection.isClosed()) ? openConnection() : connection;
         } catch (SQLException e) {
             e.printStackTrace();
             this.connection = openConnection();
