@@ -129,7 +129,7 @@ public class DataCache {
      * @see @link{DataCache#rebuildChannelList()} for rebuilding the channel list
      */
     public static Optional<ChatChannel> getOrMakeChannel(String name) {
-        return channelHashMap.entrySet().stream().map(Map.Entry::getValue)
+        return channelHashMap.values().stream()
                 .filter(chatChannel -> chatChannel.getName().equals(name)).findFirst();
     }
 

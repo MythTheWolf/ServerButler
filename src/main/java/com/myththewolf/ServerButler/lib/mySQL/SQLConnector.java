@@ -1,10 +1,10 @@
 package com.myththewolf.ServerButler.lib.mySQL;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import org.bukkit.Bukkit;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * This class represents a SQL connector
@@ -59,11 +59,15 @@ public class SQLConnector implements Loggable {
      */
     public Connection getConnection() {
         try {
+            PreparedStatement ps = this.connection.prepareStatement("SELECT * FROM `SB_Players` LIMIT 1");
+            ResultSet rs = ps.executeQuery();
+            rs.next();
             return ((connection == null) || connection.isClosed()) ? openConnection() : connection;
         } catch (SQLException e) {
             e.printStackTrace();
+            this.connection = openConnection();
         }
-        return null;
+        return connection;
     }
 
     /**
@@ -72,10 +76,16 @@ public class SQLConnector implements Loggable {
      * @return The connection
      * @throws SQLException If a error occurred while connecting
      */
-    private Connection openConnection() throws SQLException {
+    private Connection openConnection() {
         debug("Opening new connection");
-        connection = DriverManager
-                .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName + "?autoReconnect=true", username, password);
+        try {
+            connection = DriverManager
+                    .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName, username, password);
+        } catch (SQLException e) {
+            getLogger().severe("Could not connect to database!");
+            e.printStackTrace();
+            Bukkit.getPluginManager().disablePlugin(ServerButler.plugin);
+        }
         return connection;
     }
 }
