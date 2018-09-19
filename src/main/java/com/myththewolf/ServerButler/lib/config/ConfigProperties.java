@@ -184,7 +184,7 @@ public class ConfigProperties {
 
     public static String TEMPBAN_PERMISSION = ServerButler.configuration.getString("TEMPBAN-PERMISSION");
 
-    public static String DEFAULT_CHAT_PATTERN = "{prefix} {player_name} : {text}";
+    public static String DEFAULT_CHAT_PATTERN = "{isProbated}{prefix} {player_name} : {text}";
 
     public static String COLOR_CHAT_PERMISSION = ServerButler.configuration.getString("CHAT-COLOR-PERMISSION");
 
