@@ -21,7 +21,7 @@ public class SpigotTabCompleter implements TabCompleter, Loggable {
             return ret;
         }
         DataCache.getPlayerNameMap().keySet().stream()
-                .filter(s -> s.toLowerCase().startsWith(strings[strings.length - 1].toLowerCase())).forEach(ret::add);
+                .filter(s -> s != null && s.toLowerCase().startsWith(strings[strings.length - 1].toLowerCase())).forEach(ret::add);
         return ret;
     }
 }

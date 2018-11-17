@@ -358,6 +358,9 @@ public class DataCache {
 
     public static void rebuildPlayer(String UUID) {
         playerHashMap.put(UUID, new IMythPlayer(UUID));
+        playerNameMap.remove(playerHashMap.get(UUID).getName());
+        playerNameMap.put(playerHashMap.get(UUID).getName(), UUID);
+
     }
 
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
@@ -401,6 +404,6 @@ public class DataCache {
     }
 
     public static HashMap<String, String> getPlayerNameMap() {
-        return playerNameMap;
+        return new HashMap<>(playerNameMap);
     }
 }

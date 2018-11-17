@@ -177,7 +177,6 @@ public class ChatChannel implements SQLAble {
      * @deprecated We now just remove players from the recipent list via AsyncPlayerChatEvent
      */
     public void push(String content, MythPlayer player) {
-
         if (player == null) {
             String con = ChatColor.translateAlternateColorCodes('&', content);
             getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
