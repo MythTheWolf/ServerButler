@@ -115,6 +115,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EInventoryClick(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerChat(), this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerLeave(), this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerDeath(), this);
         getLogger().info("Constructing database");
         checkTables();
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
@@ -123,10 +125,6 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         }
         getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
-        getLogger().info("Caching all player names");
-        DataCache.rebuildNameList();
-        getLogger().info("Caching all IP addresses");
-        DataCache.rebuildIPList();
         getLogger().info("Caching all announcement tasks");
         DataCache.rebuildTaskList();
         getLogger().info("Starting all announcement tasks");
@@ -174,7 +172,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                         chatChannel.getDiscordChannel()
                                 .sendMessage(":timer: I'm still setting permissions! Chat will not be fully accessible!");
                         PermissionsBuilder pb = new PermissionsBuilder();
-                        pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES);
+                        pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.ATTACH_FILE);
                         ServerButler.API.getServers().stream().findFirst().get().getRoles().forEach(role -> {
 
                             chatChannel.getDiscordChannel().asServerTextChannel().get().createUpdater()
@@ -195,7 +193,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                     chatChannel.setChannel(c);
                     chatChannel.update();
                     chatChannel.getDiscordChannel()
-                            .sendMessage("**------------------[Connected To Minecraft]------------------**")
+                            .sendMessage("**:arrow_up: Server Online**")
                             .exceptionally(ExceptionLogger.get());
                 });
             });
@@ -247,7 +245,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public void onDisable() {
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             DataCache.getAllChannels().forEach(chatChannel -> {
-                chatChannel.getDiscordChannel().sendMessage("**------------------[Server Closed]------------------**")
+                chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                         .join();
             });
         }
@@ -332,7 +330,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void checkTables() {
-        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `probate` VARCHAR(255) NOT NULL DEFAULT 'false',`chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
+        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL UNIQUE , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `probate` VARCHAR(255) NOT NULL DEFAULT 'false',`chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Actions` ( `ID` INT NOT NULL AUTO_INCREMENT , `type` VARCHAR(255) NULL DEFAULT NULL , `reason` VARCHAR(255) NULL DEFAULT NULL , `expireDate` VARCHAR(255) NULL DEFAULT NULL, `target` VARCHAR(255) NULL DEFAULT NULL , `moderator` VARCHAR(255) NULL DEFAULT NULL , `targetType` VARCHAR(255) NULL DEFAULT NULL , `dateApplied` VARCHAR(255) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Channels` ( `ID` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , `shortcut` VARCHAR(255) NULL DEFAULT NULL , `prefix` VARCHAR(255) NULL DEFAULT NULL , `permission` VARCHAR(255) NULL DEFAULT NULL ,`format` VARCHAR(255) NOT NULL , `discord_id` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Discord` ( `ID` INT NOT NULL AUTO_INCREMENT , `token` VARCHAR(255) NOT NULL , `UUID` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);

@@ -16,7 +16,10 @@ import java.net.InetAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -38,8 +41,6 @@ public class DataCache {
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
-    private static HashMap<String, String> playerNameMap = new HashMap<>();
-    private static List<String> allIps = new ArrayList<>();
     /**
      * Gets a player from cache if present, but makes a new player object
      *
@@ -54,10 +55,6 @@ public class DataCache {
         MythPlayer player = makeNewPlayerObj(UUID);
         if (player.playerExists()) {
             playerHashMap.put(UUID, player);
-        }
-        if (!playerNameMap.containsKey(player.getName())) {
-            debug("Player doesn't exist in name list,adding: " + player.getName());
-            playerNameMap.put(player.getName(), player.getUUID());
         }
         return playerHashMap.get(UUID);
     }
@@ -101,9 +98,7 @@ public class DataCache {
     public static void makeMaps() {
         playerHashMap = new HashMap<>();
         channelHashMap = new HashMap<>();
-        playerNameMap = new HashMap<>();
         annoucementHashMap = new HashMap<>();
-        allIps = new ArrayList<>();
     }
 
     /**
@@ -166,9 +161,6 @@ public class DataCache {
         }
     }
 
-    public static List<String> getAllIps() {
-        return allIps;
-    }
 
     /**
      * Converts the channelHashMap to a list
@@ -179,18 +171,6 @@ public class DataCache {
         return channelHashMap.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
-    public static void rebuildIPList() {
-        allIps.clear();
-        try {
-            ResultSet rs = ServerButler.connector.getConnection().prepareStatement("SELECT * FROM SB_IPAddresses")
-                    .executeQuery();
-            while (rs.next()) {
-                allIps.add(rs.getString("address"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
     /**
      * Gets the plugin logger. We can't use {@link Loggable#getLogger()} because all methods here are static
      *
@@ -236,18 +216,7 @@ public class DataCache {
         return getOrMakeChannel("ADMIN").get();
     }
 
-    public static void rebuildNameList() {
-        try {
-            PreparedStatement ps = ServerButler.connector.getConnection()
-                    .prepareStatement("SELECT * FROM `SB_Players`");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                playerNameMap.put(rs.getString("name"), rs.getString("UUID"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+
     public static void rebuildTaskList() {
         List<ChatAnnoucement> runnning = DataCache.annoucementHashMap.values().stream()
                 .filter(ChatAnnoucement::isRunning).collect(Collectors.toList());
@@ -282,13 +251,17 @@ public class DataCache {
      * @apiNote This performs a database selection to convert their name into a UUID, but pulls their MythPlayer object from cache (or creates it if not present)
      */
     public static Optional<MythPlayer> getPlayerByName(String name) {
-        if (!playerNameMap.containsKey(name)) {
-            return Optional.empty();
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection().prepareStatement("SELECT * FROM `SB_Players` WHERE `name` = ?");
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return Optional.ofNullable(getOrMakePlayer(rs.getString("UUID")));
+            }
+        } catch (SQLException E) {
+            E.printStackTrace();
         }
-        if (!DataCache.getOrMakePlayer(playerNameMap.get(name)).playerExists()) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(DataCache.getOrMakePlayer(playerNameMap.get(name)));
+        return Optional.empty();
     }
 
     /**
@@ -358,8 +331,6 @@ public class DataCache {
 
     public static void rebuildPlayer(String UUID) {
         playerHashMap.put(UUID, new IMythPlayer(UUID));
-        playerNameMap.remove(playerHashMap.get(UUID).getName());
-        playerNameMap.put(playerHashMap.get(UUID).getName(), UUID);
 
     }
 
@@ -403,7 +374,8 @@ public class DataCache {
         }
     }
 
-    public static HashMap<String, String> getPlayerNameMap() {
+    /*public static HashMap<String, String> getPlayerNameMap() {
         return new HashMap<>(playerNameMap);
     }
+    */
 }
