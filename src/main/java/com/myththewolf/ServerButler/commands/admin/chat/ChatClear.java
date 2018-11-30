@@ -21,6 +21,12 @@ public class ChatClear extends CommandAdapter {
                 sender.get().getWritingChannel().get().pushRaw("");
             }
             sender.get().getWritingChannel().get().push(ChatColor.AQUA + "[This chat has been cleared]");
+            if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                sender.get().getWritingChannel().orElseThrow(IllegalStateException::new).getDiscordChannel().getMessages(45).join().deleteAll().whenComplete((aVoid, throwable) -> {
+                    sender.get().getWritingChannel().orElseThrow(IllegalStateException::new).getDiscordChannel().sendMessage("[This chat has been cleared]");
+                });
+
+            }
         } else {
             if (args[0].toLowerCase().equals("all-channels")) {
                 DataCache.getAllChannels().forEach(chatChannel -> {
@@ -28,6 +34,12 @@ public class ChatClear extends CommandAdapter {
                         chatChannel.pushRaw("");
                     }
                     chatChannel.push(ChatColor.AQUA + "[This chat has been cleared]");
+                    if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                        chatChannel.getDiscordChannel().getMessages(45).join().deleteAll().whenComplete((aVoid, throwable) -> {
+                            chatChannel.getDiscordChannel().sendMessage("[This chat has been cleared]");
+                        });
+
+                    }
                 });
                 return;
             }
@@ -40,6 +52,11 @@ public class ChatClear extends CommandAdapter {
                 optionalChatChannel.get().pushRaw("");
             }
             optionalChatChannel.get().push(ChatColor.AQUA + "[This chat has been cleared]");
+            if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                optionalChatChannel.map(ChatChannel::getDiscordChannel).orElseThrow(IllegalStateException::new).getMessages(45).join().deleteAll().whenComplete((aVoid, throwable) -> {
+                    optionalChatChannel.map(ChatChannel::getDiscordChannel).orElseThrow(IllegalStateException::new).sendMessage("[This chat has been cleared]");
+                });
+            }
         }
 
     }
