@@ -93,6 +93,7 @@ public class EPlayerJoin implements Listener, Loggable {
 
         if (!MP.getWritingChannel().isPresent()) {
             MP.setWritingChannel(DataCache.getGlobalChannel());
+            MP.updatePlayer();
         }
 
         if (!MP.isViewing(DataCache.getGlobalChannel())) {
@@ -197,6 +198,9 @@ public class EPlayerJoin implements Listener, Loggable {
                 return;
             } else {
                 MP.getChannelList().forEach(DataCache::rebuildChannel);
+            }
+            if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                DataCache.getGlobalChannel().getDiscordChannel().sendMessage(":arrow_forward: " + ChatColor.stripColor(MP.getDisplayName()) + " joined the game.");
             }
         } catch (Exception e) {
             e.printStackTrace();
