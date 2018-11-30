@@ -30,7 +30,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
      */
     private LoginStatus loginStatus = null;
     /**
-     * The current chat status ofthe player
+     * The current chat status of the player
      */
     private ChatStatus chatStatus = null;
     private DateTime joinDate;

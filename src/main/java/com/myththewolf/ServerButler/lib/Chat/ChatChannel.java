@@ -254,7 +254,8 @@ public class ChatChannel implements SQLAble {
         String message2Send = ChatColor.translateAlternateColorCodes('&', getPattern()
                 .replace("{prefix}", getPrefix())
                 .replace("{channelName}", getName())
-                .replace("{worldName}", ""));
+                .replace("{worldName}", ""))
+                .replace("{isProbated}", player.isProbated() ? ChatColor.RED + "*" + "" : "");
         getAllCachedPlayers().forEach(p21 -> p21.getBukkitPlayer()
                 .ifPresent(p2 -> p2.sendMessage(String
                         .format(message2Send, player
