@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.annoucement.task;
 import com.myththewolf.ServerButler.commands.admin.annoucement.tasks;
+import com.myththewolf.ServerButler.commands.admin.chat.ChatClear;
 import com.myththewolf.ServerButler.commands.admin.eval;
 import com.myththewolf.ServerButler.commands.admin.jsonImport;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.about;
@@ -14,8 +15,12 @@ import com.myththewolf.ServerButler.commands.admin.player.punishment.*;
 import com.myththewolf.ServerButler.commands.futureTest;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.commands.player.discord.link;
+import com.myththewolf.ServerButler.commands.player.eula;
 import com.myththewolf.ServerButler.commands.player.token;
+import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
+import com.myththewolf.ServerButler.lib.MythUtils.MythTPSWatcher;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
@@ -56,11 +61,14 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.permission.PermissionsBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.util.logging.ExceptionLogger;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -83,7 +91,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static Plugin plugin;
     private CommandMap commandMap = null;
     private TabCompleter mythTabCompleter;
-
+    public static DateTime startTime = new DateTime();
+    private List<Message> loadingMessages = new ArrayList<>();
     public static boolean isAlive(Process p) {
         try {
             p.exitValue();
@@ -107,11 +116,17 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         getLogger().info("Connecting to SQL server");
         connector = new SQLConnector(ConfigProperties.SQL_HOST, Integer
                 .parseInt(ConfigProperties.SQL_PORT), ConfigProperties.SQL_USER, ConfigProperties.SQL_PASS, ConfigProperties.SQL_DATABASE);
+        if (!connector.isConnected()) {
+            getLogger().warning("***COULD NOT CONNECT TO DATABASE!*** Shutting down server so banned players can't sneak in!");
+            //Bukkit.getServer().shutdown();
+        }
         Bukkit.getPluginManager().registerEvents(new EPlayerJoin(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
         Bukkit.getPluginManager().registerEvents(new EInventoryClick(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerChat(), this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerLeave(), this);
+        Bukkit.getPluginManager().registerEvents(new EPlayerDeath(), this);
         getLogger().info("Constructing database");
         checkTables();
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
@@ -120,10 +135,16 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         }
         getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
-        getLogger().info("Caching all player names");
-        DataCache.rebuildNameList();
         getLogger().info("Caching all announcement tasks");
         DataCache.rebuildTaskList();
+        getLogger().info("Starting all announcement tasks");
+        DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::startTask);
+        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 1L);
+        Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            DataCache.getAllChannels().forEach(chatChannel -> {
+                chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
+            });
+        }, 20, 1200);
         getLogger().info("Building command list");
         registerCommands();
 
@@ -167,7 +188,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                         chatChannel.getDiscordChannel()
                                 .sendMessage(":timer: I'm still setting permissions! Chat will not be fully accessible!");
                         PermissionsBuilder pb = new PermissionsBuilder();
-                        pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES);
+                        pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.ATTACH_FILE);
                         ServerButler.API.getServers().stream().findFirst().get().getRoles().forEach(role -> {
 
                             chatChannel.getDiscordChannel().asServerTextChannel().get().createUpdater()
@@ -187,15 +208,20 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                         .findFirst().flatMap(Channel::asServerTextChannel).ifPresent(c -> {
                     chatChannel.setChannel(c);
                     chatChannel.update();
-                    chatChannel.getDiscordChannel()
-                            .sendMessage("**------------------[Connected To Minecraft]------------------**")
-                            .exceptionally(ExceptionLogger.get());
+                    chatChannel.getDiscordChannel().sendMessage("<393971066692960278> Server starting").exceptionally(ExceptionLogger.get()).thenAccept(message -> {
+                        loadingMessages.add(message);
+                    });
                 });
             });
         }
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             getLogger().info("Starting the Discord Command Engine");
             API.addMessageCreateListener(new DiscordMessageEvent());
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+                loadingMessages.forEach(message -> {
+                    message.edit("**:arrow_up: Server Online**").exceptionally(ExceptionLogger.get());
+                });
+            });
         }
         getLogger().info("Creating command proxies");
         try {
@@ -240,8 +266,9 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public void onDisable() {
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             DataCache.getAllChannels().forEach(chatChannel -> {
-                chatChannel.getDiscordChannel().sendMessage("**------------------[Server Closed]------------------**")
+                chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                         .join();
+                chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("[Server offline]").join();
             });
         }
     }
@@ -268,11 +295,14 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("pardon", new pardon());
         registerCommand("tasks", new tasks());
         registerCommand("task", new task());
+        registerCommand("clearchat", new ChatClear());
+        registerCommand("eula", new eula());
+        registerCommand("probate", new probate());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
         }
-
+        DataCache.rebuildChannelList();
     }
 
     public void registerPacketHandlers() {
@@ -304,6 +334,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.STOP_ANNOUNCEMENT, new StopTaskHandler());
         registerPacketHandler(PacketType.ADD_CHANNEL, new AddChannelHandler());
         registerPacketHandler(PacketType.REMOVE_CHANNEL, new RemoveChannelHandler());
+        registerPacketHandler(PacketType.CREATE_ANNOUNCEMENT, new CreateAnnouncementHandler());
+        registerPacketHandler(PacketType.INSERT_ANNOUNCEMENT, new InsertAnnouncementHandler());
     }
 
     public void checkConfiguration() {
@@ -320,7 +352,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void checkTables() {
-        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
+        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL UNIQUE , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `probate` VARCHAR(255) NOT NULL DEFAULT 'false',`chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Actions` ( `ID` INT NOT NULL AUTO_INCREMENT , `type` VARCHAR(255) NULL DEFAULT NULL , `reason` VARCHAR(255) NULL DEFAULT NULL , `expireDate` VARCHAR(255) NULL DEFAULT NULL, `target` VARCHAR(255) NULL DEFAULT NULL , `moderator` VARCHAR(255) NULL DEFAULT NULL , `targetType` VARCHAR(255) NULL DEFAULT NULL , `dateApplied` VARCHAR(255) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Channels` ( `ID` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , `shortcut` VARCHAR(255) NULL DEFAULT NULL , `prefix` VARCHAR(255) NULL DEFAULT NULL , `permission` VARCHAR(255) NULL DEFAULT NULL ,`format` VARCHAR(255) NOT NULL , `discord_id` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Discord` ( `ID` INT NOT NULL AUTO_INCREMENT , `token` VARCHAR(255) NOT NULL , `UUID` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);

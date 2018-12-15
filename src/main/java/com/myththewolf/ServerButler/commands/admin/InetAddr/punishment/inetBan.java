@@ -1,86 +1,61 @@
 package com.myththewolf.ServerButler.commands.admin.InetAddr.punishment;
 
-import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
+import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
-import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetBan;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
-import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
+import org.bukkit.conversations.ConversationContext;
+import org.bukkit.conversations.Prompt;
+import org.bukkit.conversations.StringPrompt;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class inetBan extends CommandAdapter implements Loggable {
-    String REASON;
-    String[] args;
     @Override
     @CommandPolicy(commandUsage = "/ipban <IP address || username> [reason]", userRequiredArgs = 1, consoleRequiredArgs = 2)
-    public void onCommand(Optional<MythPlayer> sender, String[] Theargs, JavaPlugin javaPlugin) {
-        args = Theargs;
-        if (args.length == 1 && sender.isPresent()) {
-            reply("Please supply a reason:");
-            EPlayerChat.inputs.put(sender.get().getUUID(), content -> { REASON = content; doThing(sender); });
-            return;
-        } else if (args.length > 1) {
-            REASON = StringUtils.arrayToString(2, args);
-        }
-        doThing(sender);
-    }
-    private void doThing(Optional<MythPlayer> sender){
-        PlayerInetAddress target;
+    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+        Optional<PlayerInetAddress> playerInetAddress;
         if (args[0].startsWith("/")) {
-            Optional<PlayerInetAddress> optionalInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
-            if (!optionalInetAddress.isPresent()) {
-                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
-                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "IP address not found"));
-                sender.orElseGet(() -> {
-                    getLogger().warning("IP address not found!");
-                    return null;
-                });
-                return;
-            }
-            target = optionalInetAddress.get();
+            playerInetAddress = DataCache.getPlayerInetAddressByIp(args[0]);
         } else {
-            Optional<PlayerInetAddress> optionalMythPlayer = DataCache.getPlayerByName(args[0])
-                    .flatMap(MythPlayer::getConnectionAddress);
-            if (!optionalMythPlayer.isPresent()) {
-                sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player
-                        .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Could not bind to player's connection address! (Are they offline or not existent?)"));
-                sender.orElseGet(() -> {
-                    getLogger()
-                            .warning("Could not bind to player's connection address! (Are they offline or not existent?)");
-                    return null;
-                });
+            Optional<MythPlayer> player = DataCache.getPlayerByName(args[0]);
+            if (!player.isPresent()) {
+                reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not grab ip: Player not found.");
                 return;
             }
-            target = optionalMythPlayer.get();
+            playerInetAddress = DataCache
+                    .getOrMakeInetAddress(player.get().getConnectionAddress().orElseThrow(AssertionError::new)
+                            .getDatabaseId());
         }
-        ActionInetBan actionInetBan = new ActionInetBan(REASON, target, sender.orElse(null));
-        actionInetBan.update();
-        target.setLoginStatus(LoginStatus.BANNED);
-        DataCache.rebuildPlayerInetAddress(target);
-        String KICK_REASON = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_IP_BAN, target.getAddress().toString(), sender
-                        .map(MythPlayer::getName).orElse("CONSOLE"), REASON);
+        if (!playerInetAddress.isPresent()) {
+            reply(ConfigProperties.PREFIX + ChatColor.RED + "IP not found");
+            return;
+        }
+        if (args.length == 1) {
+            ServerButler.conversationBuilder.withEscapeSequence("^c").withFirstPrompt(new StringPrompt() {
+                @Override
+                public String getPromptText(ConversationContext conversationContext) {
+                    return ConfigProperties.PREFIX + "Please specify the reason";
+                }
 
-        String affected = StringUtils.serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
-                .collect(Collectors.toList()));
-
-        String CHAT_MESSAGE = StringUtils
-                .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, target.getAddress().toString(), sender
-                        .map(MythPlayer::getName).orElse("CONSOLE"), REASON, affected);
-        DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
-
-        target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
-                .forEachOrdered(player -> player.kickPlayerRaw(KICK_REASON));
+                @Override
+                public Prompt acceptInput(ConversationContext conversationContext, String s) {
+                    conversationContext.setSessionData("packetType", PacketType.BAN_IP);
+                    conversationContext.setSessionData("reason", s);
+                    conversationContext.setSessionData("target-ip", playerInetAddress.get());
+                    return END_OF_CONVERSATION;
+                }
+            }).buildConversation(sender.get().getBukkitPlayer().get()).begin();
+        }
     }
+
 
     @Override
     public String getRequiredPermission() {

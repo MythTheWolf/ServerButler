@@ -313,11 +313,11 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     default void updatePlayer() {
         if (playerExists()) {
-            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?, `displayName` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ? WHERE `UUID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 8, getLoginStatus(), getChatStatus(), getName(), getDisplayName(), getWritingChannel()
+            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?, `displayName` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ?, `probate` = ? WHERE `UUID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 9, getLoginStatus(), getChatStatus(), getName(), getDisplayName(), getWritingChannel()
                     .map(ChatChannel::getID).orElse(null), StringUtils
                     .serializeArray(getChannelList().stream().map(ChatChannel::getID)
-                            .collect(Collectors.toList())), getDiscordID().orElse(null), getUUID());
+                            .collect(Collectors.toList())), getDiscordID().orElse(null), isProbated(), getUUID());
 
         } else {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";
@@ -343,4 +343,8 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         }
         return getBukkitPlayer().isPresent() && getBukkitPlayer().get().hasPermission(node);
     }
+
+    boolean isProbated();
+
+    void setProbate(boolean probate);
 }

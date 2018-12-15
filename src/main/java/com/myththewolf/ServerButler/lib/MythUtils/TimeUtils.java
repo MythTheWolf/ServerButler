@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.MythUtils;
 
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.PeriodFormatter;
@@ -39,5 +40,9 @@ public class TimeUtils {
         return new PeriodFormatterBuilder().appendYears().appendSuffix("y").appendMonths().appendSuffix("mo")
                 .appendWeeks().appendSuffix("w").appendDays().appendSuffix("d").appendHours().appendSuffix("h")
                 .appendMinutes().appendSuffix("m").appendSeconds().appendSuffix("s").toFormatter();
+    }
+
+    public static String durationToString(Duration d) {
+        return d.getStandardHours() + " Hours, or " + d.getStandardMinutes() + " minutes";
     }
 }

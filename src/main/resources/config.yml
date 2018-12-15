@@ -28,6 +28,7 @@ PARDON-PERMISSION: "sb.pardon"
 KICK-PERMISSION: "sb.kick"
 MUTE-PERMISSION: "sb.mute"
 UNMUTE-PERMISSION: "sb.unmute"
+PROBATE-PERMISSION: "sb.probate"
 # -IP Permissions
 BAN-IP-PERMISSION: "sb.ban.ip"
 VIEW-PLAYER-IPS-PERMISSION: "sb.view.ipList"
@@ -41,11 +42,13 @@ CHAT-COLOR-PERMISSION: "sb.chat.color"
 IMPORT-JSON-DATA: "sb.json.import"
 DEFAULT-CHANNEL: "global"
 VIEW-ANNOUNCEMENT-GUI: "sb.annouce.view"
-
-
+PUNISHMENT-INFO-CHANNEL: "ADMIN"
+POST-EULA-COMMANDS:
+  - "msg {player} Hello"
+  - "pex user {player} add sb.chat.admin"
 #Discord bot
 ENABLE-DISCORD-BOT: false
-
+DISCORD-BOT-TOKEN: "bread"
 
 #MySQL Connection
 

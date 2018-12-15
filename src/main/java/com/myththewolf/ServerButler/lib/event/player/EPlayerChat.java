@@ -1,15 +1,22 @@
 package com.myththewolf.ServerButler.lib.event.player;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
+import com.myththewolf.ServerButler.lib.MythUtils.MythTPSWatcher;
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.interfaces.ChatStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.javacord.api.util.logging.ExceptionLogger;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,21 +28,21 @@ import java.util.concurrent.CompletableFuture;
  */
 public class EPlayerChat implements Listener, Loggable {
     public static HashMap<String, DirectCommandInput> inputs = new HashMap<>();
+    MythPlayer sender;
     /**
      * Used to return if the message was used to send a channel message via the channel's shortcut
      */
     private boolean shortCutRan = false;
-    MythPlayer sender;
+
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         shortCutRan = false;
-        event.setCancelled(true);
         if (inputs
                 .containsKey(event.getPlayer().getUniqueId().toString())) {
-            if(event.getMessage().toLowerCase().equals("^c")){
-                event.getPlayer().sendMessage(ConfigProperties.PREFIX+"Cancelling.");
+            if (event.getMessage().toLowerCase().equals("^c")) {
+                event.getPlayer().sendMessage(ConfigProperties.PREFIX + "Cancelling.");
                 inputs.remove(event.getPlayer().getUniqueId().toString());
-            }else {
+            } else {
                 CompletableFuture.supplyAsync(() -> {
 
                     inputs.get(event.getPlayer().getUniqueId().toString()).onInput(event.getMessage());
@@ -55,16 +62,16 @@ public class EPlayerChat implements Listener, Loggable {
         }
 
         List<ChatChannel> chanList = new ArrayList<>(sender.getChannelList());
-       chanList.stream()
+        chanList.stream()
                 .filter(chatChannel -> chatChannel.getPermission().isPresent() && !sender.getBukkitPlayer().get()
                         .hasPermission(chatChannel.getPermission().get())).forEach(sender::closeChannel);
-       if(!sender.getWritingChannel().isPresent()){
+        if (!sender.getWritingChannel().isPresent()) {
             sender.setWritingChannel(DataCache.getGlobalChannel());
-       }
+        }
 
-       if(!sender.isViewing(DataCache.getGlobalChannel())){
-           sender.openChannel(DataCache.getGlobalChannel());
-       }
+        if (!sender.isViewing(DataCache.getGlobalChannel())) {
+            sender.openChannel(DataCache.getGlobalChannel());
+        }
 
         if (sender.getChatStatus() != ChatStatus.PERMITTED) {
             if (sender.getChatStatus() == ChatStatus.MUTED) {
@@ -75,24 +82,39 @@ public class EPlayerChat implements Listener, Loggable {
                     sender.getBukkitPlayer().ifPresent(pl -> pl
                             .sendMessage(sender.getWritingChannel().get().getPrefix() + sender.getName() + ": " + event
                                     .getMessage()));
-                    DataCache.getAdminChannel().push(ChatColor.GRAY + "[SOFTMUTED: " + sender.getName() + " - " + event
-                            .getMessage(), null);
+                    DataCache.getPunishmentInfoChannel()
+                            .push(ChatColor.GRAY + "[SOFTMUTED: " + sender.getName() + " - " + event
+                                    .getMessage());
                 }
             }
             return;
         }
         DataCache.getAllChannels().stream().filter(channel -> userCanSendTo(sender, channel))
-                .filter(channel -> shortcutMatches(channel, event.getMessage())).forEach(channel -> {
+                .filter(channel -> shortcutMatches(channel, event.getMessage())).forEach(chatChannel -> {
             shortCutRan = true;
-            channel.push(trimShortcut(event.getMessage(), channel), sender);
+            Bukkit.getOnlinePlayers().stream().filter(player -> {
+                MythPlayer mp = DataCache.getOrMakePlayer(player.getUniqueId().toString());
+                return !chatChannel.getAllCachedPlayers().contains(mp);
+            }).forEach(o -> event.getRecipients().remove(o));
+            event.setFormat(chatChannel.getMessageFromContext(sender));
+            event.setMessage(event.getMessage().substring(chatChannel.getShortcut().get().length()));
+            chatChannel.sendToDiscord(sender, event.getMessage());
         });
+
         if (shortCutRan) {
             return;
         }
-        sender.getWritingChannel().ifPresent(channel -> {
-                    channel.push(event.getMessage(), sender);
-                }
-        );
+        sender.getWritingChannel().ifPresent(chatChannel -> {
+            Bukkit.getOnlinePlayers().stream().filter(player -> {
+                MythPlayer mp = DataCache.getOrMakePlayer(player.getUniqueId().toString());
+                return !chatChannel.getAllCachedPlayers().contains(mp);
+            }).forEach(o -> event.getRecipients().remove(o));
+            event.setFormat(chatChannel.getMessageFromContext(sender));
+            chatChannel.sendToDiscord(sender, event.getMessage());
+        });
+        DataCache.getAllChannels().forEach(chatChannel -> {
+            chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(ServerButler.startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
+        });
     }
 
 

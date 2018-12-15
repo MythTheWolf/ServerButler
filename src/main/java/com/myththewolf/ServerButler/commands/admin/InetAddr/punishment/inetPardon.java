@@ -7,7 +7,6 @@ import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.event.player.EPlayerChat;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
-import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetBan;
 import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetPardon;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
@@ -74,7 +73,7 @@ public class inetPardon extends CommandAdapter implements Loggable {
         String CHAT_MESSAGE = StringUtils
                 .replaceParameters(ConfigProperties.FORMAT_IP_PARDON, target.getAddress().toString(), sender
                         .map(MythPlayer::getName).orElse("CONSOLE"), REASON, affected);
-        DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+        DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
     }
 
     @Override

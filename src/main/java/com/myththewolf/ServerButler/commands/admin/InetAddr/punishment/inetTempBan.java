@@ -108,7 +108,7 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                                 .serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
                                         .collect(Collectors.toList())), TimeUtils
                                 .dateToString(actionInetTempBan.getExpireDate().get()));
-                DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+                DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
                 target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
                         .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
                 DataCache.rebuildPlayerInetAddress(target);
@@ -140,7 +140,7 @@ public class inetTempBan extends CommandAdapter implements Loggable {
                             .serializeArray(target.getMappedPlayers().stream().map(MythPlayer::getName)
                                     .collect(Collectors.toList())), TimeUtils
                             .dateToString(actionInetTempBan.getExpireDate().get()));
-            DataCache.getAdminChannel().push(CHAT_MESSAGE, null);
+            DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
             target.getMappedPlayers().stream().filter(MythPlayer::isOnline)
                     .forEachOrdered(player -> player.kickPlayerRaw(KICK_MESSAGE));
             DataCache.rebuildPlayerInetAddress(target);

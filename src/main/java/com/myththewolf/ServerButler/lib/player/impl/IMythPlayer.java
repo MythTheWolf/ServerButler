@@ -30,7 +30,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
      */
     private LoginStatus loginStatus = null;
     /**
-     * The current chat status ofthe player
+     * The current chat status of the player
      */
     private ChatStatus chatStatus = null;
     private DateTime joinDate;
@@ -40,6 +40,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private ChatChannel writeTo;
     private String discordID;
     private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
+    private boolean probate = false;
     /**
      * Bukkit display name
      */
@@ -69,7 +70,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
         try {
             ResultSet RS = prepareAndExecuteSelectThrow("SELECT * FROM `SB_Players` WHERE `UUID` = ?", 1, UUID);
             while (RS.next()) {
-                exists = true;
+                this.exists = true;
                 this.loginStatus = LoginStatus.valueOf(RS.getString("loginStatus"));
                 this.chatStatus = ChatStatus.valueOf(RS.getString("chatStatus"));
                 this.joinDate = TimeUtils.timeFromString(RS.getString("joinDate"));
@@ -85,6 +86,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
                         .getOrMakeChannel(RS.getInt("writeChannel")).get() : null;
                 this.discordID = RS.getString("discordID");
                 this.displayName = RS.getString("displayName");
+                this.probate = RS.getBoolean("probate");
             }
 
             String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE ?";
@@ -106,6 +108,11 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public String getDisplayName() {
         return displayName == null ? getName() : displayName;
+    }
+
+    @Override
+    public boolean isProbated() {
+        return probate;
     }
 
     @Override
@@ -210,6 +217,11 @@ public class IMythPlayer implements MythPlayer, Loggable {
     public void openChannel(ChatChannel channel) {
         this.channelList.add(channel);
         updatePlayer();
+    }
+
+    @Override
+    public void setProbate(boolean probate) {
+        this.probate = probate;
     }
 
     @Override

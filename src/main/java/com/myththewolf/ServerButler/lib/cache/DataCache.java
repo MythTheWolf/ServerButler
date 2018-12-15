@@ -41,8 +41,6 @@ public class DataCache {
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
-    private static HashMap<String, String> playerNameMap = new HashMap<>();
-
     /**
      * Gets a player from cache if present, but makes a new player object
      *
@@ -57,10 +55,6 @@ public class DataCache {
         MythPlayer player = makeNewPlayerObj(UUID);
         if (player.playerExists()) {
             playerHashMap.put(UUID, player);
-        }
-        if (!playerNameMap.containsKey(player.getName())) {
-            debug("Player doesn't exist in name list,adding: " + player.getName());
-            playerNameMap.put(player.getName(), player.getUUID());
         }
         return playerHashMap.get(UUID);
     }
@@ -104,7 +98,6 @@ public class DataCache {
     public static void makeMaps() {
         playerHashMap = new HashMap<>();
         channelHashMap = new HashMap<>();
-        playerNameMap = new HashMap<>();
         annoucementHashMap = new HashMap<>();
     }
 
@@ -131,7 +124,7 @@ public class DataCache {
      * @see @link{DataCache#rebuildChannelList()} for rebuilding the channel list
      */
     public static Optional<ChatChannel> getOrMakeChannel(String name) {
-        return channelHashMap.entrySet().stream().map(Map.Entry::getValue)
+        return channelHashMap.values().stream()
                 .filter(chatChannel -> chatChannel.getName().equals(name)).findFirst();
     }
 
@@ -167,6 +160,7 @@ public class DataCache {
             e.printStackTrace();
         }
     }
+
 
     /**
      * Converts the channelHashMap to a list
@@ -211,44 +205,40 @@ public class DataCache {
      *
      * @return The cached Admin chat channel
      */
+
+    public static ChatChannel getPunishmentInfoChannel() {
+        Optional<ChatChannel> optionalChatChannel = DataCache
+                .getOrMakeChannel(ConfigProperties.PUNISHMENT_INFO_CHANNEL);
+        return optionalChatChannel.orElseGet(DataCache::getAdminChannel);
+    }
+
     public static ChatChannel getAdminChannel() {
         return getOrMakeChannel("ADMIN").get();
-
     }
 
-    public static void rebuildNameList() {
-        try {
-            PreparedStatement ps = ServerButler.connector.getConnection()
-                    .prepareStatement("SELECT * FROM `SB_Players`");
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                playerNameMap.put(rs.getString("name"), rs.getString("UUID"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void rebuildTaskList() {
-        getLogger().info("RUN");
-        DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::stopTask);
+        List<ChatAnnoucement> runnning = DataCache.annoucementHashMap.values().stream()
+                .filter(ChatAnnoucement::isRunning).collect(Collectors.toList());
+        runnning.forEach(ChatAnnoucement::stopTask);
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()
                     .prepareStatement("SELECT * FROM `SB_Announcements`");
             ResultSet rs = ps.executeQuery();
-            getLogger().info("ASK");
             while (rs.next()) {
-                getLogger().info("PUT: " + rs.getString("ID"));
                 annoucementHashMap.put(rs.getString("ID"), new ChatAnnoucement(rs.getString("ID")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        runnning.stream().map(ChatAnnoucement::getId).map(annoucementHashMap::get).forEach(ChatAnnoucement::startTask);
+        runnning.clear();
     }
 
     public static Optional<ChatAnnoucement> getAnnouncement(String ID) {
         return Optional.ofNullable(annoucementHashMap.get(ID));
     }
+
     public static ChatChannel getGlobalChannel() {
         return getOrMakeChannel("GLOBAL").get();
     }
@@ -261,13 +251,17 @@ public class DataCache {
      * @apiNote This performs a database selection to convert their name into a UUID, but pulls their MythPlayer object from cache (or creates it if not present)
      */
     public static Optional<MythPlayer> getPlayerByName(String name) {
-        if (!playerNameMap.containsKey(name)) {
-            return Optional.empty();
+        try {
+            PreparedStatement ps = ServerButler.connector.getConnection().prepareStatement("SELECT * FROM `SB_Players` WHERE `name` = ?");
+            ps.setString(1, name);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return Optional.ofNullable(getOrMakePlayer(rs.getString("UUID")));
+            }
+        } catch (SQLException E) {
+            E.printStackTrace();
         }
-        if (!DataCache.getOrMakePlayer(playerNameMap.get(name)).playerExists()) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(DataCache.getOrMakePlayer(playerNameMap.get(name)));
+        return Optional.empty();
     }
 
     /**
@@ -337,6 +331,7 @@ public class DataCache {
 
     public static void rebuildPlayer(String UUID) {
         playerHashMap.put(UUID, new IMythPlayer(UUID));
+
     }
 
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
@@ -379,7 +374,8 @@ public class DataCache {
         }
     }
 
-    public static HashMap<String, String> getPlayerNameMap() {
-        return playerNameMap;
+    /*public static HashMap<String, String> getPlayerNameMap() {
+        return new HashMap<>(playerNameMap);
     }
+    */
 }

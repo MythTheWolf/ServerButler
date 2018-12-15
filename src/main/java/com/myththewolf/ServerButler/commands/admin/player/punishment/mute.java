@@ -53,7 +53,7 @@ public class mute extends CommandAdapter {
                     .replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, sender.map(MythPlayer::getName)
                             .orElse("CONSOLE"), target.map(MythPlayer::getName)
                             .orElse("<ERROR: MythPlayer not present>"), reason);
-            DataCache.getAdminChannel().push(toSend, null);
+            DataCache.getPunishmentInfoChannel().push(toSend);
             String playerMuteMessage = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_MUTE, sender.map(MythPlayer::getName)
                             .orElse("CONSOLE"), reason);

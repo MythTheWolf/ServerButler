@@ -11,9 +11,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -57,7 +54,7 @@ public class jsonImport extends CommandAdapter implements Loggable {
                 reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not read file: " + e.getMessage());
             }
         });
-        T.setName("SBJSONImporter");
+        T.setName("SB-JSON-Importer");
         T.start();
     }
 

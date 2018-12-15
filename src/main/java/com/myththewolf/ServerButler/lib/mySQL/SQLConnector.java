@@ -1,13 +1,13 @@
 package com.myththewolf.ServerButler.lib.mySQL;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import com.myththewolf.ServerButler.lib.logging.Loggable;
+
+import java.sql.*;
 
 /**
  * This class represents a SQL connector
  */
-public class SQLConnector {
+public class SQLConnector implements Loggable {
     /**
      * The connection object to the server
      */
@@ -57,11 +57,15 @@ public class SQLConnector {
      */
     public Connection getConnection() {
         try {
-            return ((connection == null) || connection.isClosed()) ? openConnection() : connection;
+            connection = ((connection == null) || connection.isClosed()) ? openConnection() : connection;
+            PreparedStatement ps = this.connection.prepareStatement("SELECT * FROM `SB_Players` LIMIT 1");
+            ResultSet rs = ps.executeQuery();
+            rs.next();
         } catch (SQLException e) {
             e.printStackTrace();
+            this.connection = openConnection();
         }
-        return null;
+        return connection;
     }
 
     /**
@@ -70,9 +74,30 @@ public class SQLConnector {
      * @return The connection
      * @throws SQLException If a error occurred while connecting
      */
-    private Connection openConnection() throws SQLException {
-        connection = DriverManager
-                .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName, username, password);
+    private Connection openConnection() {
+        debug("Opening new connection");
+        try {
+            connection = DriverManager
+                    .getConnection("jdbc:mysql://" + address + ":" + port + "/" + dbName, username, password);
+        } catch (SQLException e) {
+            getLogger().severe("Could not connect to database!");
+            e.printStackTrace();
+        }
         return connection;
+    }
+
+    public boolean isConnected() {
+        try {
+            if (connection.isClosed()) {
+                return false;
+            }
+            if (getConnection() == null) {
+                return false;
+            }
+            ResultSet rs = getConnection().prepareStatement("SELECT * FROM `SB_Channels`").executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
