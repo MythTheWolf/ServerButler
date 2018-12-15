@@ -59,8 +59,7 @@ public class CommitChannelHandler implements ItemPacketHandler, Loggable {
         }
         ItemStack packetCommit = ItemUtils.nameItem("Confirm Changes", ItemUtils.applyJSON(data
                 .put("selectedChannels", compiled).put("packetType", PacketType.valueOf(data
-                        .getString("targetPacketType"))), new ItemStack(Material.INK_SACK, 1, CustomDyeColor.LIME
-                .getData())));
+                        .getString("targetPacketType"))), new ItemStack(Material.LIME_DYE,1)));
         I.setItem(ItemUtils.findInventorySize(DataCache.getAllChannels().size() + 1) - 1, packetCommit);
         player.getBukkitPlayer().get().openInventory(I);
     }

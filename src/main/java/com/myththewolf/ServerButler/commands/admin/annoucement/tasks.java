@@ -42,8 +42,7 @@ public class tasks extends CommandAdapter {
         JSONObject packetCreateAnnouncement = new JSONObject();
         packetCreateAnnouncement.put("packetType", PacketType.CREATE_ANNOUNCEMENT);
         ItemStack itemCreateAnnouncement = ItemUtils.nameItem("Create new Announcement", ItemUtils
-                .applyJSON(packetCreateAnnouncement, new ItemStack(Material.INK_SACK, 1, CustomDyeColor.LIME
-                        .getData())));
+                .applyJSON(packetCreateAnnouncement, new ItemStack(Material.ORANGE_DYE)));
         I.setItem(ItemUtils.findInventorySize(DataCache.annoucementHashMap.values()
                 .size() + 1) - 1, itemCreateAnnouncement);
         sender.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player.openInventory(I));
