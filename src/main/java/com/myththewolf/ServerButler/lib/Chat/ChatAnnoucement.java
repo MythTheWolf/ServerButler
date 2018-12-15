@@ -82,7 +82,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
 
     public void startTaskNow() {
         if (taskID == null) {
-            long ticks = (getInterval().getSeconds() * 20);
+            long ticks = (getInterval().toStandardSeconds().getSeconds() * 20);
             taskID = Bukkit.getScheduler()
                     .runTaskTimerAsynchronously(ServerButler.plugin, () -> {
                         List<MythPlayer> pingedPlayers = new ArrayList<>();
@@ -99,7 +99,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
 
     public void startTask() {
         if (taskID == null) {
-            long ticks = (getInterval().getSeconds() * 20);
+            long ticks = (getInterval().toStandardSeconds().getSeconds() * 20);
             taskID = Bukkit.getScheduler()
                     .runTaskTimerAsynchronously(ServerButler.plugin, () -> {
                         List<MythPlayer> pingedPlayers = new ArrayList<>();

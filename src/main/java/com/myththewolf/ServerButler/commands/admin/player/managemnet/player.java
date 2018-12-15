@@ -68,4 +68,8 @@ public class player extends CommandAdapter {
         });
     }
 
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.VIEW_PLAYER_IPS_PERMISSION;
+    }
 }

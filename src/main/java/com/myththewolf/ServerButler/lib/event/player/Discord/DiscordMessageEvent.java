@@ -1,7 +1,6 @@
 package com.myththewolf.ServerButler.lib.event.player.Discord;
 
 import com.myththewolf.ServerButler.ServerButler;
-import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
@@ -10,9 +9,8 @@ import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.util.logging.ExceptionLogger;
 
-import java.util.ArrayList;
+import java.net.URL;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 public class DiscordMessageEvent implements MessageCreateListener, Loggable {
@@ -53,13 +51,8 @@ public class DiscordMessageEvent implements MessageCreateListener, Loggable {
                         .getId()).findAny().ifPresent(chatChannel -> {
             DataCache.getPlayerByDiscordID(messageCreateEvent.getMessage().getAuthor().getIdAsString())
                     .ifPresent(mythPlayer -> {
-                        List<String> imgs = new ArrayList<>();
-                        messageCreateEvent.getMessage().getAttachments().stream().filter(MessageAttachment::isImage).forEach(messageAttachment -> {
-                            imgs.add(messageAttachment.getUrl().toString() + " ");
-                        });
+                        messageCreateEvent.getMessage().getAttachments().stream().filter(MessageAttachment::isImage).map(MessageAttachment::getProxyUrl).map(URL::toString).forEach(s -> chatChannel.pushViaDiscord(s, mythPlayer));
                         chatChannel.pushViaDiscord(messageCreateEvent.getMessage().getContent(), mythPlayer);
-
-                        chatChannel.pushViaDiscord("[" + imgs.size() + " attatched images]:" + StringUtils.serializeArray(imgs), mythPlayer);
 
 
                     });

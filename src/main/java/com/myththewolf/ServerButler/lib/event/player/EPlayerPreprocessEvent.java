@@ -1,9 +1,20 @@
 package com.myththewolf.ServerButler.lib.event.player;
 
+import com.myththewolf.ServerButler.ServerButler;
+import com.myththewolf.ServerButler.lib.cache.DataCache;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
+import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class captures all Pre-command events
@@ -12,7 +23,7 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
     int spot = 0;
     @EventHandler
     public void onPreCommand(PlayerCommandPreprocessEvent event) {
-        /*
+
         String raw = event.getMessage();
         String[] split = raw.split(" ");
         if (!ServerButler.commands.containsKey(split[0].substring(1))) {
@@ -68,6 +79,6 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
                     .getOrMakePlayer(event.getPlayer().getUniqueId().toString())), args, (JavaPlugin) Bukkit
                     .getPluginManager().getPlugin("ServerButler"));
         });
-        */
+
     }
 }

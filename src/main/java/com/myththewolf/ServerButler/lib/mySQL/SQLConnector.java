@@ -1,8 +1,6 @@
 package com.myththewolf.ServerButler.lib.mySQL;
 
-import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
-import org.bukkit.Bukkit;
 
 import java.sql.*;
 
@@ -84,8 +82,22 @@ public class SQLConnector implements Loggable {
         } catch (SQLException e) {
             getLogger().severe("Could not connect to database!");
             e.printStackTrace();
-            Bukkit.getPluginManager().disablePlugin(ServerButler.plugin);
         }
         return connection;
+    }
+
+    public boolean isConnected() {
+        try {
+            if (connection.isClosed()) {
+                return false;
+            }
+            if (getConnection() == null) {
+                return false;
+            }
+            ResultSet rs = getConnection().prepareStatement("SELECT * FROM `SB_Channels`").executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

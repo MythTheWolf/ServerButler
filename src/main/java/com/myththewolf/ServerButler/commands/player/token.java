@@ -24,7 +24,7 @@ public class token extends CommandAdapter implements SQLAble {
         }
         reply(ConfigProperties.PREFIX + "Generating key...");
         String key = StringUtils.getToken(10);
-        reply(ConfigProperties.PREFIX + "Done! PM The token bot with this command: ;" + "link " + key);
+        reply(ConfigProperties.PREFIX + "Done! Use this command in discord: ;" + "link " + key);
 
         prepareAndExecuteUpdateExceptionally("INSERT INTO `SB_Discord` (`token`,`UUID`) VALUES (?,?)", 2, key, player
                 .getUUID());

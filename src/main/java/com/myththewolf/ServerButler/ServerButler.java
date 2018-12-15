@@ -18,7 +18,9 @@ import com.myththewolf.ServerButler.commands.player.discord.link;
 import com.myththewolf.ServerButler.commands.player.eula;
 import com.myththewolf.ServerButler.commands.player.token;
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
+import com.myththewolf.ServerButler.lib.MythUtils.MythTPSWatcher;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
@@ -59,11 +61,14 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.permission.PermissionsBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.util.logging.ExceptionLogger;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -86,7 +91,8 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static Plugin plugin;
     private CommandMap commandMap = null;
     private TabCompleter mythTabCompleter;
-
+    public static DateTime startTime = new DateTime();
+    private List<Message> loadingMessages = new ArrayList<>();
     public static boolean isAlive(Process p) {
         try {
             p.exitValue();
@@ -110,6 +116,10 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         getLogger().info("Connecting to SQL server");
         connector = new SQLConnector(ConfigProperties.SQL_HOST, Integer
                 .parseInt(ConfigProperties.SQL_PORT), ConfigProperties.SQL_USER, ConfigProperties.SQL_PASS, ConfigProperties.SQL_DATABASE);
+        if (!connector.isConnected()) {
+            getLogger().warning("***COULD NOT CONNECT TO DATABASE!*** Shutting down server so banned players can't sneak in!");
+            //Bukkit.getServer().shutdown();
+        }
         Bukkit.getPluginManager().registerEvents(new EPlayerJoin(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
@@ -129,6 +139,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         DataCache.rebuildTaskList();
         getLogger().info("Starting all announcement tasks");
         DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::startTask);
+        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 1L);
+        Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            DataCache.getAllChannels().forEach(chatChannel -> {
+                chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
+            });
+        }, 20, 1200);
         getLogger().info("Building command list");
         registerCommands();
 
@@ -192,15 +208,20 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                         .findFirst().flatMap(Channel::asServerTextChannel).ifPresent(c -> {
                     chatChannel.setChannel(c);
                     chatChannel.update();
-                    chatChannel.getDiscordChannel()
-                            .sendMessage("**:arrow_up: Server Online**")
-                            .exceptionally(ExceptionLogger.get());
+                    chatChannel.getDiscordChannel().sendMessage("<393971066692960278> Server starting").exceptionally(ExceptionLogger.get()).thenAccept(message -> {
+                        loadingMessages.add(message);
+                    });
                 });
             });
         }
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             getLogger().info("Starting the Discord Command Engine");
             API.addMessageCreateListener(new DiscordMessageEvent());
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+                loadingMessages.forEach(message -> {
+                    message.edit("**:arrow_up: Server Online**").exceptionally(ExceptionLogger.get());
+                });
+            });
         }
         getLogger().info("Creating command proxies");
         try {
@@ -247,6 +268,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
             DataCache.getAllChannels().forEach(chatChannel -> {
                 chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                         .join();
+                chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("[Server offline]").join();
             });
         }
     }
