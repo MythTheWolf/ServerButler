@@ -57,3 +57,10 @@ SQL-PORT: '3306'
 SQL-USERNAME: 'mysql'
 SQL-PASSWORD: 'whale'
 SQL-DATABASE: 'database'
+BUNGEE: false
+THIS-SERVER-NAME: ""
+SOCKET-UPDATES: false
+THIS-PORT: 25599
+SUB-SERVERS:
+  - "localhost:25565"
+  - "localhost:25566"

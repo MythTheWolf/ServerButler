@@ -6,6 +6,7 @@ import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.annoucement.task;
 import com.myththewolf.ServerButler.commands.admin.annoucement.tasks;
+import com.myththewolf.ServerButler.commands.admin.cb;
 import com.myththewolf.ServerButler.commands.admin.chat.ChatClear;
 import com.myththewolf.ServerButler.commands.admin.eval;
 import com.myththewolf.ServerButler.commands.admin.jsonImport;
@@ -21,6 +22,9 @@ import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.MythUtils.MythTPSWatcher;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
+import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketHandler;
+import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketType;
+import com.myththewolf.ServerButler.lib.bungee.packets.Handlers.BroadcastHandler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
@@ -69,7 +73,10 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -84,15 +91,16 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static HashMap<String, CommandAdapter> commands = new HashMap<>();
     public static HashMap<String, DiscordCommandAdapter> discordCommands = new HashMap<>();
     public static HashMap<PacketType, List<ItemPacketHandler>> itemPacketHandlers = new HashMap<>();
+    public static HashMap<BungeePacketType, List<BungeePacketHandler>> bungeePacketHandlers = new HashMap<>();
     public static ConversationFactory conversationBuilder;
     public static ChannelCategory channelCategory;
     public static DiscordApi API;
-    public static List<Integer> blackListedListerners = new ArrayList<>();
     public static Plugin plugin;
+    public static DateTime startTime = new DateTime();
     private CommandMap commandMap = null;
     private TabCompleter mythTabCompleter;
-    public static DateTime startTime = new DateTime();
     private List<Message> loadingMessages = new ArrayList<>();
+
     public static boolean isAlive(Process p) {
         try {
             p.exitValue();
@@ -100,6 +108,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         } catch (IllegalThreadStateException e) {
             return true;
         }
+
     }
 
     public void onEnable() {
@@ -108,6 +117,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         conversationBuilder.addConversationAbandonedListener(new PlayerConversationAbandonedEvent());
         mythTabCompleter = new SpigotTabCompleter();
         Arrays.stream(PacketType.values()).forEach(packetType -> itemPacketHandlers.put(packetType, new ArrayList<>()));
+        Arrays.stream(BungeePacketType.values()).forEach(bungeePacketType -> bungeePacketHandlers.put(bungeePacketType, new ArrayList<>()));
         getLogger().info("Received enable command");
         DataCache.makeMaps();
         checkConfiguration();
@@ -116,10 +126,6 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         getLogger().info("Connecting to SQL server");
         connector = new SQLConnector(ConfigProperties.SQL_HOST, Integer
                 .parseInt(ConfigProperties.SQL_PORT), ConfigProperties.SQL_USER, ConfigProperties.SQL_PASS, ConfigProperties.SQL_DATABASE);
-        if (!connector.isConnected()) {
-            getLogger().warning("***COULD NOT CONNECT TO DATABASE!*** Shutting down server so banned players can't sneak in!");
-            //Bukkit.getServer().shutdown();
-        }
         Bukkit.getPluginManager().registerEvents(new EPlayerJoin(), this);
         Bukkit.getPluginManager().registerEvents(new EPlayerPreprocessEvent(), this);
         Bukkit.getPluginManager().registerEvents(new EConsoleCommand(), this);
@@ -140,11 +146,13 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         getLogger().info("Starting all announcement tasks");
         DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::startTask);
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 1L);
-        Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-            DataCache.getAllChannels().forEach(chatChannel -> {
-                chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
-            });
-        }, 20, 1200);
+        if (ConfigProperties.ENABLE_DISCORD_BOT) {
+            Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+                DataCache.getAllChannels().forEach(chatChannel -> {
+                    chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
+                });
+            }, 20, 1200);
+        }
         getLogger().info("Building command list");
         registerCommands();
 
@@ -177,9 +185,9 @@ public class ServerButler extends JavaPlugin implements SQLAble {
 
             DataCache.getAllChannels().forEach(chatChannel -> {
                 if (channelCategory.getChannels().stream()
-                        .noneMatch(c -> c.getName().equals(chatChannel.getName().toLowerCase()))) {
+                        .noneMatch(c -> c.getName().equals(ConfigProperties.SERVER_NAME + chatChannel.getName().toLowerCase()))) {
                     TextChannel tc = channelCategory.getServer().createTextChannelBuilder().setCategory(channelCategory)
-                            .setName(chatChannel.getName()).create().join();
+                            .setName(ConfigProperties.SERVER_NAME+chatChannel.getName()).create().join();
                     chatChannel.setChannel(tc);
 
                     if (!chatChannel.getPermission().isPresent()) {
@@ -254,8 +262,28 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                     e.printStackTrace();
                 }
             });
+            if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+                getLogger().info("Enabling bungee..");
+                this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+                this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", (channel, player, message) -> {
+                    if (!channel.equals("BungeeCord")) {
+                        return;
+                    }
+                    try {
+                        DataInputStream in = new DataInputStream(new ByteArrayInputStream(message));
+                        String subchannel = in.readUTF();
+                        short len = in.readShort();
+                        byte[] data = new byte[len];
+                        in.readFully(data);
 
-
+                        //bytearray to string
+                        String s = new String(data);
+                        bungeePacketHandlers.get(BungeePacketType.valueOf(subchannel)).forEach(handler -> handler.onPacket(new JSONObject(s)));
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -298,6 +326,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("clearchat", new ChatClear());
         registerCommand("eula", new eula());
         registerCommand("probate", new probate());
+        registerCommand("test", new cb());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
@@ -336,6 +365,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.REMOVE_CHANNEL, new RemoveChannelHandler());
         registerPacketHandler(PacketType.CREATE_ANNOUNCEMENT, new CreateAnnouncementHandler());
         registerPacketHandler(PacketType.INSERT_ANNOUNCEMENT, new InsertAnnouncementHandler());
+        registerBungeePacketHandler(BungeePacketType.BROADCAST_MESSAGE, new BroadcastHandler());
     }
 
     public void checkConfiguration() {
@@ -352,7 +382,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     }
 
     public void checkTables() {
-        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL UNIQUE , `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `probate` VARCHAR(255) NOT NULL DEFAULT 'false',`chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
+        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Players` ( `ID` INT NOT NULL AUTO_INCREMENT , `UUID` VARCHAR(255) NOT NULL, `loginStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED' , `probate` VARCHAR(255) NOT NULL DEFAULT 'false',`chatStatus` VARCHAR(255) NOT NULL DEFAULT 'PERMITTED', `name` VARCHAR(255) NULL DEFAULT NULL , `displayName` VARCHAR(255) NULL DEFAULT NULL,`joinDate` VARCHAR(255) NULL DEFAULT NULL , `channels` VARCHAR(255) NOT NULL DEFAULT '',`writeChannel` VARCHAR(255) NULL DEFAULT NULL, `discordID` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Actions` ( `ID` INT NOT NULL AUTO_INCREMENT , `type` VARCHAR(255) NULL DEFAULT NULL , `reason` VARCHAR(255) NULL DEFAULT NULL , `expireDate` VARCHAR(255) NULL DEFAULT NULL, `target` VARCHAR(255) NULL DEFAULT NULL , `moderator` VARCHAR(255) NULL DEFAULT NULL , `targetType` VARCHAR(255) NULL DEFAULT NULL , `dateApplied` VARCHAR(255) NULL DEFAULT NULL,PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Channels` ( `ID` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , `shortcut` VARCHAR(255) NULL DEFAULT NULL , `prefix` VARCHAR(255) NULL DEFAULT NULL , `permission` VARCHAR(255) NULL DEFAULT NULL ,`format` VARCHAR(255) NOT NULL , `discord_id` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Discord` ( `ID` INT NOT NULL AUTO_INCREMENT , `token` VARCHAR(255) NOT NULL , `UUID` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
@@ -372,6 +402,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         List<ItemPacketHandler> handlerList = new ArrayList<>(itemPacketHandlers.get(type));
         handlerList.add(handler);
         itemPacketHandlers.put(type, handlerList);
+    }
+
+    public void registerBungeePacketHandler(BungeePacketType type, BungeePacketHandler handler) {
+        List<BungeePacketHandler> handlerList = new ArrayList<>(bungeePacketHandlers.get(type));
+        handlerList.add(handler);
+        bungeePacketHandlers.put(type, handlerList);
     }
 
     public void checkAndRun(String raw, Player sender) {

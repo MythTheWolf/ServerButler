@@ -3,6 +3,7 @@ package com.myththewolf.ServerButler.lib.cache;
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
+import com.myththewolf.ServerButler.lib.bungee.packets.BungeeSender;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * This class represents all caching
  */
-public class DataCache {
+public class DataCache implements BungeeSender {
     /**
      * This a mapping of a player's UUID and their cached MythPlayer object
      *
@@ -41,6 +42,7 @@ public class DataCache {
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
+
     /**
      * Gets a player from cache if present, but makes a new player object
      *
@@ -49,6 +51,9 @@ public class DataCache {
      * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
      */
     public static MythPlayer getOrMakePlayer(String UUID) {
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+            return makeNewPlayerObj(UUID);
+        }
         if (playerHashMap.containsKey(UUID)) {
             return playerHashMap.get(UUID);
         }
@@ -287,6 +292,9 @@ public class DataCache {
     }
 
     public static Optional<PlayerInetAddress> getOrMakeInetAddress(String ID) {
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+            return playerInetAddressFor(ID);
+        }
         return ipHashMap.containsKey(ID) ? Optional.ofNullable(ipHashMap.get(ID)) : playerInetAddressFor(ID);
     }
 
@@ -300,10 +308,12 @@ public class DataCache {
     }
 
     public static Optional<PlayerInetAddress> getPlayerInetAddressByIp(String IP) {
-        Optional<PlayerInetAddress> cache = ipHashMap.isEmpty() ? Optional.empty() : ipHashMap.entrySet().stream()
-                .map(Map.Entry::getValue).filter(add -> add.getAddress().toString().equals(IP)).findAny();
-        if (cache.isPresent()) {
-            return cache;
+        if (!ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+            Optional<PlayerInetAddress> cache = ipHashMap.isEmpty() ? Optional.empty() : ipHashMap.entrySet().stream()
+                    .map(Map.Entry::getValue).filter(add -> add.getAddress().toString().equals(IP)).findAny();
+            if (cache.isPresent()) {
+                return cache;
+            }
         }
         try {
             String SQL = "SELECT * FROM `SB_IPAddresses` WHERE `address` = ?";
@@ -315,6 +325,9 @@ public class DataCache {
                 return Optional.empty();
             }
             PlayerInetAddress address = new PlayerInetAddress(rs.getString("ID"));
+            if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+                return Optional.ofNullable(address);
+            }
             ipHashMap.put(address.getDatabaseId(), address);
             return Optional.of(address);
         } catch (SQLException e) {
@@ -330,11 +343,15 @@ public class DataCache {
     }
 
     public static void rebuildPlayer(String UUID) {
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT)
+            return;
         playerHashMap.put(UUID, new IMythPlayer(UUID));
 
     }
 
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT)
+            return;
         String dbId = src.getDatabaseId();
         ipHashMap.put(dbId, new PlayerInetAddress(dbId));
     }

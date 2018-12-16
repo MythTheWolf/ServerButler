@@ -5,7 +5,9 @@ import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.util.logging.ExceptionLogger;
 
@@ -101,19 +103,9 @@ public class ChatChannel implements SQLAble {
      * @return The list of players
      */
     public List<MythPlayer> getAllCachedPlayers() {
-        return DataCache.playerHashMap.entrySet().stream().map(Map.Entry::getValue)
-                .filter(mp -> mp.getChannelList().contains(this)).collect(Collectors.toList());
+       return Bukkit.getOnlinePlayers().stream().map(o -> o.getUniqueId().toString()).map(DataCache::getOrMakePlayer).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
     }
 
-    /**
-     * Gets a list of all players who are writing to this channel
-     *
-     * @return The list of authors
-     */
-    public List<MythPlayer> getAuthors() {
-        return getAllCachedPlayers().stream().filter(player -> player.getWritingChannel().equals(this))
-                .collect(Collectors.toList());
-    }
 
     /**
      * Gets the database ID of this channel

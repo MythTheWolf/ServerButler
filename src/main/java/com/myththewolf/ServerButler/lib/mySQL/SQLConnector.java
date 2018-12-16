@@ -58,7 +58,7 @@ public class SQLConnector implements Loggable {
     public Connection getConnection() {
         try {
             connection = ((connection == null) || connection.isClosed()) ? openConnection() : connection;
-            PreparedStatement ps = this.connection.prepareStatement("SELECT * FROM `SB_Players` LIMIT 1");
+            PreparedStatement ps = this.connection.prepareStatement("SHOW TABLES");
             ResultSet rs = ps.executeQuery();
             rs.next();
         } catch (SQLException e) {

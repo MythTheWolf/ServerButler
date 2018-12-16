@@ -14,6 +14,11 @@ import java.util.Optional;
  */
 public class ConfigProperties {
     /**
+     * The prefix used when displaying messges from this plugin
+     */
+    public final static String PREFIX = ChatColor
+            .translateAlternateColorCodes('&', ServerButler.configuration.getString("PLUGIN-PREFIX"));
+    /**
      * The default ban reason if no reason is specified
      */
     public static String DEFAULT_BAN_REASON = ServerButler.configuration.getString("DEFAULT-BAN-REASON");
@@ -55,7 +60,6 @@ public class ConfigProperties {
      * {2} will be replaced with the reason specified for the ban
      */
     public static String FORMAT_BAN_CHAT = ServerButler.configuration.getString("FORMAT-BAN-CHAT");
-
     /**
      * The pattern used to make the message to display when the target player when banned Such that: <br />
      * {0} will be replaced with the name of the admin who executed the punishment, or "CONSOLE" if the command was ran from the console.
@@ -71,7 +75,6 @@ public class ConfigProperties {
      * {3} will be replaced with the expire date
      */
     public static String FORMAT_TEMPBAN_CHAT = ServerButler.configuration.getString("FORMAT-TEMPBAN-CHAT");
-
     /**
      * The pattern used to make the message to display when the target player when muted Such that: <br />
      * {0} will be replaced with the name of the admin who executed the punishment, or "CONSOLE" if the command was ran from the console.
@@ -85,8 +88,6 @@ public class ConfigProperties {
      * {2} will be replaced with the reason specified for the mute
      */
     public static String FORMAT_MUTE_CHAT = ServerButler.configuration.getString("FORMAT-MUTE-CHAT");
-
-
     /**
      * The pattern used to make the message to display when the target player when unmuted Such that: <br />
      * {0} will be replaced with the name of the admin who executed the punishment, or "CONSOLE" if the command was ran from the console.
@@ -108,20 +109,20 @@ public class ConfigProperties {
      */
     public static String FORMAT_PARDON_CHAT = ServerButler.configuration.getString("FORMAT-PARDON-CHAT");
     /**
-     *  The pattern used to make the message sent to the admin channel such that: <br />
-     *  {0} will be replaced with the target IP address String
-     *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
-     *  {2} will be replaced with the reason for the ban
-     *  {3} will be replaced with a list of affected usernames
+     * The pattern used to make the message sent to the admin channel such that: <br />
+     * {0} will be replaced with the target IP address String
+     * {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
+     * {2} will be replaced with the reason for the ban
+     * {3} will be replaced with a list of affected usernames
      */
     public static String FORMAT_IPBAN_CHAT = ServerButler.configuration.getString("FORMAT-BAN-IP-CHAT");
     /**
-     *  The pattern used to make the message sent to the admin channel such that: <br />
-     *  {0} will be replaced with the target IP address String
-     *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
-     *  {2} will be replaced with the reason for the ban
-     *  {3} will be replaced with a list of affected usernames
-     *  {4} will be replaced with the expire date string
+     * The pattern used to make the message sent to the admin channel such that: <br />
+     * {0} will be replaced with the target IP address String
+     * {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
+     * {2} will be replaced with the reason for the ban
+     * {3} will be replaced with a list of affected usernames
+     * {4} will be replaced with the expire date string
      */
     public static String FORMAT_IP_TEMPBAN_CHAT = ServerButler.configuration.getString("FORMAT-TEMPBAN-IP-CHAT");
     /**
@@ -132,21 +133,14 @@ public class ConfigProperties {
      */
     public static String FORMAT_IP_BAN = ServerButler.configuration.getString("FORMAT-BAN-IP-PLAYER");
     /**
-     *  The pattern used to make the message sent to the admin channel such that: <br />
-     *  {0} will be replaced with the target IP address String
-     *  {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
-     *  {2} will be replaced with the reason for the ban
-     *  {3} will be replaced with the expire date string
+     * The pattern used to make the message sent to the admin channel such that: <br />
+     * {0} will be replaced with the target IP address String
+     * {1} will be replaced with the name of the admin who issued the ban, or "CONSOLE" if command was ran from the console
+     * {2} will be replaced with the reason for the ban
+     * {3} will be replaced with the expire date string
      */
     public static String FORMAT_IP_TEMPBAN = ServerButler.configuration.getString("FORMAT-TEMPBAN-IP-PLAYER");
-
     public static String FORMAT_IP_PARDON = ServerButler.configuration.getString("FORMAT-PARDON-IP-CHAT");
-
-    /**
-     * The prefix used when displaying messges from this plugin
-     */
-    public final static String PREFIX = ChatColor
-            .translateAlternateColorCodes('&', ServerButler.configuration.getString("PLUGIN-PREFIX"));
     /**
      * Boolean value of whether to display debug messages or not
      */
@@ -215,5 +209,7 @@ public class ConfigProperties {
     public static List<String> postEulaCommands = (List<String>) ServerButler.configuration
             .getList("POST-EULA-COMMANDS");
 
+    public static boolean ENABLE_BUNGEE_SUPPORT = ServerButler.configuration.getBoolean("BUNGEE");
 
+    public static String SERVER_NAME = ENABLE_BUNGEE_SUPPORT ? "[" + ServerButler.configuration.getString("THIS-SERVER-NAME") + "]" : "";
 }
