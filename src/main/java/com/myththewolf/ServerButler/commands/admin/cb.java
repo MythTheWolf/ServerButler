@@ -14,8 +14,7 @@ public class cb extends CommandAdapter implements BungeeSender {
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         reply("Sending message..");
         JSONObject object = new JSONObject();
-        object.put("message", args[0]);
-        object.put("sender", sender.map(MythPlayer::getName).orElse("NULL"));
-        sendToAll(sender.flatMap(MythPlayer::getBukkitPlayer).orElseThrow(IllegalStateException::new), BungeePacketType.BROADCAST_MESSAGE, object);
+        object.put("message", "TEST!!!");
+        sendToAll(BungeePacketType.BROADCAST_MESSAGE, object);
     }
 }

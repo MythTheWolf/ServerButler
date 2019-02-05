@@ -142,7 +142,7 @@ public class ConfigProperties {
     public static String FORMAT_IP_TEMPBAN = ServerButler.configuration.getString("FORMAT-TEMPBAN-IP-PLAYER");
     public static String FORMAT_IP_PARDON = ServerButler.configuration.getString("FORMAT-PARDON-IP-CHAT");
     /**
-     * Boolean value of whether to display debug messages or not
+     * Boolean value of whether to display writeDebug messages or not
      */
     public static boolean DEBUG = ServerButler.configuration.getBoolean("DEBUG");
     /**
@@ -212,4 +212,11 @@ public class ConfigProperties {
     public static boolean ENABLE_BUNGEE_SUPPORT = ServerButler.configuration.getBoolean("BUNGEE");
 
     public static String SERVER_NAME = ENABLE_BUNGEE_SUPPORT ? "[" + ServerButler.configuration.getString("THIS-SERVER-NAME") + "]" : "";
+
+    public static boolean ENABLE_CACHE = ServerButler.configuration.getBoolean("ENABLE-CACHING");
+
+    public static List<String> SOCKETS = ServerButler.configuration.getStringList("SUB-SERVERS");
+
+    public static int SOCKET_PORT = ServerButler.configuration.getInt("THIS-PORT");
+
 }

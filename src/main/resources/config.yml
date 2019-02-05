@@ -49,7 +49,7 @@ POST-EULA-COMMANDS:
 #Discord bot
 ENABLE-DISCORD-BOT: false
 DISCORD-BOT-TOKEN: "bread"
-
+DISCORD-CATEGORY-TITLE: ""
 #MySQL Connection
 
 SQL-HOST: 'locahost'
@@ -57,9 +57,9 @@ SQL-PORT: '3306'
 SQL-USERNAME: 'mysql'
 SQL-PASSWORD: 'whale'
 SQL-DATABASE: 'database'
+ENABLE-CACHING: true
 BUNGEE: false
-THIS-SERVER-NAME: ""
-SOCKET-UPDATES: false
+THIS-SERVER-NAME: "Lobby"
 THIS-PORT: 25599
 SUB-SERVERS:
   - "localhost:25565"

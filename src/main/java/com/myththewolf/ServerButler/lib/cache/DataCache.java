@@ -3,7 +3,9 @@ package com.myththewolf.ServerButler.lib.cache;
 import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
+import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketType;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeeSender;
+import com.myththewolf.ServerButler.lib.bungee.packets.PacketResult;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
@@ -12,6 +14,7 @@ import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.joda.time.DateTime;
+import org.json.JSONObject;
 
 import java.net.InetAddress;
 import java.sql.PreparedStatement;
@@ -42,6 +45,7 @@ public class DataCache implements BungeeSender {
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
+    private static DataCache thiz = new DataCache();
 
     /**
      * Gets a player from cache if present, but makes a new player object
@@ -137,6 +141,7 @@ public class DataCache implements BungeeSender {
      * Empties the current cached channel list and re-populates it by a database selection
      */
     public static void rebuildChannelList() {
+        thiz.sendToAll(BungeePacketType.REBUILD_CACHE, new JSONObject().put("targetType", "channelList")).stream().filter(PacketResult::isError).forEach(packetResult -> getLogger().warning("Could not update cache on server " + packetResult.getHost() + ":" + packetResult.getPort() + " -> " + packetResult.getMessage()));
         channelHashMap.clear();
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()

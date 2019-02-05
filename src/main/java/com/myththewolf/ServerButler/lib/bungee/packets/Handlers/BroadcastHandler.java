@@ -7,6 +7,6 @@ import org.json.JSONObject;
 public class BroadcastHandler implements BungeePacketHandler, Loggable {
     @Override
     public void onPacket(JSONObject data) {
-        getLogger().info(data.getString("sender") + " did a thing:" + data.getString("message"));
+        getLogger().info("BroadCastHandler#onPacket: " + data);
     }
 }

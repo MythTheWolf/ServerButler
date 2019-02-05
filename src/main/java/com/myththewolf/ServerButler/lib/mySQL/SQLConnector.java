@@ -62,7 +62,7 @@ public class SQLConnector implements Loggable {
             ResultSet rs = ps.executeQuery();
             rs.next();
         } catch (SQLException e) {
-            e.printStackTrace();
+            debug("Lost connection to SQL server, attempting to restore!");
             this.connection = openConnection();
         }
         return connection;

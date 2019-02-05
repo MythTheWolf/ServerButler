@@ -2,40 +2,61 @@ package com.myththewolf.ServerButler.lib.bungee.packets;
 
 
 import com.myththewolf.ServerButler.ServerButler;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-public interface BungeeSender {
-    default void sendToAll(Player player,BungeePacketType type, JSONObject object) {
-        sendToAll(player,type, object.toString());
+public interface BungeeSender{
+
+
+    default List<PacketResult> sendToAll(BungeePacketType type, JSONObject data) {
+        return ConfigProperties.SOCKETS.stream().map(s -> sendTo(s, type, data)).collect(Collectors.toList());
     }
 
-    default void sendToAll(Player player,BungeePacketType type, String data) {
-        sendTo(player,"ALL", type, data);
+    default PacketResult sendTo(String server, BungeePacketType type, JSONObject data) {
+
+            String[] srv = server.split(":");
+            return sendData(srv[0], Integer.parseInt(srv[1]), data.put("packetType", type.toString()));
+
     }
 
-    default void sendTo(Player player,String server, BungeePacketType type, String data) {
-        forwardString(type.toString(),server,data,player);
-    }
-    default void forwardString(String subchannel, String target, String s,Player p){
-        try{
-            ByteArrayOutputStream b = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(b);
-
-            out.writeUTF("Forward");
-            out.writeUTF(target);
-            out.writeUTF(subchannel); // "customchannel" for example
-            byte[] data = s.getBytes();
-            out.writeShort(data.length);
-            out.write(data);
-            p.sendPluginMessage(ServerButler.plugin, "BungeeCord", b.toByteArray());
-        }catch(Exception ex){
-            ex.printStackTrace();
+    default PacketResult sendData(String host, int port, JSONObject data) {
+        try {
+            Socket socket;
+            ObjectOutputStream oos;
+            ObjectInputStream ois;
+            //establish socket connection to server
+            socket = new Socket(host, port);
+            //write to socket using ObjectOutputStream
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            writeDebug("Sending data to host " + host + ":" + port + "->" + data);
+            oos.writeObject(data.toString());
+            //read the server response message
+            ois = new ObjectInputStream(socket.getInputStream());
+            String message = (String) ois.readObject();
+            writeDebug("Got reply from host " + host + ":" + port + "->" + message);
+            //close resources
+            ois.close();
+            oos.close();
+            return new PacketResult(new JSONObject(message), host, port, data.toString());
+        } catch (Exception e) {
+            JSONObject rep = new JSONObject();
+            rep.put("error", true);
+            rep.put("message", e.getMessage());
+            return new PacketResult(rep, host, port, data.toString());
         }
+
+    }
+
+    default void writeDebug(String s) {
+        ServerButler.connector.debug(s);
     }
 
 }

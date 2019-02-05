@@ -13,7 +13,6 @@ import com.myththewolf.ServerButler.commands.admin.jsonImport;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.about;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.player;
 import com.myththewolf.ServerButler.commands.admin.player.punishment.*;
-import com.myththewolf.ServerButler.commands.futureTest;
 import com.myththewolf.ServerButler.commands.player.channelmanager;
 import com.myththewolf.ServerButler.commands.player.discord.link;
 import com.myththewolf.ServerButler.commands.player.eula;
@@ -25,6 +24,8 @@ import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketHandler;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketType;
 import com.myththewolf.ServerButler.lib.bungee.packets.Handlers.BroadcastHandler;
+import com.myththewolf.ServerButler.lib.bungee.packets.Handlers.CacheRebuildHandler;
+import com.myththewolf.ServerButler.lib.bungee.packets.MythSocketServer;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
@@ -48,6 +49,7 @@ import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.pun
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.punishment.TempBanIpHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
+import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.mySQL.SQLConnector;
 import org.bukkit.Bukkit;
@@ -75,8 +77,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -85,7 +85,7 @@ import java.util.*;
 /**
  * This class is the main plugin class
  */
-public class ServerButler extends JavaPlugin implements SQLAble {
+public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
     public static SQLConnector connector;
     public static FileConfiguration configuration;
     public static HashMap<String, CommandAdapter> commands = new HashMap<>();
@@ -93,23 +93,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
     public static HashMap<PacketType, List<ItemPacketHandler>> itemPacketHandlers = new HashMap<>();
     public static HashMap<BungeePacketType, List<BungeePacketHandler>> bungeePacketHandlers = new HashMap<>();
     public static ConversationFactory conversationBuilder;
-    public static ChannelCategory channelCategory;
     public static DiscordApi API;
     public static Plugin plugin;
     public static DateTime startTime = new DateTime();
-    private CommandMap commandMap = null;
+    private static ChannelCategory channelCategory;
     private TabCompleter mythTabCompleter;
     private List<Message> loadingMessages = new ArrayList<>();
-
-    public static boolean isAlive(Process p) {
-        try {
-            p.exitValue();
-            return false;
-        } catch (IllegalThreadStateException e) {
-            return true;
-        }
-
-    }
 
     public void onEnable() {
         plugin = this;
@@ -147,11 +136,7 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::startTask);
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 1L);
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
-            Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-                DataCache.getAllChannels().forEach(chatChannel -> {
-                    chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
-                });
-            }, 20, 1200);
+            Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> DataCache.getAllChannels().forEach(chatChannel -> chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get())), 20, 1200);
         }
         getLogger().info("Building command list");
         registerCommands();
@@ -159,17 +144,26 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             File botFolder = new File(getDataFolder().getAbsolutePath() + File.separator + "discordBot");
             if (!botFolder.exists()) {
-                botFolder.mkdir();
+                boolean ok = botFolder.mkdir();
+                if (!ok)
+                    throw new IllegalStateException("Must have perms to write!");
             }
-            Server thisServer = API.getServers().stream().findFirst().get();
+            File dataFile = new File(botFolder.getAbsolutePath() + File.separator);
+            if (!dataFile.exists()) {
+                JSONObject tmp = new JSONObject();
+                tmp.put("category-id", "NOT_A_ID");
+                tmp.put("name", "minecraft channels");
+                StringUtils.writeFile(dataFile.getAbsolutePath(), tmp.toString(4));
+            }
+            JSONObject conf = new JSONObject(StringUtils.readFile(dataFile.getAbsolutePath()));
+            Server thisServer = API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new);
 
 
-            if (thisServer.getChannelCategoriesByName("minecraft channels").size() == 0) {
+            if (thisServer.getChannelCategoryById(conf.getString("category-id")).isPresent()) {
                 getLogger().info("Creating MC category");
-                thisServer.createChannelCategoryBuilder().setName("minecraft channels").create().join();
-                channelCategory = thisServer.getChannelCategoriesByName("minecraft channels").get(0);
+                channelCategory = thisServer.createChannelCategoryBuilder().setName(conf.getString("name")).create().join();
                 getLogger().info("Setting up one-time permissions");
-                ServerButler.API.getServers().stream().findFirst().get().getRoles().forEach(role -> {
+                ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getRoles().forEach(role -> {
                     getLogger().info(role.getName());
                     Permissions p = new PermissionsBuilder().setAllDenied().build();
                     channelCategory.createUpdater().addPermissionOverwrite(role, p).update()
@@ -181,13 +175,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                     }
                 });
             }
-            channelCategory = thisServer.getChannelCategoriesByName("minecraft channels").get(0);
-
+            channelCategory = thisServer.getChannelCategoryById(conf.getString("category-id")).orElseThrow(IllegalStateException::new);
             DataCache.getAllChannels().forEach(chatChannel -> {
                 if (channelCategory.getChannels().stream()
                         .noneMatch(c -> c.getName().equals(ConfigProperties.SERVER_NAME + chatChannel.getName().toLowerCase()))) {
                     TextChannel tc = channelCategory.getServer().createTextChannelBuilder().setCategory(channelCategory)
-                            .setName(ConfigProperties.SERVER_NAME+chatChannel.getName()).create().join();
+                            .setName(ConfigProperties.SERVER_NAME + chatChannel.getName()).create().join();
                     chatChannel.setChannel(tc);
 
                     if (!chatChannel.getPermission().isPresent()) {
@@ -197,9 +190,9 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                                 .sendMessage(":timer: I'm still setting permissions! Chat will not be fully accessible!");
                         PermissionsBuilder pb = new PermissionsBuilder();
                         pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.ATTACH_FILE);
-                        ServerButler.API.getServers().stream().findFirst().get().getRoles().forEach(role -> {
+                        ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getRoles().forEach(role -> {
 
-                            chatChannel.getDiscordChannel().asServerTextChannel().get().createUpdater()
+                            chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).createUpdater()
                                     .addPermissionOverwrite(role, pb.build()).update()
                                     .exceptionally(ExceptionLogger.get());
                             try {
@@ -262,27 +255,12 @@ public class ServerButler extends JavaPlugin implements SQLAble {
                     e.printStackTrace();
                 }
             });
-            if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
-                getLogger().info("Enabling bungee..");
-                this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-                this.getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", (channel, player, message) -> {
-                    if (!channel.equals("BungeeCord")) {
-                        return;
-                    }
-                    try {
-                        DataInputStream in = new DataInputStream(new ByteArrayInputStream(message));
-                        String subchannel = in.readUTF();
-                        short len = in.readShort();
-                        byte[] data = new byte[len];
-                        in.readFully(data);
-
-                        //bytearray to string
-                        String s = new String(data);
-                        bungeePacketHandlers.get(BungeePacketType.valueOf(subchannel)).forEach(handler -> handler.onPacket(new JSONObject(s)));
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                });
+            if (ConfigProperties.ENABLE_BUNGEE_SUPPORT && ConfigProperties.ENABLE_CACHE) {
+                getLogger().info("Enabling bungee socket servers..");
+                Thread thread = new Thread(new MythSocketServer(ConfigProperties.SOCKET_PORT));
+                thread.start();
+                registerBungeePacketHandler(BungeePacketType.REBUILD_CACHE, new CacheRebuildHandler());
+                registerBungeePacketHandler(BungeePacketType.BROADCAST_MESSAGE, new BroadcastHandler());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -314,7 +292,6 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerCommand("ips", new ips());
         registerCommand("ipban", new inetBan());
         registerCommand("iptempban", new inetTempBan());
-        registerCommand("intest", new futureTest());
         registerCommand("jsonimport", new jsonImport());
         registerCommand("eval", new eval(this));
         registerCommand("createchannel", new ChannelBuilder());
@@ -365,7 +342,6 @@ public class ServerButler extends JavaPlugin implements SQLAble {
         registerPacketHandler(PacketType.REMOVE_CHANNEL, new RemoveChannelHandler());
         registerPacketHandler(PacketType.CREATE_ANNOUNCEMENT, new CreateAnnouncementHandler());
         registerPacketHandler(PacketType.INSERT_ANNOUNCEMENT, new InsertAnnouncementHandler());
-        registerBungeePacketHandler(BungeePacketType.BROADCAST_MESSAGE, new BroadcastHandler());
     }
 
     public void checkConfiguration() {
