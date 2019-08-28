@@ -279,6 +279,9 @@ public class StringUtils {
      * @return A optional, empty if no hidden String is present
      */
     public static Optional<String> getEmeddedString(ItemStack item) {
+        if(item == null || item.getItemMeta() == null || item.getItemMeta().getLore() == null){
+            return Optional.empty();
+        }
         return item.getItemMeta().getLore().stream().filter(StringUtils::hasHiddenString)
                 .map(StringUtils::extractHiddenString).findFirst();
     }
