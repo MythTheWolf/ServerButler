@@ -136,6 +136,7 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                 ActionInetBan actionInetBan = new ActionInetBan(reason, targetIp, sender.orElse(null));
                 actionInetBan.update();
                 targetIp.setLoginStatus(LoginStatus.BANNED);
+                targetIp.update();
                 DataCache.rebuildPlayerInetAddress(targetIp);
                 String KICK_REASON = StringUtils
                         .replaceParameters(ConfigProperties.FORMAT_IP_BAN, targetIp.getAddress().toString(), sender
