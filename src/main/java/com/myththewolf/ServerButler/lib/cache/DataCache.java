@@ -350,15 +350,18 @@ public class DataCache implements BungeeSender {
     }
 
     public static void rebuildPlayer(String UUID) {
-        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT)
-            return;
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT){
+
+        }
+
         playerHashMap.put(UUID, new IMythPlayer(UUID));
 
     }
 
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
-        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT)
-            return;
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT){
+
+        }
         String dbId = src.getDatabaseId();
         ipHashMap.put(dbId, new PlayerInetAddress(dbId));
     }

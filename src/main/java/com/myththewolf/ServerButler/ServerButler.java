@@ -156,7 +156,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             Server thisServer = API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new);
 
 
-            if (thisServer.getChannelCategoryById(conf.getString("category-id")).isPresent()) {
+            if (!thisServer.getChannelCategoryById(conf.getString("category-id")).isPresent()) {
                 getLogger().info("Creating MC category");
                 channelCategory = thisServer.createChannelCategoryBuilder().setName(conf.getString("name")).create().join();
                 getLogger().info("Setting up one-time permissions");

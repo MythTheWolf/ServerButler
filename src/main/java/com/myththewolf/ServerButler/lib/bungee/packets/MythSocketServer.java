@@ -33,7 +33,10 @@ public class MythSocketServer implements Loggable, Runnable {
                 ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                 //convert ObjectInputStream object to String
                 String message = (String) ois.readObject();
+
                 debug(ConfigProperties.SERVER_NAME + ": Got imbound socket packet: " + message);
+                //terminate the server if client sends exit request
+                if (message.equalsIgnoreCase("exit")) break;
                 //create ObjectOutputStream object
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                 //write object to Socket
@@ -54,7 +57,7 @@ public class MythSocketServer implements Loggable, Runnable {
                 ois.close();
                 oos.close();
                 socket.close();
-                //terminate the server if client sends exit request
+
                 if (message.equalsIgnoreCase("exit")) break;
             }
             System.out.println("Shutting down Socket server!!");
