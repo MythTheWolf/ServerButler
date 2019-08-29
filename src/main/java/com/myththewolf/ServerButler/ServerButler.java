@@ -145,7 +145,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 if (!ok)
                     throw new IllegalStateException("Must have perms to write!");
             }
-            File dataFile = new File(botFolder.getAbsolutePath() + File.separator);
+            File dataFile = new File(botFolder.getAbsolutePath() + File.separator+"bot-config.json");
             if (!dataFile.exists()) {
                 JSONObject tmp = new JSONObject();
                 tmp.put("category-id", "NOT_A_ID");
