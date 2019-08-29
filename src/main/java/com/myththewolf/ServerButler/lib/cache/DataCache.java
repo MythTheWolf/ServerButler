@@ -141,7 +141,9 @@ public class DataCache implements BungeeSender {
      * Empties the current cached channel list and re-populates it by a database selection
      */
     public static void rebuildChannelList() {
-        thiz.sendToAll(BungeePacketType.REBUILD_CACHE, new JSONObject().put("targetType", "channelList")).stream().filter(PacketResult::isError).forEach(packetResult -> getLogger().warning("Could not update cache on server " + packetResult.getHost() + ":" + packetResult.getPort() + " -> " + packetResult.getMessage()));
+        if(ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+            thiz.sendToAll(BungeePacketType.REBUILD_CACHE, new JSONObject().put("targetType", "channelList")).stream().filter(PacketResult::isError).forEach(packetResult -> getLogger().warning("Could not update cache on server " + packetResult.getHost() + ":" + packetResult.getPort() + " -> " + packetResult.getMessage()));
+        }
         channelHashMap.clear();
         try {
             PreparedStatement ps = ServerButler.connector.getConnection()
