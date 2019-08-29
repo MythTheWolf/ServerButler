@@ -1,15 +1,12 @@
 package com.myththewolf.ServerButler;
 
-import com.myththewolf.ServerButler.commands.admin.ChannelBuilder;
+import com.myththewolf.ServerButler.commands.admin.*;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.management.ips;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetBan;
 import com.myththewolf.ServerButler.commands.admin.InetAddr.punishment.inetTempBan;
 import com.myththewolf.ServerButler.commands.admin.annoucement.task;
 import com.myththewolf.ServerButler.commands.admin.annoucement.tasks;
-import com.myththewolf.ServerButler.commands.admin.cb;
 import com.myththewolf.ServerButler.commands.admin.chat.ChatClear;
-import com.myththewolf.ServerButler.commands.admin.eval;
-import com.myththewolf.ServerButler.commands.admin.jsonImport;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.about;
 import com.myththewolf.ServerButler.commands.admin.player.managemnet.player;
 import com.myththewolf.ServerButler.commands.admin.player.punishment.*;
@@ -304,6 +301,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         registerCommand("eula", new eula());
         registerCommand("probate", new probate());
         registerCommand("test", new cb());
+        registerCommand("sb",new version());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());

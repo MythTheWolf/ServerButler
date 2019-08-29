@@ -44,7 +44,7 @@ public class DataCache implements BungeeSender {
      */
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
-    private static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
+    public static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
     private static DataCache thiz = new DataCache();
 
     /**

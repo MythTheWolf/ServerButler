@@ -58,31 +58,33 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.yml</include>
+                </includes>
+            </resource>
+        </resources>
         <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
         <plugins>
             <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>replacer</artifactId>
-                <version>1.5.3</version>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>generate-sources</phase>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <tasks>
+                                <replace token= "@plugin-ver" value="'${git.branch}-${git.commit.id.abbrev}'" dir="target/classes">
+                                    <include name="**/*.yml"/>
+                                </replace>
+                            </tasks>
+                        </configuration>
                         <goals>
-                            <goal>replace</goal>
+                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <includes>
-                        <include>${basedir}/src/main/resources/plugin.yml</include>
-                    </includes>
-                    <replacements>
-                        <replacement>
-                            <token>@plugin-version</token>
-                            <value>"${git.branch}-${git.commit.id.abbrev}"</value>
-                        </replacement>
-                    </replacements>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
