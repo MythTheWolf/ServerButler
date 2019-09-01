@@ -305,6 +305,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
+            registerDiscordCommand(";eval",new com.myththewolf.ServerButler.commands.admin.discord.eval(this));
         }
         DataCache.rebuildChannelList();
     }

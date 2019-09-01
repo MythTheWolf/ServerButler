@@ -18,9 +18,11 @@ import org.bukkit.entity.Player;
 import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.permission.PermissionsBuilder;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
 
+import java.nio.channels.IllegalSelectorException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -166,7 +168,10 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      * @param existent The boolean value
      */
     void setExistent(boolean existent);
+    default Optional<User> getDiscordUser(){
+        return getDiscordID().isPresent() ?  Optional.ofNullable(ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getMemberById(getDiscordID().orElseThrow(IllegalStateException::new)).orElseThrow(IllegalSelectorException::new)) : Optional.empty();
 
+    }
     /**
      * Gets the User's discord ID
      *
