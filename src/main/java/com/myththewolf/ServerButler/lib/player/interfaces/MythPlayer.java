@@ -79,6 +79,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
                         break;
                 }
             }
+            his.forEach(moderationAction -> {
+                DataCache.actionHashMap.put(moderationAction.getDatabaseID(), moderationAction);
+            });
         } catch (SQLException e) {
             handleExceptionPST(e);
         }
@@ -124,11 +127,11 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      */
     String getName();
 
+    void setName(String name);
+
     String getDisplayName();
 
     void setDisplayName(String displayName);
-
-    void setName(String name);
 
     /**
      * Gets the date that this player joined
@@ -168,10 +171,12 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
      * @param existent The boolean value
      */
     void setExistent(boolean existent);
-    default Optional<User> getDiscordUser(){
-        return getDiscordID().isPresent() ?  Optional.ofNullable(ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getMemberById(getDiscordID().orElseThrow(IllegalStateException::new)).orElseThrow(IllegalSelectorException::new)) : Optional.empty();
+
+    default Optional<User> getDiscordUser() {
+        return getDiscordID().isPresent() ? Optional.ofNullable(ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getMemberById(getDiscordID().orElseThrow(IllegalStateException::new)).orElseThrow(IllegalSelectorException::new)) : Optional.empty();
 
     }
+
     /**
      * Gets the User's discord ID
      *
@@ -313,6 +318,7 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
             kickPlayerRaw(StringUtils.replaceParameters(ConfigProperties.FORMAT_TEMPBAN, MOD_NAME, REASON, EXPIRE));
         });
     }
+
     /**
      * Updates player in database
      */

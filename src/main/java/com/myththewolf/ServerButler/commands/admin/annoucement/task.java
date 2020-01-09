@@ -81,7 +81,7 @@ public class task extends CommandAdapter implements Loggable {
         packetStopTask.put("packetType", PacketType.STOP_ANNOUNCEMENT);
         packetStopTask.put("ID", target.getId());
         ItemStack itemStopTask = ItemUtils.nameItem("Stop task", ItemUtils
-                .applyJSON(packetStopTask, new ItemStack(Material.ROSE_RED, 1)));
+                .applyJSON(packetStopTask, new ItemStack(Material.RED_DYE, 1)));
         JSONObject packetDeleteItem = new JSONObject();
         packetDeleteItem.put("packetType", PacketType.DELETE_ANNOUNCEMENT);
         packetDeleteItem.put("ID", target.getId());

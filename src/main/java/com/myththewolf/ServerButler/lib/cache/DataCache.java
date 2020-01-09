@@ -8,6 +8,7 @@ import com.myththewolf.ServerButler.lib.bungee.packets.BungeeSender;
 import com.myththewolf.ServerButler.lib.bungee.packets.PacketResult;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -45,6 +46,7 @@ public class DataCache implements BungeeSender {
     public static HashMap<String, ChatChannel> channelHashMap = new HashMap<>();
     public static HashMap<String, ChatAnnoucement> annoucementHashMap = new HashMap<>();
     public static HashMap<String, PlayerInetAddress> ipHashMap = new HashMap<>();
+    public static HashMap<String, ModerationAction> actionHashMap = new HashMap<>();
     private static DataCache thiz = new DataCache();
 
     /**
@@ -141,7 +143,7 @@ public class DataCache implements BungeeSender {
      * Empties the current cached channel list and re-populates it by a database selection
      */
     public static void rebuildChannelList() {
-        if(ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
             thiz.sendToAll(BungeePacketType.REBUILD_CACHE, new JSONObject().put("targetType", "channelList")).stream().filter(PacketResult::isError).forEach(packetResult -> getLogger().warning("Could not update cache on server " + packetResult.getHost() + ":" + packetResult.getPort() + " -> " + packetResult.getMessage()));
         }
         channelHashMap.clear();
@@ -167,7 +169,20 @@ public class DataCache implements BungeeSender {
                 rebuildChannelList();
                 return;
             }
-
+            boolean auditLogCExist = channelHashMap.values().stream()
+                    .anyMatch(chatChannel -> chatChannel.getName().equals("AuditLog"));
+            if (!auditLogCExist) {
+                makeAuditLogChannl();
+                rebuildChannelList();
+                return;
+            }
+            boolean consoleCExist = channelHashMap.values().stream()
+                    .anyMatch(chatChannel -> chatChannel.getName().equals("CONSOLE"));
+            if (!consoleCExist) {
+                makeConsoleChannl();
+                rebuildChannelList();
+                return;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -205,6 +220,20 @@ public class DataCache implements BungeeSender {
         return admin;
     }
 
+    private static ChatChannel makeAuditLogChannl() {
+        String pre = "§8[§4AUDIT§8]§6";
+        ChatChannel admin = new ChatChannel("AuditLog", ConfigProperties.ADMIN_CHAT_PERMISSION, "^@#$&", pre, ConfigProperties.DEFAULT_CHAT_PATTERN);
+        admin.update();
+        return admin;
+    }
+
+    private static ChatChannel makeConsoleChannl() {
+        String pre = "§8[§4CONSOLE§8]§6";
+        ChatChannel admin = new ChatChannel("CONSOLE", "sb.chat.console", "^@#$&%%%%", pre, ConfigProperties.DEFAULT_CHAT_PATTERN);
+        admin.update();
+        return admin;
+    }
+
     private static ChatChannel makeGlobalChatChannel() {
         String pre = "";
         ChatChannel global = new ChatChannel("GLOBAL", null, "@", pre, ConfigProperties.DEFAULT_CHAT_PATTERN);
@@ -228,6 +257,9 @@ public class DataCache implements BungeeSender {
         return getOrMakeChannel("ADMIN").get();
     }
 
+    public static ChatChannel getConsoleChannel() {
+        return getOrMakeChannel("CONSOLE").get();
+    }
 
     public static void rebuildTaskList() {
         List<ChatAnnoucement> runnning = DataCache.annoucementHashMap.values().stream()
@@ -350,7 +382,7 @@ public class DataCache implements BungeeSender {
     }
 
     public static void rebuildPlayer(String UUID) {
-        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT){
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
 
         }
 
@@ -359,7 +391,7 @@ public class DataCache implements BungeeSender {
     }
 
     public static void rebuildPlayerInetAddress(PlayerInetAddress src) {
-        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT){
+        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
 
         }
         String dbId = src.getDatabaseId();

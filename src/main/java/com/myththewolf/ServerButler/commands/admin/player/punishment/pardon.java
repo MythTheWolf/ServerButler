@@ -48,7 +48,7 @@ public class pardon extends CommandAdapter {
             }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
         } else {
             String reason = StringUtils.arrayToString(1, args);
-            target.get().banPlayer(reason, sender.orElse(null));
+            target.get().pardonPlayer(reason, sender.orElse(null));
             ChatChannel adminChat = DataCache.getPunishmentInfoChannel();
             String CHAT_MESSAGE = StringUtils
                     .replaceParameters(ConfigProperties.FORMAT_PARDON_CHAT, (sender.isPresent() ? sender.get()

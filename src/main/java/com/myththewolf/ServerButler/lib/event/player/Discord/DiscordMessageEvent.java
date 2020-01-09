@@ -4,6 +4,7 @@ import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.DiscordCommandAdapter;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import org.bukkit.Bukkit;
 import org.javacord.api.entity.message.MessageAttachment;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
@@ -49,14 +50,22 @@ public class DiscordMessageEvent implements MessageCreateListener, Loggable {
         DataCache.getAllChannels().stream()
                 .filter(chatChannel -> chatChannel.getDiscordChannel().getId() == messageCreateEvent.getChannel()
                         .getId()).findAny().ifPresent(chatChannel -> {
-            DataCache.getPlayerByDiscordID(messageCreateEvent.getMessage().getAuthor().getIdAsString())
-                    .ifPresent(mythPlayer -> {
-                        messageCreateEvent.getMessage().getAttachments().stream().filter(MessageAttachment::isImage).map(MessageAttachment::getProxyUrl).map(URL::toString).forEach(s -> chatChannel.pushViaDiscord(s, mythPlayer));
-                        chatChannel.pushViaDiscord(messageCreateEvent.getMessage().getContent(), mythPlayer);
+
+            if (chatChannel.getName().equals("CONSOLE")) {
+                Bukkit.getScheduler().callSyncMethod(ServerButler.plugin, () -> ServerButler.plugin.getServer().dispatchCommand(Bukkit.getConsoleSender(), messageCreateEvent.getMessageContent()));
+                // messageCreateEvent.deleteMessage().join();
+                return;
+            } else {
+                DataCache.getPlayerByDiscordID(messageCreateEvent.getMessage().getAuthor().getIdAsString())
+                        .ifPresent(mythPlayer -> {
+                            messageCreateEvent.getMessage().getAttachments().stream().filter(MessageAttachment::isImage).map(MessageAttachment::getProxyUrl).map(URL::toString).forEach(s -> chatChannel.pushViaDiscord(s, mythPlayer));
+                            chatChannel.pushViaDiscord(messageCreateEvent.getMessage().getContent(), mythPlayer);
 
 
-                    });
+                        });
+            }
+            messageCreateEvent.deleteMessage().exceptionally(ExceptionLogger.get());
         });
-        messageCreateEvent.deleteMessage().exceptionally(ExceptionLogger.get());
+
     }
 }

@@ -46,14 +46,16 @@ import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.pun
 import com.myththewolf.ServerButler.lib.inventory.handlers.playerInetAddress.punishment.TempBanIpHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.ItemPacketHandler;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
+import com.myththewolf.ServerButler.lib.logging.ConsoleAppender;
+import com.myththewolf.ServerButler.lib.logging.ConsoleMessageQueueWorker;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.mySQL.SQLConnector;
+import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
+import com.myththewolf.ServerButler.lib.webserver.ServerButlerJettyServer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.CommandMap;
-import org.bukkit.command.PluginCommand;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.entity.Player;
@@ -96,6 +98,16 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
     private static ChannelCategory channelCategory;
     private TabCompleter mythTabCompleter;
     private List<Message> loadingMessages = new ArrayList<>();
+    private Queue<String> consoleMessageQueue = new LinkedList<>();
+    private ConsoleMessageQueueWorker consoleMessageQueueWorker = null;
+
+    public static ServerButler getInstance() {
+        return ((ServerButler) plugin);
+    }
+
+    public Queue<String> getConsoleMessageQueue() {
+        return consoleMessageQueue;
+    }
 
     public void onEnable() {
         plugin = this;
@@ -145,7 +157,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 if (!ok)
                     throw new IllegalStateException("Must have perms to write!");
             }
-            File dataFile = new File(botFolder.getAbsolutePath() + File.separator+"bot-config.json");
+            File dataFile = new File(botFolder.getAbsolutePath() + File.separator + "bot-config.json");
             if (!dataFile.exists()) {
                 JSONObject tmp = new JSONObject();
                 tmp.put("category-id", "NOT_A_ID");
@@ -206,16 +218,45 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                         .findFirst().flatMap(Channel::asServerTextChannel).ifPresent(c -> {
                     chatChannel.setChannel(c);
                     chatChannel.update();
-                    chatChannel.getDiscordChannel().sendMessage("<393971066692960278> Server starting").exceptionally(ExceptionLogger.get()).thenAccept(message -> {
+                    chatChannel.getDiscordChannel().sendMessage(":timer: Server starting").exceptionally(ExceptionLogger.get()).thenAccept(message -> {
                         loadingMessages.add(message);
                     });
                 });
             });
         }
+
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
+
             getLogger().info("Starting the Discord Command Engine");
             API.addMessageCreateListener(new DiscordMessageEvent());
             Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> {
+                getLogger().info("Enabling the logger bridge");
+                // check log4j capabilities
+                boolean serverIsLog4jCapable = false;
+                boolean serverIsLog4j21Capable = false;
+                try {
+                    serverIsLog4jCapable = Class.forName("org.apache.logging.log4j.core.Logger") != null;
+                } catch (ClassNotFoundException e) {
+                    getLogger().severe("Log4j classes are NOT available, console channel will not be attached");
+                }
+                try {
+                    serverIsLog4j21Capable = Class.forName("org.apache.logging.log4j.core.Filter") != null;
+                } catch (ClassNotFoundException e) {
+                    getLogger().severe("Log4j 2.1 classes are NOT available, JDA messages will NOT be formatted properly");
+                }
+
+                new ConsoleAppender();
+
+                // start console message queue worker thread
+                if (consoleMessageQueueWorker != null) {
+                    if (consoleMessageQueueWorker.getState() != Thread.State.NEW) {
+                        consoleMessageQueueWorker.interrupt();
+                        consoleMessageQueueWorker = new ConsoleMessageQueueWorker();
+                    }
+                } else {
+                    consoleMessageQueueWorker = new ConsoleMessageQueueWorker();
+                }
+                consoleMessageQueueWorker.start();
                 loadingMessages.forEach(message -> {
                     message.edit("**:arrow_up: Server Online**").exceptionally(ExceptionLogger.get());
                 });
@@ -244,7 +285,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                             arr[spot] = S;
                             spot++;
                         }
-                        checkAndRun(StringUtils.arrayToString(0, arr), ((Player) commandSender));
+                        checkAndRun(StringUtils.arrayToString(0, arr), commandSender);
                         return true;
                     });
                     commandMap.register(trigger, pluginCommand);
@@ -262,7 +303,12 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        Thread webThread = new Thread(() ->{
+        getLogger().info("Starting web server");
+            ServerButlerJettyServer jettyServer = new ServerButlerJettyServer(25577);
+            jettyServer.start();
+        });
+        webThread.start();
     }
 
     @Override
@@ -301,11 +347,12 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         registerCommand("eula", new eula());
         registerCommand("probate", new probate());
         registerCommand("test", new cb());
-        registerCommand("sb",new version());
+        registerCommand("sb", new version());
+        registerCommand("softmute",new softmute());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
-            registerDiscordCommand(";eval",new com.myththewolf.ServerButler.commands.admin.discord.eval(this));
+            registerDiscordCommand(";eval", new com.myththewolf.ServerButler.commands.admin.discord.eval(this));
         }
         DataCache.rebuildChannelList();
     }
@@ -385,7 +432,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         bungeePacketHandlers.put(type, handlerList);
     }
 
-    public void checkAndRun(String raw, Player sender) {
+    public void checkAndRun(String raw, CommandSender sender) {
         String[] split = raw.split(" ");
         if (!ServerButler.commands.containsKey(split[0].substring(1))) {
             return;
@@ -397,10 +444,11 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         } else {
             args = Arrays.copyOfRange(split, 1, split.length);
         }
+
         ServerButler.commands.entrySet().stream()
                 .filter(stringCommandAdapterEntry -> stringCommandAdapterEntry.getKey().equals(chop))
                 .map(Map.Entry::getValue).forEach(commandAdapter -> {
-            commandAdapter.setLastPlayer(DataCache.getOrMakePlayer(sender.getUniqueId().toString()));
+
             try {
                 CommandPolicy CP = commandAdapter.getClass()
                         .getMethod("onCommand", Optional.class, String[].class, JavaPlugin.class)
@@ -412,22 +460,28 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                     debug("No annotations found for command executor class '" + commandAdapter.getClass()
                             .getName() + "', no checks will be made by the system!");
                 }
-                int commandUserReq = isAnnoPresent ? CP.userRequiredArgs() : -1;
+                int commandUserReq = isAnnoPresent ? CP.userRequiredArgs() : 0;
+                int commandConsoleReq = isAnnoPresent ? CP.consoleRequiredArgs() : 0;
                 String usage = isAnnoPresent ? CP.commandUsage() : "<<NOT DEFINED>>";
                 String permission = commandAdapter.getRequiredPermission();
-                if (args.length < commandUserReq) {
+                if (isAnnoPresent && commandConsoleReq == -1) {
+                    sender.sendMessage("This command cannot be run from the console.");
+                    return;
+                }
+                if ((sender instanceof Player && args.length < commandUserReq) || (sender instanceof ConsoleCommandSender && args.length < commandConsoleReq)) {
                     sender
-                            .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "This command requires " + commandUserReq + " arguments, got " + args.length + ".");
+                            .sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "This command requires " + ((sender instanceof Player) ? commandUserReq : commandConsoleReq) + " arguments, got " + args.length + ".");
                     sender.sendMessage(ConfigProperties.PREFIX + ChatColor.RED + "Usage: " + usage);
                     return;
                 }
-                if (permission != null && !sender.hasPermission(permission)) {
+                if (permission != null && sender instanceof Player && !sender.hasPermission(permission)) {
                     sender
                             .sendMessage(ConfigProperties.PREFIX + "You do not have permission for this command.");
                     return;
                 }
-                commandAdapter.onCommand(Optional.ofNullable(DataCache
-                        .getOrMakePlayer(sender.getUniqueId().toString())), args, this);
+                MythPlayer cast = sender instanceof Player ? DataCache.getOrMakePlayer(((Player) sender).getUniqueId().toString()) : null;
+                commandAdapter.setLastPlayer(cast);
+                commandAdapter.onCommand(Optional.ofNullable(cast), args, this);
             } catch (NoSuchMethodException ex) {
                 getLogger().severe("Could not find runner for command executor class: '" + commandAdapter.getClass()
                         .getName() + "'");

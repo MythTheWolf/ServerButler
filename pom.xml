@@ -24,6 +24,30 @@
             <version>3.0.1</version>
             <type>maven-plugin</type>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <!-- MC <  1.12 = 2.0-beta9 -->
+            <!-- MC >= 1.12 = 2.1 -->
+            <version>2.0-beta9</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>1_15</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>1.7.25</version>
+        </dependency>
         <!--Spigot API-->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -55,8 +79,34 @@
             <version>3.0.3</version>
             <type>pom</type>
         </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-annotations</artifactId>
+            <version>9.4.12.v20180830</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>9.4.12.v20180830</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>apache-jsp</artifactId>
+            <version>9.4.12.v20180830</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>apache-jstl</artifactId>
+            <version>9.4.12.v20180830</version>
+            <type>pom</type>
+        </dependency>
     </dependencies>
-
     <build>
         <resources>
             <resource>
@@ -65,9 +115,33 @@
                     <include>**/*.yml</include>
                 </includes>
             </resource>
+            <resource>
+                <directory>src/main</directory>
+                <includes>
+                    <include>webapp/**/*.*</include>
+                </includes>
+            </resource>
         </resources>
         <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-Dtomcat.util.scan.StandardJarScanFilter.jarsToScan=taglibs-standard-impl-*</argument>
+                        <argument>
+                            -Dtomcat.util.scan.StandardJarScanFilter.jarsToSkip=apache-*,ecj-*,jetty-*,asm-*,javax.servlet-*,javax.annotation-*,taglibs-standard-spec-*
+                        </argument>
+                        <argument>-cp</argument>
+                        <classpath/>
+                        <argument>org.eclipse.jetty.demo.Main</argument>
+                        <argument>8080</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
@@ -75,7 +149,8 @@
                         <phase>prepare-package</phase>
                         <configuration>
                             <tasks>
-                                <replace token= "@plugin-ver" value="'${git.branch}-${git.commit.id.abbrev}'" dir="target/classes">
+                                <replace token="@plugin-ver" value="'${git.branch}-${git.commit.id.abbrev}'"
+                                         dir="target/classes">
                                     <include name="**/*.yml"/>
                                 </replace>
                             </tasks>

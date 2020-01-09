@@ -74,6 +74,7 @@ public class EPlayerChat implements Listener, Loggable {
         }
 
         if (sender.getChatStatus() != ChatStatus.PERMITTED) {
+            event.setCancelled(true);
             if (sender.getChatStatus() == ChatStatus.MUTED) {
                 sender.getBukkitPlayer().ifPresent(player -> player
                         .sendMessage(ConfigProperties.PREFIX + "You are not permitted to chat."));

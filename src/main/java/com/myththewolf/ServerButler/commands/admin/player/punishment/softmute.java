@@ -16,9 +16,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 
-public class mute extends CommandAdapter {
+public class softmute extends CommandAdapter {
     @Override
-    @CommandPolicy(commandUsage = "/mute <username> [reason]", consoleRequiredArgs = 2, userRequiredArgs = 1)
+    @CommandPolicy(userRequiredArgs = 1, consoleRequiredArgs = 2, commandUsage = "/softmute <player> <reason>")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<MythPlayer> target = DataCache.getPlayerByName(args[0]);
         if (!target.isPresent()) {
@@ -29,12 +29,12 @@ public class mute extends CommandAdapter {
             ServerButler.conversationBuilder.withFirstPrompt(new StringPrompt() {
                 @Override
                 public String getPromptText(ConversationContext conversationContext) {
-                    return ConfigProperties.PREFIX + "Please specify the mute reason.";
+                    return ConfigProperties.PREFIX + "Please specify the soft-mute reason.";
                 }
 
                 @Override
                 public Prompt acceptInput(ConversationContext conversationContext, String s) {
-                    conversationContext.setSessionData("packetType", PacketType.MUTE_PLAYER);
+                    conversationContext.setSessionData("packetType", PacketType.SOFTMUTE_PLAYER);
                     conversationContext.setSessionData("reason", s);
                     conversationContext.setSessionData("sender", sender.orElse(null));
                     conversationContext.setSessionData("target", target.get());
@@ -43,17 +43,13 @@ public class mute extends CommandAdapter {
             }).buildConversation(sender.flatMap(MythPlayer::getBukkitPlayer).get()).begin();
         } else {
             String reason = StringUtils.arrayToString(1, args);
-            target.get().mutePlayer(reason, sender.orElse(null));
+            target.get().softmutePlayer(reason, sender.orElse(null));
             target.get().updatePlayer();
             String toSend = StringUtils
-                    .replaceParameters(ConfigProperties.FORMAT_MUTE_CHAT, sender.map(MythPlayer::getName)
+                    .replaceParameters("[SOFT-MUTE]" + ConfigProperties.FORMAT_MUTE_CHAT, sender.map(MythPlayer::getName)
                             .orElse("CONSOLE"), target.map(MythPlayer::getName)
                             .orElse("<ERROR: MythPlayer not present>"), reason);
             DataCache.getPunishmentInfoChannel().push(toSend);
-            String playerMuteMessage = StringUtils
-                    .replaceParameters(ConfigProperties.FORMAT_MUTE, sender.map(MythPlayer::getName)
-                            .orElse("CONSOLE"), reason);
-            target.flatMap(MythPlayer::getBukkitPlayer).ifPresent(player -> player.sendMessage(playerMuteMessage));
         }
     }
 
@@ -61,5 +57,4 @@ public class mute extends CommandAdapter {
     public String getRequiredPermission() {
         return ConfigProperties.MUTE_PERMISSION;
     }
-
 }

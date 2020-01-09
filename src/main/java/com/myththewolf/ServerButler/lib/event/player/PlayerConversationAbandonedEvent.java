@@ -87,6 +87,7 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                         .replaceParameters(ConfigProperties.FORMAT_MUTE, sender.map(MythPlayer::getName)
                                 .orElse("CONSOLE"), reason);
                 target.getBukkitPlayer().ifPresent(player -> player.sendMessage(playerMuteMessage));
+                break;
             case UNMUTE_PLAYER:
                 target.unmutePlayer(reason, sender.orElse(null));
                 target.updatePlayer();

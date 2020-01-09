@@ -7,14 +7,12 @@ import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -103,7 +101,7 @@ public class ChatChannel implements SQLAble {
      * @return The list of players
      */
     public List<MythPlayer> getAllCachedPlayers() {
-       return Bukkit.getOnlinePlayers().stream().map(o -> o.getUniqueId().toString()).map(DataCache::getOrMakePlayer).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
+        return Bukkit.getOnlinePlayers().stream().map(o -> o.getUniqueId().toString()).map(DataCache::getOrMakePlayer).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
     }
 
 
@@ -240,6 +238,9 @@ public class ChatChannel implements SQLAble {
                 .forEach(player -> {
                     player.sendMessage(raw);
                 });
+        if (ConfigProperties.ENABLE_DISCORD_BOT) {
+            getDiscordChannel().sendMessage(ChatColor.stripColor(raw)).exceptionally(ExceptionLogger.get());
+        }
     }
 
     public void pushViaDiscord(String content, MythPlayer player) {
@@ -256,6 +257,10 @@ public class ChatChannel implements SQLAble {
         String whom = ChatColor.translateAlternateColorCodes('&', player.getDisplayName());
         getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
                 .exceptionally(ExceptionLogger.get());
+        String oldName = Thread.currentThread().getName();
+        Thread.currentThread().setName(getName());
+        getLogger().info(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con));
+        Thread.currentThread().setName(oldName);
     }
 
     @Override
