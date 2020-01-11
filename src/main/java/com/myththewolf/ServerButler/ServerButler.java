@@ -100,6 +100,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
     private List<Message> loadingMessages = new ArrayList<>();
     private Queue<String> consoleMessageQueue = new LinkedList<>();
     private ConsoleMessageQueueWorker consoleMessageQueueWorker = null;
+    private ServerButlerJettyServer webServer;
 
     public static ServerButler getInstance() {
         return ((ServerButler) plugin);
@@ -165,7 +166,14 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 StringUtils.writeFile(dataFile.getAbsolutePath(), tmp.toString(4));
             }
             JSONObject conf = new JSONObject(StringUtils.readFile(dataFile.getAbsolutePath()));
-            Server thisServer = API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new);
+            Server thisServer = null;
+            try {
+                thisServer = API.getServerById(ConfigProperties.DISCORD_GUILD_ID).orElseThrow(Exception::new);
+            } catch (Exception e) {
+                getLogger().warning("Failed to enable discord bot - No such guild for that ID!");
+                Bukkit.getPluginManager().disablePlugin(this);
+                e.getStackTrace();
+            }
 
 
             if (!thisServer.getChannelCategoryById(conf.getString("category-id")).isPresent()) {
@@ -303,10 +311,10 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Thread webThread = new Thread(() ->{
-        getLogger().info("Starting web server");
-            ServerButlerJettyServer jettyServer = new ServerButlerJettyServer(25577);
-            jettyServer.start();
+        Thread webThread = new Thread(() -> {
+            getLogger().info("Starting web server");
+            webServer = new ServerButlerJettyServer(25577);
+            webServer.start();
         });
         webThread.start();
     }
@@ -318,7 +326,16 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                         .join();
                 chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("[Server offline]").join();
+                API.disconnect();
+
             });
+            try {
+                getSQLConnection().close();
+                webServer.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -348,7 +365,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         registerCommand("probate", new probate());
         registerCommand("test", new cb());
         registerCommand("sb", new version());
-        registerCommand("softmute",new softmute());
+        registerCommand("softmute", new softmute());
         //*************** DISCORD COMMANDS ****************//
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             registerDiscordCommand(";link", new link());
