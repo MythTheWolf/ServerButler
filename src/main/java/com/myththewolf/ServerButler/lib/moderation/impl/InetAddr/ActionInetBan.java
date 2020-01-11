@@ -54,7 +54,7 @@ public class ActionInetBan implements ModerationAction, SQLAble {
                 this.dateApplied = TimeUtils.timeFromString(resultSet.getString("dateApplied"));
                 this.reason = resultSet.getString("reason");
                 this.moderator = resultSet.getString("moderator") == null ? null : DataCache
-                        .getOrMakePlayer(resultSet.getString("moderator"));
+                        .getPlayer(resultSet.getString("moderator")).orElseThrow(IllegalStateException::new);
                 this.target = DataCache.getPlayerInetAddressByIp(resultSet.getString("target")).orElseThrow(() -> new IllegalStateException("Could not find target IP in database"));
             }
         } catch (SQLException ex) {

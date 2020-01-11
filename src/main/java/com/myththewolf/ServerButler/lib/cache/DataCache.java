@@ -56,18 +56,21 @@ public class DataCache implements BungeeSender {
      * @return A new MythPlayer object
      * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
      */
-    public static MythPlayer getOrMakePlayer(String UUID) {
-        if (ConfigProperties.ENABLE_BUNGEE_SUPPORT) {
-            return makeNewPlayerObj(UUID);
-        }
+    public static Optional<MythPlayer> getPlayer(String UUID) {
         if (playerHashMap.containsKey(UUID)) {
-            return playerHashMap.get(UUID);
+            return playerHashMap.get(UUID).playerExists() ? Optional.ofNullable(playerHashMap.get(UUID)) : Optional.empty();
+        } else {
+            if (ConfigProperties.DEBUG) {
+                getLogger().info("Player doesn't exist in cache. Creating.");
+            }
+            MythPlayer player = makeNewPlayerObj(UUID);
+            if (player.playerExists()) {
+                playerHashMap.put(UUID, player);
+                return Optional.ofNullable(playerHashMap.get(UUID));
+            } else {
+                return Optional.empty();
+            }
         }
-        MythPlayer player = makeNewPlayerObj(UUID);
-        if (player.playerExists()) {
-            playerHashMap.put(UUID, player);
-        }
-        return playerHashMap.get(UUID);
     }
 
     /**
@@ -84,7 +87,9 @@ public class DataCache implements BungeeSender {
         }
         MythPlayer MP = new IMythPlayer(new DateTime(), UUID, name);
         MP.updatePlayer();
-        return makeNewPlayerObj(UUID);
+        MP = getPlayer(UUID).orElseThrow(IllegalStateException::new);
+        playerHashMap.put(UUID, MP);
+        return playerHashMap.get(UUID);
     }
 
     /**
@@ -95,11 +100,7 @@ public class DataCache implements BungeeSender {
      * @note This does not check for valid UUIDs, so do not pass possibly invalid UUIDs.
      */
     private static MythPlayer makeNewPlayerObj(String UUID) {
-        if (ConfigProperties.DEBUG) {
-            getLogger().info("Player doesn't exist in cache. Creating.");
-        }
         MythPlayer MP = new IMythPlayer(UUID);
-        playerHashMap.put(UUID, MP);
         return MP;
     }
 
@@ -110,6 +111,7 @@ public class DataCache implements BungeeSender {
         playerHashMap = new HashMap<>();
         channelHashMap = new HashMap<>();
         annoucementHashMap = new HashMap<>();
+        actionHashMap = new HashMap<>();
     }
 
     /**
@@ -300,7 +302,7 @@ public class DataCache implements BungeeSender {
             ps.setString(1, name);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return Optional.ofNullable(getOrMakePlayer(rs.getString("UUID")));
+                return getPlayer(rs.getString("UUID"));
             }
         } catch (SQLException E) {
             E.printStackTrace();
@@ -418,7 +420,7 @@ public class DataCache implements BungeeSender {
             ps.setString(1, ID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return Optional.of(getOrMakePlayer(rs.getString("UUID")));
+                return getPlayer(rs.getString("UUID"));
             }
         } catch (SQLException e) {
             e.printStackTrace();

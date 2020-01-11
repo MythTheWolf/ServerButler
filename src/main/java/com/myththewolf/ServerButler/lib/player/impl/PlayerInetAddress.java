@@ -94,7 +94,7 @@ public class PlayerInetAddress implements SQLAble {
     }
 
     public List<MythPlayer> getMappedPlayers() {
-        return mappedPlayers.stream().map(DataCache::getOrMakePlayer).collect(Collectors.toList());
+        return mappedPlayers.stream().map(DataCache::getPlayer).map(mythPlayer -> mythPlayer.orElseThrow(IllegalStateException::new)).collect(Collectors.toList());
     }
 
     public void addPlayer(MythPlayer mythPlayer) {

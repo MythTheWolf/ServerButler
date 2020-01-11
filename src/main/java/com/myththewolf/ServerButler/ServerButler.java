@@ -479,7 +479,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                             .sendMessage(ConfigProperties.PREFIX + "You do not have permission for this command.");
                     return;
                 }
-                MythPlayer cast = sender instanceof Player ? DataCache.getOrMakePlayer(((Player) sender).getUniqueId().toString()) : null;
+                MythPlayer cast = sender instanceof Player ? DataCache.getPlayer(((Player) sender).getUniqueId().toString()).orElseThrow(IllegalStateException::new) : null;
                 commandAdapter.setLastPlayer(cast);
                 commandAdapter.onCommand(Optional.ofNullable(cast), args, this);
             } catch (NoSuchMethodException ex) {

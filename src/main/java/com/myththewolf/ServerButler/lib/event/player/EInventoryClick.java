@@ -45,7 +45,7 @@ public class EInventoryClick implements Listener, Loggable {
         Player player = (Player) event.getWhoClicked();
         player.closeInventory();
         ServerButler.itemPacketHandlers.get(PacketType.valueOf(parsed.getString("packetType"))).forEach(handler -> {
-            handler.onPacketReceived(DataCache.getOrMakePlayer(player.getUniqueId().toString()), parsed);
+            handler.onPacketReceived(DataCache.getPlayer(player.getUniqueId().toString()).orElseThrow(IllegalStateException::new), parsed);
         });
     }
 }

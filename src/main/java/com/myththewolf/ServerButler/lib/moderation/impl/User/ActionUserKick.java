@@ -53,8 +53,8 @@ public class ActionUserKick implements ModerationAction, SQLAble {
                 this.dateApplied = TimeUtils.timeFromString(resultSet.getString("dateApplied"));
                 this.reason = resultSet.getString("reason");
                 this.moderator = resultSet.getString("moderator") == null ? null : DataCache
-                        .getOrMakePlayer(resultSet.getString("moderator"));
-                this.target = DataCache.getOrMakePlayer(resultSet.getString("target"));
+                        .getPlayer(resultSet.getString("moderator")).orElseThrow(IllegalStateException::new);
+                this.target = DataCache.getPlayer(resultSet.getString("target")).orElseThrow(IllegalStateException::new);
             }
         } catch (SQLException ex) {
             handleException(ex);

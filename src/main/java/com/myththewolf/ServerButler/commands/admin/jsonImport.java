@@ -32,7 +32,7 @@ public class jsonImport extends CommandAdapter implements Loggable {
                     if (ban.getString("expires").equals("forever")) {
                         debug("Importing User: "+ban.getString("uuid"));
                         if(DataCache.playerExists(ban.getString("uuid"))){
-                            MythPlayer  mp = DataCache.getOrMakePlayer("uuid");
+                            MythPlayer mp = DataCache.getPlayer("uuid").orElseThrow(IllegalStateException::new);
                             mp.banPlayer(ban.getString("reason"),null);
                             mp.updatePlayer();
                             DataCache.rebuildPlayer(mp.getUUID());
@@ -40,9 +40,8 @@ public class jsonImport extends CommandAdapter implements Loggable {
                         }else{
                             getLogger().info("Having to manually set: "+ban.getString("name"));
                            MythPlayer mp = DataCache.createPlayer(ban.getString("uuid"),ban.getString("name"));
-                          MythPlayer neww = DataCache.getOrMakePlayer(ban.getString("uuid"));
-                            neww.banPlayer(ban.getString("reason"),null);
-                            neww.updatePlayer();
+                            mp.banPlayer(ban.getString("reason"), null);
+                            mp.updatePlayer();
                             totalDone++;
                         }
                         debug("Imported ban from user '"+ban.getString("name")+"'.");

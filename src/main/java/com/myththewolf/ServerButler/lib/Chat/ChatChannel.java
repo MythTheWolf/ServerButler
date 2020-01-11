@@ -101,7 +101,7 @@ public class ChatChannel implements SQLAble {
      * @return The list of players
      */
     public List<MythPlayer> getAllCachedPlayers() {
-        return Bukkit.getOnlinePlayers().stream().map(o -> o.getUniqueId().toString()).map(DataCache::getOrMakePlayer).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
+        return Bukkit.getOnlinePlayers().stream().map(o -> o.getUniqueId().toString()).map(DataCache::getPlayer).map(mythPlayer -> mythPlayer.orElseThrow(IllegalStateException::new)).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
     }
 
 

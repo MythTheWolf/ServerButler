@@ -18,7 +18,7 @@ import org.joda.time.Duration;
 public class EPlayerLeave implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
-        MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        MythPlayer MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             DataCache.getGlobalChannel().getDiscordChannel().sendMessage(":arrow_backward: " + ChatColor.stripColor(MP.getDisplayName()) + " left the game.");
             DataCache.getAllChannels().forEach(chatChannel -> {

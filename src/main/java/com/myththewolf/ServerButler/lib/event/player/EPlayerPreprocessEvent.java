@@ -21,6 +21,7 @@ import java.util.Optional;
  */
 public class EPlayerPreprocessEvent implements Listener, Loggable {
     int spot = 0;
+
     @EventHandler
     public void onPreCommand(PlayerCommandPreprocessEvent event) {
 
@@ -36,7 +37,7 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
         ServerButler.commands.entrySet().stream()
                 .filter(stringCommandAdapterEntry -> stringCommandAdapterEntry.getKey().equals(chop))
                 .map(Map.Entry::getValue).forEach(commandAdapter -> {
-            commandAdapter.setLastPlayer(DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString()));
+            commandAdapter.setLastPlayer(DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new));
             try {
                 CommandPolicy CP = commandAdapter.getClass()
                         .getMethod("onCommand", Optional.class, String[].class, JavaPlugin.class)
@@ -75,8 +76,8 @@ public class EPlayerPreprocessEvent implements Listener, Loggable {
                         .getName() + "'");
             }
 
-            commandAdapter.onCommand(Optional.ofNullable(DataCache
-                    .getOrMakePlayer(event.getPlayer().getUniqueId().toString())), args, (JavaPlugin) Bukkit
+            commandAdapter.onCommand(DataCache
+                    .getPlayer(event.getPlayer().getUniqueId().toString()), args, (JavaPlugin) Bukkit
                     .getPluginManager().getPlugin("ServerButler"));
         });
 

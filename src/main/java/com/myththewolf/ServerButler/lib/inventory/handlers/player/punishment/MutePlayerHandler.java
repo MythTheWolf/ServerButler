@@ -13,9 +13,9 @@ import java.util.Optional;
 public class MutePlayerHandler implements ItemPacketHandler {
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
-        MythPlayer target = DataCache.getOrMakePlayer(data.getString("PLAYER-NAME"));
+        MythPlayer target = DataCache.getPlayer(data.getString("PLAYER-NAME")).orElseThrow(IllegalStateException::new);
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
-        String args[] = {target.getName()};
+        String[] args = {target.getName()};
         ServerButler.commands.get("mute").setLastPlayer(player);
         ServerButler.commands.get("mute").onCommand(Optional.ofNullable(player), args, tar);
     }

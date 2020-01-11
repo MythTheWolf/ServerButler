@@ -53,12 +53,12 @@ public class EPlayerChat implements Listener, Loggable {
                 return;
             }
         }
-        sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+        sender = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
         if (!sender.getDisplayName().equals(event.getPlayer().getDisplayName())) {
             sender.setDisplayName(event.getPlayer().getDisplayName());
             sender.updatePlayer();
             DataCache.rebuildPlayer(sender.getUUID());
-            sender = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+            sender = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
         }
 
         List<ChatChannel> chanList = new ArrayList<>(sender.getChannelList());
@@ -94,7 +94,7 @@ public class EPlayerChat implements Listener, Loggable {
                 .filter(channel -> shortcutMatches(channel, event.getMessage())).forEach(chatChannel -> {
             shortCutRan = true;
             Bukkit.getOnlinePlayers().stream().filter(player -> {
-                MythPlayer mp = DataCache.getOrMakePlayer(player.getUniqueId().toString());
+                MythPlayer mp = DataCache.getPlayer(player.getUniqueId().toString()).orElseThrow(IllegalStateException::new);
                 return !chatChannel.getAllCachedPlayers().contains(mp);
             }).forEach(o -> event.getRecipients().remove(o));
             event.setFormat(chatChannel.getMessageFromContext(sender));
@@ -107,7 +107,7 @@ public class EPlayerChat implements Listener, Loggable {
         }
         sender.getWritingChannel().ifPresent(chatChannel -> {
             Bukkit.getOnlinePlayers().stream().filter(player -> {
-                MythPlayer mp = DataCache.getOrMakePlayer(player.getUniqueId().toString());
+                MythPlayer mp = DataCache.getPlayer(player.getUniqueId().toString()).orElseThrow(IllegalStateException::new);
                 return !chatChannel.getAllCachedPlayers().contains(mp);
             }).forEach(o -> event.getRecipients().remove(o));
             event.setFormat(chatChannel.getMessageFromContext(sender));

@@ -14,7 +14,7 @@ public class ViewPlayerIPs implements ItemPacketHandler{
     @Override
     public void onPacketReceived(MythPlayer player, JSONObject data) {
         String[] args = new String[1];
-        args[0] = DataCache.getOrMakePlayer(data.getString("PLAYER-UUID")).getName();
+        args[0] = DataCache.getPlayer(data.getString("PLAYER-UUID")).orElseThrow(IllegalStateException::new).getName();
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
         ServerButler.commands.get("ips").setLastPlayer(player);
         ServerButler.commands.get("ips").onCommand(Optional.ofNullable(player), args, tar);

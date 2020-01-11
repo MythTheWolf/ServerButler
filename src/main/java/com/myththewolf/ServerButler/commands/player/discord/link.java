@@ -27,7 +27,7 @@ public class link extends DiscordCommandAdapter implements SQLAble {
         try {
             if (resultSet.next()) {
                 String UUID = resultSet.getString("UUID");
-                MythPlayer mp = DataCache.getOrMakePlayer(UUID);
+                MythPlayer mp = DataCache.getPlayer(UUID).orElseThrow(IllegalStateException::new);
                 reply(":white_check_mark: Hello," + mp.getName() + "! (UUID: " + mp.getUUID() + ")");
                 reply(":warning: Please Re-Join the minecraft server in order to re-fresh discord permissions.");
                 mp.setDiscordID(orgin.getAuthor().getIdAsString());

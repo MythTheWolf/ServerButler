@@ -38,11 +38,14 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
             if (!ServerButler.connector.isConnected()) {
                 throw new Exception("No connection to database");
             }
-            MythPlayer MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
-            if (!MP.playerExists()) {
+            MythPlayer MP;
+
+            if (!DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).isPresent()) {
                 MP = DataCache.createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
                 ConfigProperties.EULA
                         .ifPresent(s -> event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', s)));
+            } else {
+                MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).get();
             }
             Optional<PlayerInetAddress> ipAddress = DataCache
                     .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
@@ -67,7 +70,7 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
             }
             Bukkit.getScheduler().scheduleSyncDelayedTask(ServerButler.plugin, new Runnable() {
                 public void run() {
-                    MythPlayer mp = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+                    MythPlayer mp = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
                     if (!mp.getDisplayName().equals(event.getPlayer().getDisplayName())) {
                         mp.setDisplayName(event.getPlayer().getDisplayName());
                         mp.updatePlayer();
@@ -75,11 +78,11 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
                     }
                 }
             }, 20L);
-            MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+            MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
             if (!ipAddress.isPresent()) {
                 DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
                 DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
-                MP = DataCache.getOrMakePlayer(event.getPlayer().getUniqueId().toString());
+                MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
                 ipAddress = DataCache
                         .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
             }
@@ -91,7 +94,7 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
                 DataCache.rebuildPlayerInetAddress(ipAddress.get());
                 DataCache.rebuildPlayer(MP.getUUID());
                 MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache
-                        .getOrMakePlayer(event.getPlayer().getUniqueId().toString()) : DataCache
+                        .getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new) : DataCache
                         .createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
                 ipAddress = DataCache
                         .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());

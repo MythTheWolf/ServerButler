@@ -225,7 +225,7 @@ public class ItemUtils {
     public static ItemStack getSkullofPlayer(String playerUUID) {
         ItemStack raw = new ItemStack(Material.PLAYER_HEAD, (short) 3);
         SkullMeta skullMeta = (SkullMeta) raw.getItemMeta();
-        skullMeta.setOwningPlayer(DataCache.getOrMakePlayer(playerUUID).getOfflinePlayer());
+        skullMeta.setOwningPlayer(DataCache.getPlayer(playerUUID).orElseThrow(IllegalStateException::new).getOfflinePlayer());
         return raw;
     }
 
