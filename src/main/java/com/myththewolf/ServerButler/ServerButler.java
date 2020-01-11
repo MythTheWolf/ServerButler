@@ -162,7 +162,6 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             if (!dataFile.exists()) {
                 JSONObject tmp = new JSONObject();
                 tmp.put("category-id", "NOT_A_ID");
-                tmp.put("name", "minecraft channels");
                 StringUtils.writeFile(dataFile.getAbsolutePath(), tmp.toString(4));
             }
             JSONObject conf = new JSONObject(StringUtils.readFile(dataFile.getAbsolutePath()));
@@ -178,9 +177,13 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
 
             if (!thisServer.getChannelCategoryById(conf.getString("category-id")).isPresent()) {
                 getLogger().info("Creating MC category");
-                channelCategory = thisServer.createChannelCategoryBuilder().setName(conf.getString("name")).create().join();
+                channelCategory = thisServer.createChannelCategoryBuilder().setName(ConfigProperties.DISCORD_CATEGORY_NAME).create().join();
+                JSONObject tmp = new JSONObject();
+                tmp.put("category-id", channelCategory.getIdAsString());
+                StringUtils.writeFile(dataFile.getAbsolutePath(), tmp.toString(4));
+                conf = new JSONObject(StringUtils.readFile(dataFile.getAbsolutePath()));
                 getLogger().info("Setting up one-time permissions");
-                ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getRoles().forEach(role -> {
+                thisServer.getRoles().forEach(role -> {
                     getLogger().info(role.getName());
                     Permissions p = new PermissionsBuilder().setAllDenied().build();
                     channelCategory.createUpdater().addPermissionOverwrite(role, p).update()
@@ -192,7 +195,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                     }
                 });
             }
-            channelCategory = thisServer.getChannelCategoryById(conf.getString("category-id")).orElseThrow(IllegalStateException::new);
+            channelCategory = thisServer.getChannelCategoryById(conf.getString("category-id")).get();
             DataCache.getAllChannels().forEach(chatChannel -> {
                 if (channelCategory.getChannels().stream()
                         .noneMatch(c -> c.getName().equals(ConfigProperties.SERVER_NAME + chatChannel.getName().toLowerCase()))) {
@@ -207,7 +210,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                                 .sendMessage(":timer: I'm still setting permissions! Chat will not be fully accessible!");
                         PermissionsBuilder pb = new PermissionsBuilder();
                         pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.ATTACH_FILE);
-                        ServerButler.API.getServers().stream().findFirst().orElseThrow(IllegalStateException::new).getRoles().forEach(role -> {
+                        API.getServerById(ConfigProperties.DISCORD_GUILD_ID).orElseThrow(IllegalStateException::new).getRoles().forEach(role -> {
 
                             chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).createUpdater()
                                     .addPermissionOverwrite(role, pb.build()).update()
@@ -326,12 +329,11 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                         .join();
                 chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("[Server offline]").join();
-                API.disconnect();
-
             });
             try {
                 getSQLConnection().close();
                 webServer.stop();
+                API.disconnect();
             } catch (Exception e) {
                 e.printStackTrace();
             }

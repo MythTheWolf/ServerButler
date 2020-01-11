@@ -186,6 +186,7 @@ public class ConfigProperties {
 
     public static String DISCORD_BOT_TOKEN = ServerButler.configuration.getString("DISCORD-BOT-TOKEN");
     public static String DISCORD_GUILD_ID = ServerButler.configuration.getString("DISCORD-GUILD-ID");
+    public static String DISCORD_CATEGORY_NAME = ServerButler.configuration.getString("DISCORD-CATEGORY-TITLE");
     public static String SQL_HOST = ServerButler.configuration.getString("SQL-HOST");
 
     public static String SQL_PORT = ServerButler.configuration.getString("SQL-PORT");
