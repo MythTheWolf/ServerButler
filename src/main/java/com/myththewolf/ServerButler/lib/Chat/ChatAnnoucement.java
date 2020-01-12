@@ -28,6 +28,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
     private String id = null;
 
     private String taskID = null;
+    private boolean run = false;
 
     public ChatAnnoucement(String ID) {
         try {
@@ -40,6 +41,7 @@ public class ChatAnnoucement implements SQLAble, Loggable {
                 this.requiredPerm = resultSet.getString("permission");
                 interval = TimeUtils.TIME_INPUT_FORMAT().parsePeriod(resultSet.getString("time"));
                 id = resultSet.getString("ID");
+                run = resultSet.getBoolean("enabled");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -141,15 +143,23 @@ public class ChatAnnoucement implements SQLAble, Loggable {
 
     public void update() {
         if (getId() == null) {
-            this.id = prepareAndExecuteUpdateExceptionally("INSERT INTO `SB_Announcements` (`ID`, `content`, `channels`, `permission`, `time`) VALUES (NULL, ?, ?, ?, ?)", 4, getContent(), StringUtils
+            this.id = prepareAndExecuteUpdateExceptionally("INSERT INTO `SB_Announcements` (`ID`, `content`, `channels`, `permission`, `time`,`enabled`) VALUES (NULL, ?, ?, ?, ?,?)", 5, getContent(), StringUtils
                     .serializeArray(getDestinations().stream().map(ChatChannel::getID).collect(Collectors
-                            .toList())), getRequiredPerm(), TimeUtils.TIME_INPUT_FORMAT().print(getInterval())) + "";
+                            .toList())), getRequiredPerm(), TimeUtils.TIME_INPUT_FORMAT().print(getInterval()), isEnabled()) + "";
         } else {
-            prepareAndExecuteUpdateExceptionally("UPDATE `SB_Announcements` SET `content` = ? , `channels` = ? , `permission` =  ? , `time` = ? WHERE `ID` = ? ", 5, getContent(), StringUtils
+            prepareAndExecuteUpdateExceptionally("UPDATE `SB_Announcements` SET `content` = ? , `channels` = ? , `permission` =  ? , `time` = ?, `enabled` = ? WHERE `ID` = ? ", 6, getContent(), StringUtils
                     .serializeArray(getDestinations().stream().map(ChatChannel::getID).collect(Collectors
                             .toList())), getRequiredPerm(), TimeUtils.TIME_INPUT_FORMAT()
-                    .print(getInterval()), getId());
+                    .print(getInterval()), isEnabled(), getId());
         }
+    }
+
+    public boolean isEnabled() {
+        return run;
+    }
+
+    public void setEneabled(boolean run) {
+        this.run = run;
     }
 
     public void delete() {

@@ -22,6 +22,8 @@ public class StartTaskHandler implements ItemPacketHandler {
         }
         ChatAnnoucement chatAnnoucement = annoucement.get();
         chatAnnoucement.startTaskNow();
+        chatAnnoucement.setEneabled(true);
+        chatAnnoucement.update();
         sender.sendMessage(ConfigProperties.PREFIX + ChatColor.GREEN + "Submitted as task #" + chatAnnoucement
                 .getTaskID());
     }

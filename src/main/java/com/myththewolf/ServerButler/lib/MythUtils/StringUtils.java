@@ -279,7 +279,7 @@ public class StringUtils {
      * @return A optional, empty if no hidden String is present
      */
     public static Optional<String> getEmeddedString(ItemStack item) {
-        if(item == null || item.getItemMeta() == null || item.getItemMeta().getLore() == null){
+        if (item == null || item.getItemMeta() == null || item.getItemMeta().getLore() == null) {
             return Optional.empty();
         }
         return item.getItemMeta().getLore().stream().filter(StringUtils::hasHiddenString)
@@ -302,6 +302,14 @@ public class StringUtils {
         return Optional.ofNullable(jsonObject);
     }
 
+    public static boolean isInt(String in) {
+        try {
+            Integer.parseInt(in);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
 
     public static String getToken(int length) {
         StringBuilder token = new StringBuilder(length);
@@ -320,4 +328,10 @@ public class StringUtils {
         }
     }
 
+    public static String getStackTrace(Exception E) {
+        StringWriter sw = new StringWriter();
+        E.printStackTrace(new PrintWriter(sw));
+        String exceptionAsString = sw.toString();
+        return exceptionAsString;
+    }
 }

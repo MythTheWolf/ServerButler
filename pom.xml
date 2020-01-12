@@ -125,24 +125,6 @@
         <finalName>${project.artifactId}-${git.branch}-${git.commit.id.abbrev}</finalName>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2</version>
-                <configuration>
-                    <executable>java</executable>
-                    <arguments>
-                        <argument>-Dtomcat.util.scan.StandardJarScanFilter.jarsToScan=taglibs-standard-impl-*</argument>
-                        <argument>
-                            -Dtomcat.util.scan.StandardJarScanFilter.jarsToSkip=apache-*,ecj-*,jetty-*,asm-*,javax.servlet-*,javax.annotation-*,taglibs-standard-spec-*
-                        </argument>
-                        <argument>-cp</argument>
-                        <classpath/>
-                        <argument>org.eclipse.jetty.demo.Main</argument>
-                        <argument>8080</argument>
-                    </arguments>
-                </configuration>
-            </plugin>
-            <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>

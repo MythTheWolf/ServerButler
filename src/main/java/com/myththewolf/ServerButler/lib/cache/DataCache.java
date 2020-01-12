@@ -8,6 +8,8 @@ import com.myththewolf.ServerButler.lib.bungee.packets.BungeeSender;
 import com.myththewolf.ServerButler.lib.bungee.packets.PacketResult;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
+import com.myththewolf.ServerButler.lib.moderation.impl.User.*;
+import com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType;
 import com.myththewolf.ServerButler.lib.moderation.interfaces.ModerationAction;
 import com.myththewolf.ServerButler.lib.player.impl.IMythPlayer;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
@@ -112,6 +114,59 @@ public class DataCache implements BungeeSender {
         channelHashMap = new HashMap<>();
         annoucementHashMap = new HashMap<>();
         actionHashMap = new HashMap<>();
+    }
+
+    public static Optional<ModerationAction> getActionByID(String ID) {
+        if (actionHashMap.containsKey(ID)) {
+            return Optional.ofNullable(actionHashMap.get(ID));
+        } else {
+            try {
+                PreparedStatement ps = ServerButler.connector.getConnection().prepareStatement("SELECT `ID`,`type` FROM `SB_Actions` WHERE `ID` = ?");
+                ps.setString(1, ID);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    ActionType type = ActionType.valueOf(rs.getString("type"));
+                    ModerationAction action = null;
+                    switch (type) {
+                        case BAN:
+                            action = new ActionUserBan(ID);
+                            break;
+                        case TEMP_BAN:
+                            action = new ActionUserTempBan(ID);
+                            break;
+                        case KICK:
+                            action = new ActionUserKick(ID);
+                            break;
+                        case PARDON:
+                            action = new ActionUserPardon(ID);
+                            break;
+                        case MUTE:
+                            action = new ActionUserMute(ID);
+                            break;
+                        case UNMUTE:
+                            action = new ActionUserUnmute(ID);
+                            break;
+                        case SOFT_MUTE:
+                            action = new ActionUserSoftmute(ID);
+                        case TEMP_MUTE:
+                            break;
+                        default:
+                            break;
+                    }
+                    if (action == null) {
+                        getLogger().warning("Could not find containing class for ActionType: " + type);
+                        return Optional.empty();
+                    }
+                    actionHashMap.put(ID, action);
+                    return Optional.of(action);
+                } else {
+                    return Optional.empty();
+                }
+            } catch (Exception E) {
+                E.printStackTrace();
+                return Optional.empty();
+            }
+        }
     }
 
     /**

@@ -134,6 +134,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         Bukkit.getPluginManager().registerEvents(new EPlayerDeath(), this);
         getLogger().info("Constructing database");
         checkTables();
+
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             getLogger().info("Starting token bot from token dir..");
             API = new DiscordApiBuilder().setToken(ConfigProperties.DISCORD_BOT_TOKEN).login().join();
@@ -143,7 +144,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         getLogger().info("Caching all announcement tasks");
         DataCache.rebuildTaskList();
         getLogger().info("Starting all announcement tasks");
-        DataCache.annoucementHashMap.values().forEach(ChatAnnoucement::startTask);
+        DataCache.annoucementHashMap.values().stream().filter(ChatAnnoucement::isEnabled).forEach(ChatAnnoucement::startTask);
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 1L);
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> DataCache.getAllChannels().forEach(chatChannel -> chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get())), 20, 1200);
@@ -333,6 +334,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             try {
                 getSQLConnection().close();
                 webServer.stop();
+                consoleMessageQueueWorker.interrupt();
                 API.disconnect();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -428,7 +430,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Channels` ( `ID` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR(255) NOT NULL , `shortcut` VARCHAR(255) NULL DEFAULT NULL , `prefix` VARCHAR(255) NULL DEFAULT NULL , `permission` VARCHAR(255) NULL DEFAULT NULL ,`format` VARCHAR(255) NOT NULL , `discord_id` VARCHAR(255) NULL DEFAULT NULL, PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Discord` ( `ID` INT NOT NULL AUTO_INCREMENT , `token` VARCHAR(255) NOT NULL , `UUID` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
         prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_IPAddresses` ( `ID` INT NULL AUTO_INCREMENT , `address` VARCHAR(255) NOT NULL , `playerUUIDs` TEXT NOT NULL, `loginStatus` VARCHAR(255) NOT NULL , `dateJoined` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
-        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Announcements` ( `ID` INT NOT NULL AUTO_INCREMENT , `content` TEXT NOT NULL , `channels` VARCHAR(255) NOT NULL , `permission` VARCHAR(255) NULL , `interval` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`)) ENGINE = InnoDB;", 0);
+        prepareAndExecuteUpdateExceptionally("CREATE TABLE IF NOT EXISTS `SB_Announcements` ( `ID` INT NOT NULL AUTO_INCREMENT , `content` TEXT NOT NULL , `channels` VARCHAR(255) NOT NULL , `permission` VARCHAR(255) NULL , `time` VARCHAR(255) NOT NULL , PRIMARY KEY (`ID`), `enabled` VARCHAR(255) NOT NULL) ENGINE = InnoDB;", 0);
     }
 
     public void registerCommand(String cmd, CommandAdapter executor) {

@@ -1,8 +1,10 @@
 package com.myththewolf.ServerButler.lib.moderation.interfaces;
 
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.joda.time.DateTime;
+import org.json.JSONObject;
 
 import java.util.Optional;
 
@@ -109,10 +111,22 @@ public interface ModerationAction {
 
     /**
      * Checks if the target is a IP address
+     *
      * @return True if the target is a IP address
      */
     default boolean targetIsIP() {
         return !targetIsPlayer();
     }
 
+    default JSONObject toJSON() {
+        JSONObject object = new JSONObject();
+        object.put("targetType", getTargetType());
+        object.put("target", targetIsPlayer() ? getTargetUser().orElseThrow(IllegalStateException::new) : getTargetIP().orElseThrow(IllegalStateException::new));
+        object.put("reason", getReason());
+        object.put("moderator", getModeratorUser().orElse(null));
+        object.put("expireDate", getExpireDate().map(TimeUtils::dateToString).orElse(null));
+        object.put("dateApplied", TimeUtils.dateToString(getDateApplied()));
+        object.put("ID", getDatabaseID());
+        return object;
+    }
 }
