@@ -19,7 +19,7 @@ public class PardonIPHandler implements ItemPacketHandler {
         String[] args = new String[1];
         args[0] = TARGET_IP_ADDRESS;
         JavaPlugin tar = (JavaPlugin) Bukkit.getPluginManager().getPlugin("ServerButler");
-        ServerButler.commands.get("ippardon").setLastPlayer(player);
-        ServerButler.commands.get("ippardon").onCommand(Optional.ofNullable(player), args, tar);
+        ServerButler.commands.get("pardonip").setLastPlayer(player);
+        ServerButler.commands.get("pardonip").onCommand(Optional.ofNullable(player), args, tar);
     }
 }

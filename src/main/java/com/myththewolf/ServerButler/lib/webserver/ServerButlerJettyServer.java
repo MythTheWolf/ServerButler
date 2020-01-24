@@ -21,6 +21,7 @@ package com.myththewolf.ServerButler.lib.webserver;
 
 import com.myththewolf.ServerButler.ServerButler;
 import org.apache.tomcat.util.scan.StandardJarScanner;
+import org.bukkit.Bukkit;
 import org.eclipse.jetty.apache.jsp.JettyJasperInitializer;
 import org.eclipse.jetty.jsp.JettyJspServlet;
 import org.eclipse.jetty.server.Server;
@@ -57,9 +58,16 @@ public class ServerButlerJettyServer {
     private static final Logger LOG = ServerButler.plugin.getLogger();
     private int port;
     private Server server;
+    private String hostAddress;
 
     public ServerButlerJettyServer(int port) {
         this.port = port;
+        this.hostAddress = Bukkit.getServer().getIp();
+    }
+
+    public ServerButlerJettyServer(String webserverHostAddr, int webserverPort) {
+        this.port = webserverPort;
+        this.hostAddress = webserverHostAddr;
     }
 
     public void start() {
@@ -78,6 +86,7 @@ public class ServerButlerJettyServer {
         // Define ServerConnector
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(port);
+        connector.setHost(hostAddress);
         server.addConnector(connector);
 
         // Add annotation scanning (for WebAppContexts)

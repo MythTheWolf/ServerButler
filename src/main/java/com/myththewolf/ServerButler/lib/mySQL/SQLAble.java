@@ -1,6 +1,7 @@
 package com.myththewolf.ServerButler.lib.mySQL;
 
 import com.myththewolf.ServerButler.ServerButler;
+import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 
 import java.sql.*;
@@ -24,9 +25,9 @@ public interface SQLAble extends Loggable {
      * @param SQL       The SQL statement to execute
      * @param numParams The total number of parameters
      * @param values    The values to bind to the parameters
+     * @return The ID of the newly created row
      * @throws IllegalStateException If number of parameters != number of values
      * @throws SQLException          If a SQL connection or syntax error occurs
-     * @return The ID of the newly created row
      */
     default int prepareAndExecuteUpdateThrow(String SQL, int numParams, Object... values) throws IllegalStateException, SQLException {
         if (numParams != values.length) {
@@ -91,6 +92,7 @@ public interface SQLAble extends Loggable {
             throw new IllegalStateException("Num of params do not match values (SQL: " + SQL + ")");
         }
         PreparedStatement preparedStatement = getSQLConnection().prepareStatement(SQL);
+
         for (int i = 0; i < numParams; i++) {
             Object singleValue = values[i];
             if (singleValue instanceof String) {
@@ -102,6 +104,9 @@ public interface SQLAble extends Loggable {
             } else {
                 preparedStatement.setString(i + 1, singleValue.toString());
             }
+        }
+        if (ConfigProperties.DEBUG) {
+            getLogger().info("Executing SQL Query: " + preparedStatement.toString());
         }
         return preparedStatement.executeQuery();
     }

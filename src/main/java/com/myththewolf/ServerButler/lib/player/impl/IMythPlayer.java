@@ -9,6 +9,7 @@ import com.myththewolf.ServerButler.lib.player.interfaces.ChatStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.joda.time.DateTime;
+import org.json.JSONObject;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,12 +40,15 @@ public class IMythPlayer implements MythPlayer, Loggable {
     private List<ChatChannel> channelList = new ArrayList<>();
     private ChatChannel writeTo;
     private String discordID;
-    private List<PlayerInetAddress> playerAddresses = new ArrayList<>();
+    private List<String> playerAddresses = new ArrayList<>();
     private boolean probate = false;
+    private String ID;
+    private boolean tosAccepted;
     /**
      * Bukkit display name
      */
     private String displayName;
+
     public IMythPlayer(DateTime joinDate, String UUID1) {
         this.joinDate = joinDate;
         this.UUID = UUID1;
@@ -87,22 +91,29 @@ public class IMythPlayer implements MythPlayer, Loggable {
                 this.discordID = RS.getString("discordID");
                 this.displayName = RS.getString("displayName");
                 this.probate = RS.getBoolean("probate");
+                this.ID = RS.getString("ID");
+                this.tosAccepted = RS.getBoolean("tos");
             }
 
             String SQL_2 = "SELECT * FROM `SB_IPAddresses` WHERE `playerUUIDs` LIKE ?";
             ResultSet rs = prepareAndExecuteSelectExceptionally(SQL_2, 1, "%" + getUUID() + "%");
             while (rs.next()) {
-                Optional<PlayerInetAddress> address = DataCache.getOrMakeInetAddress(rs.getString("ID"));
-                if (!address.isPresent()) {
-                    debug("Could not map address to object: " + rs.getString("address"));
-                    return;
-                }
-                address.ifPresent(playerAddresses::add);
+                playerAddresses.add(rs.getString("ID"));
             }
         } catch (SQLException exception) {
             handleExceptionPST(exception);
             return;
         }
+    }
+
+    @Override
+    public boolean tosAccepted() {
+        return tosAccepted;
+    }
+
+    @Override
+    public void setTosAccepted(boolean tosAccepted) {
+        this.tosAccepted = tosAccepted;
     }
 
     @Override
@@ -118,6 +129,11 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public boolean equals(Object o) {
         return ((o instanceof IMythPlayer) && ((IMythPlayer) o).getUUID().equals(getUUID()));
+    }
+
+    @Override
+    public String getID() {
+        return ID;
     }
 
     @Override
@@ -173,7 +189,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
 
     @Override
     public List<PlayerInetAddress> getPlayerAddresses() {
-        return playerAddresses;
+        return playerAddresses.stream().map(DataCache::getOrMakeInetAddress).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
     }
 
     @Override
@@ -181,9 +197,9 @@ public class IMythPlayer implements MythPlayer, Loggable {
         if (!isOnline()) {
             return Optional.empty();
         }
-        return playerAddresses.stream()
+        return getPlayerAddresses().stream()
                 .filter(a -> {
-                    return getBukkitPlayer().get().getAddress().getAddress().toString()
+                    return getBukkitPlayer().orElseThrow(IllegalStateException::new).getAddress().getAddress().toString()
                             .equals(a.getAddress().toString());
                 }).findAny();
     }
@@ -238,6 +254,22 @@ public class IMythPlayer implements MythPlayer, Loggable {
     @Override
     public void setDiscordID(String id) {
         this.discordID = id;
+    }
+
+    @Override
+    public JSONObject toJSON() {
+        JSONObject response = new JSONObject();
+        response.put("chatStaus", getChatStatus());
+        response.put("loginStatus", getLoginStatus());
+        response.put("discordID", getDiscordID().orElse(null));
+        response.put("probated", isProbated());
+        response.put("ID", getID());
+        response.put("joinDate", getJoinDate());
+        response.put("channelList", getChannelList().stream().map(ChatChannel::getID).collect(Collectors.toSet()));
+        response.put("name", getName());
+        response.put("UUID", getUUID());
+        response.put("displayName", getDisplayName());
+        return response;
     }
 }
 

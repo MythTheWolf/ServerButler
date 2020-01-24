@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler.commands.player;
 
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
+import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -13,6 +14,7 @@ import java.util.Optional;
 
 public class token extends CommandAdapter implements SQLAble {
     @Override
+    @CommandPolicy(commandUsage = "/token", userRequiredArgs = 0)
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         if (!sender.isPresent()) {
             return;
@@ -34,4 +36,8 @@ public class token extends CommandAdapter implements SQLAble {
                 .getUUID());
     }
 
+    @Override
+    public String getRequiredPermission() {
+        return ConfigProperties.LINK_PERMISSION;
+    }
 }

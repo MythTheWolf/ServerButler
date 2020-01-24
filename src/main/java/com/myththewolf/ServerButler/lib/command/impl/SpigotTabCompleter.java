@@ -18,13 +18,13 @@ public class SpigotTabCompleter implements TabCompleter, Loggable, SQLAble {
         List<String> ret = new ArrayList<>();
         try {
             if (strings[0].startsWith("/")) {
-                ResultSet rs = prepareAndExecuteSelectExceptionally("SELECT * FROM `SB_IPAddresses` WHERE `address` LIKE ?", 1, strings[0].substring(1) + "%");
+                ResultSet rs = prepareAndExecuteSelectExceptionally("SELECT `address` FROM `SB_IPAddresses` WHERE `address` LIKE ?", 1, strings[0] + "%");
                 while (rs.next()) {
                     ret.add(rs.getString("address"));
                 }
                 return ret;
             }
-            ResultSet resultSet = prepareAndExecuteSelectExceptionally("SELECT * FROM `SB_Players` WHERE `name` LIKE ?", 1, strings[0] + "%");
+            ResultSet resultSet = prepareAndExecuteSelectExceptionally("SELECT `name` FROM `SB_Players` WHERE `name` LIKE ?", 1, strings[0] + "%");
             while (resultSet.next()) {
                 ret.add(resultSet.getString("name"));
             }

@@ -5,5 +5,7 @@ public enum ParamType {
     INT,
     BOOL,
     PLAYER_UUID,
-    PLAYER_NAME
+    PLAYER_NAME,
+    ACTION_TYPE,
+    CHANNEL_ID
 }

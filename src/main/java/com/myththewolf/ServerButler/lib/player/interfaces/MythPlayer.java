@@ -21,6 +21,7 @@ import org.javacord.api.entity.permission.PermissionsBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
+import org.json.JSONObject;
 
 import java.nio.channels.IllegalSelectorException;
 import java.sql.ResultSet;
@@ -319,22 +320,36 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
         });
     }
 
+    boolean tosAccepted();
+
+    void setTosAccepted(boolean tos);
+
     /**
      * Updates player in database
      */
     default void updatePlayer() {
+        if (getName().equals("MythTheWolf")) {
+            getLogger().warning("UPDATING MASSIVE LEGEND");
+        }
         if (playerExists()) {
-            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?, `displayName` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ?, `probate` = ? WHERE `UUID` = ?";
-            prepareAndExecuteUpdateExceptionally(SQL, 9, getLoginStatus(), getChatStatus(), getName(), getDisplayName(), getWritingChannel()
+            String SQL = "UPDATE `SB_Players` SET `loginStatus` = ?, `chatStatus` = ?, `name` = ?, `displayName` = ?,`writeChannel` = ?, `channels` = ?, `discordID` = ?, `probate` = ?,`tos` = ? WHERE `UUID` = ?";
+            prepareAndExecuteUpdateExceptionally(SQL, 10, getLoginStatus(), getChatStatus(), getName(), getDisplayName(), getWritingChannel()
                     .map(ChatChannel::getID).orElse(null), StringUtils
                     .serializeArray(getChannelList().stream().map(ChatChannel::getID)
-                            .collect(Collectors.toList())), getDiscordID().orElse(null), isProbated(), getUUID());
+                            .collect(Collectors.toList())), getDiscordID().orElse(null), isProbated(), tosAccepted(), getUUID());
 
         } else {
             String SQL = "INSERT INTO `SB_Players` (`loginStatus`, `chatStatus`, `name`,`joinDate`,`UUID`) VALUES (?,?,?,?,?)";
             prepareAndExecuteUpdateExceptionally(SQL, 5, LoginStatus.PERMITTED, ChatStatus.PERMITTED, getName(), TimeUtils
                     .dateToString(getJoinDate()), getUUID());
             setExistent(true);
+        }
+        if (ConfigProperties.ENABLE_DISCORD_BAN_SYNCING && getDiscordUser().isPresent()) {
+            if (!canJoin()) {
+                ServerButler.API.getServerById(ConfigProperties.DISCORD_GUILD_ID).orElseThrow(IllegalStateException::new).banUser(getDiscordUser().get()).join();
+            } else {
+                ServerButler.API.getServerById(ConfigProperties.DISCORD_GUILD_ID).orElseThrow(IllegalStateException::new).unbanUser(getDiscordUser().get()).join();
+            }
         }
         DataCache.rebuildPlayer(getUUID());
     }
@@ -358,4 +373,9 @@ public interface MythPlayer extends SQLAble, ChannelViewer {
     boolean isProbated();
 
     void setProbate(boolean probate);
+
+    JSONObject toJSON();
+
+    String getID();
+
 }

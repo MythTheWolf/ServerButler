@@ -10,6 +10,7 @@ import com.myththewolf.ServerButler.lib.config.ConfigProperties;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetBan;
+import com.myththewolf.ServerButler.lib.moderation.impl.InetAddr.ActionInetPardon;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -154,6 +155,22 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
 
                 targetIp.getMappedPlayers().stream().filter(MythPlayer::isOnline)
                         .forEachOrdered(player -> player.kickPlayerRaw(KICK_REASON));
+                break;
+            case PARDON_IP:
+                targetIp = (PlayerInetAddress) conversationAbandonedEvent.getContext()
+                        .getSessionData("target-ip");
+                ActionInetPardon actionInetPardon = new ActionInetPardon(reason, targetIp, sender.orElse(null));
+                actionInetPardon.update();
+                targetIp.setLoginStatus(LoginStatus.PERMITTED);
+                targetIp.update();
+                DataCache.rebuildPlayerInetAddress(targetIp);
+                affected = StringUtils
+                        .serializeArray(targetIp.getMappedPlayers().stream().map(MythPlayer::getName)
+                                .collect(Collectors.toList()));
+                CHAT_MESSAGE = StringUtils
+                        .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, targetIp.getAddress().toString(), sender
+                                .map(MythPlayer::getName).orElse("CONSOLE"), reason, affected);
+                DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
                 break;
             default:
                 break;

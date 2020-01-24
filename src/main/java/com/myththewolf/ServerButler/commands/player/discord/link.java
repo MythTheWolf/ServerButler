@@ -17,8 +17,9 @@ public class link extends DiscordCommandAdapter implements SQLAble {
     public void onCommand(Message orgin, TextChannel channel, Server server, Optional<MythPlayer> sender, String[] args) {
         if (args.length < 1) {
             reply("**Usage:** ;link <token>");
+            return;
         }
-        if (sender.isPresent()) {
+        if (sender.flatMap(MythPlayer::getDiscordID).isPresent()) {
             reply(":x: You already are linked!");
             return;
         }

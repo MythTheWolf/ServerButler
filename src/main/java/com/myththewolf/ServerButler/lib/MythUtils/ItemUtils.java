@@ -215,9 +215,10 @@ public class ItemUtils {
         return applyJSON(packet, stack);
     }
 
-    public static ItemStack nameItem(String x, ItemStack source) {
+    public static ItemStack nameItem(String x, ItemStack source, String... lore) {
         ItemMeta meta = source.getItemMeta();
         meta.setDisplayName(x);
+        meta.setLore(Arrays.asList(lore));
         source.setItemMeta(meta);
         return source;
     }
@@ -226,6 +227,7 @@ public class ItemUtils {
         ItemStack raw = new ItemStack(Material.PLAYER_HEAD, (short) 3);
         SkullMeta skullMeta = (SkullMeta) raw.getItemMeta();
         skullMeta.setOwningPlayer(DataCache.getPlayer(playerUUID).orElseThrow(IllegalStateException::new).getOfflinePlayer());
+        raw.setItemMeta(skullMeta);
         return raw;
     }
 

@@ -1,5 +1,6 @@
 package com.myththewolf.ServerButler.lib.moderation.interfaces;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
@@ -123,10 +124,12 @@ public interface ModerationAction {
         object.put("targetType", getTargetType());
         object.put("target", targetIsPlayer() ? getTargetUser().orElseThrow(IllegalStateException::new) : getTargetIP().orElseThrow(IllegalStateException::new));
         object.put("reason", getReason());
-        object.put("moderator", getModeratorUser().orElse(null));
-        object.put("expireDate", getExpireDate().map(TimeUtils::dateToString).orElse(null));
+        object.put("moderator", getModeratorUser().isPresent() ? getModeratorUser().get().getUUID() : JSONObject.NULL);
+        object.put("expireDate", getExpireDate().isPresent() ? getExpireDate().map(TimeUtils::dateToString).get() : JSONObject.NULL);
         object.put("dateApplied", TimeUtils.dateToString(getDateApplied()));
         object.put("ID", getDatabaseID());
+        object.put("actionType", getActionType());
+        ServerButler.getInstance().getLogger().warning(object.toString(4));
         return object;
     }
 }

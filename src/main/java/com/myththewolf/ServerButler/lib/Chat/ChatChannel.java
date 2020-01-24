@@ -7,6 +7,7 @@ import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.util.logging.ExceptionLogger;
 
@@ -14,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -101,7 +103,7 @@ public class ChatChannel implements SQLAble {
      * @return The list of players
      */
     public List<MythPlayer> getAllCachedPlayers() {
-        return Bukkit.getOnlinePlayers().stream().map(o -> o.getUniqueId().toString()).map(DataCache::getPlayer).map(mythPlayer -> mythPlayer.orElseThrow(IllegalStateException::new)).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
+        return Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).map(UUID::toString).map(DataCache::getPlayer).map(mythPlayer -> mythPlayer.orElseThrow(IllegalStateException::new)).filter(mythPlayer -> mythPlayer.getChannelList().contains(this)).collect(Collectors.toList());
     }
 
 
@@ -216,11 +218,18 @@ public class ChatChannel implements SQLAble {
     }
 
     public void push(String content) {
-        String con = ChatColor.translateAlternateColorCodes('&', content);
-        getAllCachedPlayers().stream().filter(MythPlayer::isOnline).map(p2 -> p2.getBukkitPlayer().get())
-                .forEach(bukkitPlayer -> bukkitPlayer
-                        .sendMessage(ChatColor.translateAlternateColorCodes('&', getPrefix()) + con));
         String whom = "[Server Message]";
+        if (this.equals(DataCache.getPunishmentInfoChannel())) {
+            String con = ChatColor.translateAlternateColorCodes('&', content);
+            getAllCachedPlayers().stream().filter(mythPlayer -> mythPlayer.hasPermission(ConfigProperties.VIEW_PLAYER_IPS_PERMISSION)).map(MythPlayer::getBukkitPlayer).filter(Optional::isPresent).map(Optional::get).forEach(player -> player.sendMessage(getPrefix() + con));
+            if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con.replaceAll("/\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b", "[redacted]")))
+                        .exceptionally(ExceptionLogger.get());
+            }
+            return;
+        }
+        String con = ChatColor.translateAlternateColorCodes('&', content);
+        getAllCachedPlayers().stream().filter(mythPlayer -> mythPlayer.hasPermission(ConfigProperties.VIEW_PLAYER_IPS_PERMISSION)).map(MythPlayer::getBukkitPlayer).filter(Optional::isPresent).map(Optional::get).forEach(player -> player.sendMessage(getPrefix() + con.replaceAll("/\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b", "[redacted]")));
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             getDiscordChannel().sendMessage(ChatColor.stripColor(whom) + " » " + ChatColor.stripColor(con))
                     .exceptionally(ExceptionLogger.get());

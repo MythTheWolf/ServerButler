@@ -29,6 +29,9 @@ public class inetBan extends CommandAdapter implements Loggable {
             if (!player.isPresent()) {
                 reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not grab ip: Player not found.");
                 return;
+            } else if (!player.get().isOnline()) {
+                reply(ConfigProperties.PREFIX + ChatColor.RED + "ERROR: " + ChatColor.GOLD + "The player isn't online, cannot grab IP address. (Use /ips <playername>)");
+                return;
             }
             playerInetAddress = DataCache
                     .getOrMakeInetAddress(player.get().getConnectionAddress().orElseThrow(AssertionError::new)

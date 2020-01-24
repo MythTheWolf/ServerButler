@@ -9,10 +9,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 /**
  * This class contains various String utils
@@ -69,7 +66,7 @@ public class StringUtils {
                     new BufferedReader(fileReader);
 
             while ((line = bufferedReader.readLine()) != null) {
-                sb.append(line);
+                sb.append(line + "\n");
             }
 
             // Always close files.
@@ -103,6 +100,16 @@ public class StringUtils {
             pos++;
         }
         return rep;
+    }
+
+    public static <E extends Enum<E>> boolean enumContains(Class<E> _enumClass,
+                                                           String value) {
+        try {
+            return EnumSet.allOf(_enumClass)
+                    .contains(Enum.valueOf(_enumClass, value));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

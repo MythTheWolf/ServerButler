@@ -16,6 +16,10 @@ import com.myththewolf.ServerButler.lib.player.interfaces.LoginStatus;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.conversations.BooleanPrompt;
+import org.bukkit.conversations.ConversationContext;
+import org.bukkit.conversations.ConversationFactory;
+import org.bukkit.conversations.Prompt;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -25,6 +29,7 @@ import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
+import java.io.File;
 import java.util.IllformedLocaleException;
 import java.util.Optional;
 
@@ -42,14 +47,47 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
 
             if (!DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).isPresent()) {
                 MP = DataCache.createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
-                ConfigProperties.EULA
-                        .ifPresent(s -> event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', s)));
             } else {
                 MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).get();
             }
             Optional<PlayerInetAddress> ipAddress = DataCache
                     .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
+            if (ConfigProperties.ENABLE_EULA && !MP.tosAccepted()) {
+                File eulaFile = new File(ServerButler.plugin.getDataFolder() + File.separator + "eula.txt");
+                if (!eulaFile.exists()) {
+                    getLogger().warning("No eula.txt was found, allowing players through!");
+                } else {
+                    String EULA = ChatColor.translateAlternateColorCodes('&', StringUtils.readFile(eulaFile.getPath()));
+                    (new ConversationFactory(ServerButler.plugin)).withFirstPrompt(new BooleanPrompt() {
+                        @Override
+                        protected Prompt acceptValidatedInput(ConversationContext conversationContext, boolean b) {
+                            if (!b) {
+                                MythPlayer player = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
+                                player.kickPlayer("You must agree to the TOS to join this server!", null);
+                            } else {
+                                MythPlayer player = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
+                                player.setTosAccepted(true);
+                                player.updatePlayer();
+                                conversationContext.getForWhom().sendRawMessage(ChatColor.translateAlternateColorCodes('&', ConfigProperties.PREFIX + "Thank you for accepting. Welcome to the server!"));
+                                ConfigProperties.POST_EULA_COMMANDS.forEach(s -> {
+                                    String command = s.replaceAll("%playerName%", player.getName()).replaceAll("%playerUUID%", player.getUUID());
+                                    boolean ran = Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                                    if (!ran) {
+                                        getLogger().warning("Could not run post EULA command: " + command);
+                                    }
+                                });
+                            }
+                            return END_OF_CONVERSATION;
+                        }
 
+                        @Override
+                        public String getPromptText(ConversationContext conversationContext) {
+                            return ChatColor.translateAlternateColorCodes('&', "&6------------&b[&4EULA Agreement Required&4&b]&6------------" + EULA + "\n" + ConfigProperties.PREFIX + "Do you accept these terms? (true or false)");
+                        }
+                    }).withPrefix(conversationContext -> ChatColor.translateAlternateColorCodes('&', ConfigProperties.PREFIX)).withLocalEcho(true).buildConversation(event.getPlayer()).begin();
+                }
+
+            }
             if (ConfigProperties.ENABLE_DISCORD_BOT && MP.getDiscordID().isPresent()) {
                 final MythPlayer MPL = MP;
                 DataCache.getAllChannels().stream()
@@ -181,8 +219,8 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
                         ModerationAction action = src
                                 .getLatestActionOfType(ActionType.TEMP_BAN).orElseThrow(IllegalStateException::new);
                         if (action.getExpireDate().orElseThrow(IllegalStateException::new).isBeforeNow()) {
-                            ModerationAction actionUnbanIp = new ActionInetPardon("The IP's tempban has expired.", src, null);
-                            ((ActionInetPardon) actionUnbanIp).update();
+                            ActionInetPardon actionUnbanIp = new ActionInetPardon("The IP's tempban has expired.", src, null);
+                            actionUnbanIp.update();
                             src.setLoginStatus(LoginStatus.PERMITTED);
                             src.update();
                             DataCache.rebuildPlayerInetAddress(src);

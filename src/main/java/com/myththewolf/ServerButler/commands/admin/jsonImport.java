@@ -19,42 +19,11 @@ import java.util.Optional;
 
 public class jsonImport extends CommandAdapter implements Loggable {
     long totalDone = 0;
-    @Override
-    @CommandPolicy(commandUsage = "/jsonimport")
-    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
-        totalDone = 0;
-        Thread T = new Thread(() -> {
-            reply(ConfigProperties.PREFIX + "Reading ./banned-players.json");
-            try {
-                JSONArray root = new JSONArray(readFile("banned-players.json",Charset.defaultCharset()));
-                root.forEach(o -> {
-                    JSONObject ban = (JSONObject) o;
-                    if (ban.getString("expires").equals("forever")) {
-                        debug("Importing User: "+ban.getString("uuid"));
-                        if(DataCache.playerExists(ban.getString("uuid"))){
-                            MythPlayer mp = DataCache.getPlayer("uuid").orElseThrow(IllegalStateException::new);
-                            mp.banPlayer(ban.getString("reason"),null);
-                            mp.updatePlayer();
-                            DataCache.rebuildPlayer(mp.getUUID());
-                            totalDone++;
-                        }else{
-                            getLogger().info("Having to manually set: "+ban.getString("name"));
-                           MythPlayer mp = DataCache.createPlayer(ban.getString("uuid"),ban.getString("name"));
-                            mp.banPlayer(ban.getString("reason"), null);
-                            mp.updatePlayer();
-                            totalDone++;
-                        }
-                        debug("Imported ban from user '"+ban.getString("name")+"'.");
-                    }
-                });
-                reply("Imported "+totalDone+" bans.");
-            } catch (IOException e) {
-                e.printStackTrace();
-                reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not read file: " + e.getMessage());
-            }
-        });
-        T.setName("SB-JSON-Importer");
-        T.start();
+
+    static String readFile(String path, Charset encoding)
+            throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
     }
 
     @Override
@@ -62,10 +31,41 @@ public class jsonImport extends CommandAdapter implements Loggable {
         return ConfigProperties.IMPORT_JSON_DATA;
     }
 
-    static String readFile(String path, Charset encoding)
-            throws IOException
-    {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, encoding);
+    @Override
+    @CommandPolicy(commandUsage = "/jsonimport")
+    public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
+        totalDone = 0;
+        Thread T = new Thread(() -> {
+            reply(ConfigProperties.PREFIX + "Reading ./banned-players.json");
+            try {
+                JSONArray root = new JSONArray(readFile("banned-players.json", Charset.defaultCharset()));
+                root.forEach(o -> {
+                    JSONObject ban = (JSONObject) o;
+                    if (ban.getString("expires").equals("forever")) {
+                        debug("Importing User: " + ban.getString("uuid"));
+                        if (DataCache.playerExists(ban.getString("uuid"))) {
+                            MythPlayer mp = DataCache.getPlayer(ban.getString("uuid")).orElseThrow(IllegalStateException::new);
+                            mp.banPlayer(ban.getString("reason"), null);
+                            mp.updatePlayer();
+                            DataCache.rebuildPlayer(mp.getUUID());
+                            totalDone++;
+                        } else {
+                            getLogger().info("Having to manually set: " + ban.getString("name"));
+                            MythPlayer mp = DataCache.createPlayer(ban.getString("uuid"), ban.getString("name"));
+                            mp.banPlayer(ban.getString("reason"), null);
+                            mp.updatePlayer();
+                            totalDone++;
+                        }
+                        debug("Imported ban from user '" + ban.getString("name") + "'.");
+                    }
+                });
+                reply("Imported " + totalDone + " bans.");
+            } catch (IOException e) {
+                e.printStackTrace();
+                reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not read file: " + e.getMessage());
+            }
+        });
+        T.setName("SB-JSON-Importer");
+        T.start();
     }
 }

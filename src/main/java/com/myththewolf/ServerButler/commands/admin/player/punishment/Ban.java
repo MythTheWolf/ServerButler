@@ -35,7 +35,7 @@ public class Ban extends CommandAdapter implements Loggable {
             return;
         }
         if (args.length == 1) {
-            ServerButler.conversationBuilder.withFirstPrompt(new StringPrompt() {
+            ServerButler.conversationBuilder.withEscapeSequence("^c").withFirstPrompt(new StringPrompt() {
                 @Override
                 public String getPromptText(ConversationContext conversationContext) {
                     return ConfigProperties.PREFIX + "Please specify the ban reason.";

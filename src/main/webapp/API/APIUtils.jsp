@@ -1,6 +1,12 @@
 <%@ page import="com.myththewolf.ServerButler.lib.MythUtils.StringUtils" %>
+<%@ page import="com.myththewolf.ServerButler.lib.cache.DataCache" %>
+<%@ page import="com.myththewolf.ServerButler.lib.moderation.interfaces.ActionType" %>
 <%@ page import="com.myththewolf.ServerButler.lib.webserver.JSONCallback" %>
+<%@ page import="com.myththewolf.ServerButler.lib.webserver.OptionalGetParam" %>
+<%@ page import="com.myththewolf.ServerButler.lib.webserver.RequiredGETParam" %>
 <%@ page import="org.eclipse.jetty.server.Request" %>
+<%@ page import="org.json.JSONArray" %>
+
 <%@ page import="org.json.JSONObject" %>
 <%@ page import="java.lang.reflect.Method" %>
 <%@ page import="java.util.Arrays" %>
@@ -14,10 +20,9 @@
 
     JSONObject exception(Exception e) {
         JSONObject object = new JSONObject();
-        object.put("error", true);
         object.put("message", "Exception occurred while processing your request");
         object.put("stack_trace", StringUtils.getStackTrace(e));
-        return object;
+        return new JSONObject().put("error", true).put("errors", object);
     }
 
     JSONObject errorParamInvalid(String name, Class requested, Class got) {
@@ -27,7 +32,7 @@
         return object;
     }
 
-    public JSONArray paramCheck(Request request, JSONCallback callback) {
+    public Object paramCheck(Request request, JSONCallback callback) {
         JSONArray errors = new JSONArray();
         try {
             Method M = callback.getClass().getMethod("processValidatedInput", HttpServletRequest.class);
@@ -61,11 +66,42 @@
                         break;
                 }
             });
+            Arrays.stream(M.getAnnotationsByType(OptionalGetParam.class)).forEach(optionalGetParam -> {
+                switch (optionalGetParam.requiredType()) {
+                    case INT:
+                        if (!StringUtils.isInt(request.getParameter(optionalGetParam.name()))) {
+                            JSONObject erorr = new JSONObject();
+                            erorr.put("message", optionalGetParam.name() + " must be of type INT");
+                            errors.put(erorr);
+                            return;
+                        }
+                        break;
+                    case STRING:
+                        break;
+                    case PLAYER_UUID:
+                        if (!DataCache.getPlayer(request.getParameter(optionalGetParam.name())).isPresent()) {
+                            JSONObject erorr = new JSONObject();
+                            erorr.put("message", optionalGetParam.name() + ":" + request.getParameter(optionalGetParam.name()) + " is not a valid player UUID.");
+                            errors.put(erorr);
+                            return;
+                        }
+                    case ACTION_TYPE:
+                        if (StringUtils.enumContains(ActionType.class, request.getParameter(optionalGetParam.name()))) {
+                            JSONObject erorr = new JSONObject();
+                            erorr.put("message", optionalGetParam.name() + " must be of type one of the follow ActionTypes: " + Arrays.toString(ActionType.values()));
+                            errors.put(erorr);
+                            return;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            });
         } catch (Exception E) {
             E.printStackTrace();
         }
         if (errors.length() > 0) {
-            return errors;
+            return new JSONObject().put("error", true).put("errors", errors);
         } else {
             return callback.processValidatedInput(request);
         }

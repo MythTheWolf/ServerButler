@@ -20,7 +20,7 @@ FORMAT-BAN-IP-PLAYER: "Your IP, '{0}' was banned by {1} for {2}"
 FORMAT-BAN-IP-CHAT: "IP Address '{0}' was banned by {1} for '{2}', affecting users {3}"
 FORMAT-TEMPBAN-IP-PLAYER: "Your IP, '{0} was banned by {1} until {2} for {3}"
 FORMAT-TEMPBAN-IP-CHAT: "IP Address '{0}' was temp-banned by {1} until {4} for '{2}', affecting users {3}"
-FORMAT-PARDON-IP-CHAT: "IP Address '{0}' was pardoned by {1} affecting users {2}"
+FORMAT-PARDON-IP-CHAT: "IP Address '{0}' was pardoned by {1} for {2},affecting users {3}"
 #--User Permission
 BAN-PERMISSION: "sb.ban"
 TEMPBAN-PERMISSION: "sb.tempban"
@@ -34,23 +34,31 @@ BAN-IP-PERMISSION: "sb.ban.ip"
 VIEW-PLAYER-IPS-PERMISSION: "sb.view.ipList"
 TEMPBAN-IP-PERMISSION: "sb.tempban.ip"
 PARDON-IP-PERMISSION: "sb.pardon.ip"
-
 #Channel Permissions
 VIEW-ADMIN-CHANNEL-PERMISSION: "sb.chat.admin"
 CHAT-COLOR-PERMISSION: "sb.chat.color"
 # - Server Administration
 IMPORT-JSON-DATA: "sb.json.import"
-DEFAULT-CHANNEL: "global"
 VIEW-ANNOUNCEMENT-GUI: "sb.annouce.view"
-PUNISHMENT-INFO-CHANNEL: "ADMIN"
+#EULA
+ENABLE-EULA: true
+#params : %playerName% %playerUUID%
 POST-EULA-COMMANDS:
-  - "msg {player} Hello"
-  - "pex user {player} add sb.chat.admin"
+  - "msg %player% Hello"
 #Discord bot
 ENABLE-DISCORD-BOT: false
 DISCORD-BOT-TOKEN: "bread"
 DISCORD-CATEGORY-TITLE: ""
 DISCORD-GUILD-ID: "myid"
+DISCORD-BAN-SYNCING: true
+#Can be ALL or LINKED
+GLOBAL-CHAT-VISIBILITY: "ALL"
+LINK-COMMAND-PERMISSION: "sb.chat.link"
+#WebServer
+ENABLE-WEB-SERVER: false
+WEBSERVER-PORT: 8080
+##Uncomment the line below to manually set the webserver bind address. Use this only if you know what you're doing!
+#WEBSERVER-HOST-ADDRESS: 0.0.0.0
 #MySQL Connection
 
 SQL-HOST: 'locahost'

@@ -1,25 +1,19 @@
-package com.myththewolf.ServerButler.commands.admin.InetAddr.punishment;
+package com.myththewolf.ServerButler.commands.admin.InetAddr.management;
 
-import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.command.impl.CommandAdapter;
 import com.myththewolf.ServerButler.lib.command.interfaces.CommandPolicy;
 import com.myththewolf.ServerButler.lib.config.ConfigProperties;
-import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
-import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.player.impl.PlayerInetAddress;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.ChatColor;
-import org.bukkit.conversations.ConversationContext;
-import org.bukkit.conversations.Prompt;
-import org.bukkit.conversations.StringPrompt;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 
-public class inetPardon extends CommandAdapter implements Loggable {
+public class ipnames extends CommandAdapter {
     @Override
-    @CommandPolicy(commandUsage = "/ippardon <IP address || username> [reason]", userRequiredArgs = 1, consoleRequiredArgs = 2)
+    @CommandPolicy(userRequiredArgs = 1, consoleRequiredArgs = 1, commandUsage = "/ipnames <user || IP address>")
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         Optional<PlayerInetAddress> playerInetAddress;
         if (args[0].startsWith("/")) {
@@ -41,27 +35,11 @@ public class inetPardon extends CommandAdapter implements Loggable {
             reply(ConfigProperties.PREFIX + ChatColor.RED + "IP not found");
             return;
         }
-        if (args.length == 1) {
-            ServerButler.conversationBuilder.withEscapeSequence("^c").withFirstPrompt(new StringPrompt() {
-                @Override
-                public String getPromptText(ConversationContext conversationContext) {
-                    return ConfigProperties.PREFIX + "Please specify the reason";
-                }
-
-                @Override
-                public Prompt acceptInput(ConversationContext conversationContext, String s) {
-                    conversationContext.setSessionData("packetType", PacketType.PARDON_IP);
-                    conversationContext.setSessionData("reason", s);
-                    conversationContext.setSessionData("target-ip", playerInetAddress.get());
-                    return END_OF_CONVERSATION;
-                }
-            }).buildConversation(sender.get().getBukkitPlayer().get()).begin();
-        }
+        reply(ConfigProperties.PREFIX + "All players on IP `" + playerInetAddress.toString() + "`: " + ChatColor.AQUA + playerInetAddress.get().getMappedPlayers().toString());
     }
 
     @Override
     public String getRequiredPermission() {
-        return ConfigProperties.PARDON_IP_PERMISSION;
+        return ConfigProperties.VIEW_PLAYER_IPS_PERMISSION;
     }
 }
-

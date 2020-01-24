@@ -1,13 +1,11 @@
 package com.myththewolf.ServerButler.lib.config;
 
 import com.myththewolf.ServerButler.ServerButler;
+import com.myththewolf.ServerButler.lib.Chat.ChatVisibility;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
 import org.bukkit.ChatColor;
 
-import java.io.File;
-import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This class represents config.yml keys and values
@@ -184,9 +182,12 @@ public class ConfigProperties {
 
     public static boolean ENABLE_DISCORD_BOT = ServerButler.configuration.getBoolean("ENABLE-DISCORD-BOT");
 
+    public static ChatVisibility GLOBAL_CHAT_VISIBILITY = StringUtils.enumContains(ChatVisibility.class, ServerButler.configuration.getString("GLOBAL-CHAT-VISIBILITY")) ? ChatVisibility.valueOf(ServerButler.configuration.getString("GLOBAL-CHAT-VISIBILITY")) : ChatVisibility.LINKED;
+    public static String LINK_PERMISSION = ServerButler.configuration.getString("LINK-COMMAND-PERMISSION");
     public static String DISCORD_BOT_TOKEN = ServerButler.configuration.getString("DISCORD-BOT-TOKEN");
     public static String DISCORD_GUILD_ID = ServerButler.configuration.getString("DISCORD-GUILD-ID");
     public static String DISCORD_CATEGORY_NAME = ServerButler.configuration.getString("DISCORD-CATEGORY-TITLE");
+    public static boolean ENABLE_DISCORD_BAN_SYNCING = ENABLE_DISCORD_BOT && ServerButler.configuration.getBoolean("DISCORD-BAN-SYNCING");
     public static String SQL_HOST = ServerButler.configuration.getString("SQL-HOST");
 
     public static String SQL_PORT = ServerButler.configuration.getString("SQL-PORT");
@@ -203,11 +204,8 @@ public class ConfigProperties {
 
     public static String PROBATE_PERMISSION = ServerButler.configuration.getString("PROBATE-PERMISSION");
 
-    public static Optional<String> EULA = StringUtils
-            .readFile(ServerButler.plugin.getDataFolder() + File.separator + "eula.txt", Charset
-                    .defaultCharset());
 
-    public static List<String> postEulaCommands = (List<String>) ServerButler.configuration
+    public static List<String> POST_EULA_COMMANDS = (List<String>) ServerButler.configuration
             .getList("POST-EULA-COMMANDS");
 
     public static boolean ENABLE_BUNGEE_SUPPORT = ServerButler.configuration.getBoolean("BUNGEE");
@@ -219,5 +217,9 @@ public class ConfigProperties {
     public static List<String> SOCKETS = ServerButler.configuration.getStringList("SUB-SERVERS");
 
     public static int SOCKET_PORT = ServerButler.configuration.getInt("THIS-PORT");
+    public static boolean ENABLE_EULA = ServerButler.configuration.getBoolean("ENABLE-EULA");
+    public static boolean ENABLE_WEB_SERVER = ServerButler.configuration.getBoolean("ENABLE-WEB-SERVER");
+    public static int WEBSERVER_PORT = ServerButler.configuration.getInt("WEBSERVER-PORT");
+    public static String WEBSERVER_HOST_ADDR = ServerButler.configuration.contains("WEBSERVER-HOST-ADDRESS") ? ServerButler.configuration.getString("WEBSERVER-HOST-ADDRESS") : null;
 
 }

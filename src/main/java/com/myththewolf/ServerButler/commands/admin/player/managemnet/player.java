@@ -12,12 +12,14 @@ import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
-import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class player extends CommandAdapter {
@@ -33,36 +35,37 @@ public class player extends CommandAdapter {
             }
             MythPlayer target = optionalMythPlayer.get();
             Inventory targetInventory = Bukkit.createInventory(null, 9, "Options for " + target.getName());
+            List<ItemStack> actions = new ArrayList<>();
             player.getBukkitPlayer().ifPresent(sender -> {
-                targetInventory.setItem(0, target.getLoginStatus().equals(LoginStatus.PERMITTED) ? player
+                actions.add(target.getLoginStatus().equals(LoginStatus.PERMITTED) ? player
                         .hasPermission(ConfigProperties.BAN_PERMISSION) ? ItemUtils
-                        .makeBanUserItem(target, player) : (new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1)) : player
+                        .makeBanUserItem(target, player) : null : player
                         .hasPermission(ConfigProperties.PARDON_PERMISSION) ? ItemUtils
-                        .makePardonUserItem(target, player) : (new ItemStack(Material.WHITE_STAINED_GLASS_PANE, 1)));
-
+                        .makePardonUserItem(target, player) : null);
                 ItemStack tempBanItem = ItemUtils.woolForColor(DyeColor.ORANGE);
                 JSONObject tempBanPacket = new JSONObject();
                 tempBanPacket.put("packetType", PacketType.TEMPBAN_PLAYER);
                 tempBanPacket.put("PLAYER-NAME", target.getName());
-                targetInventory.setItem(1, ItemUtils
-                        .nameItem("Temp Ban player", ItemUtils.applyJSON(tempBanPacket, tempBanItem)));
+                actions.add(player.hasPermission(ConfigProperties.TEMPBAN_PERMISSION) ? ItemUtils
+                        .nameItem("Temp Ban player", ItemUtils.applyJSON(tempBanPacket, tempBanItem)) : null);
                 ItemStack muteUnmute = target.getChatStatus().equals(ChatStatus.MUTED) || target.getChatStatus()
-                        .equals(ChatStatus.SOFTMUTED) ? ItemUtils.makeUnmuteUserItem(target, send.get()) : ItemUtils
+                        .equals(ChatStatus.SOFTMUTED) ? player.hasPermission(ConfigProperties.UNMUTE_PERMISSION) ? ItemUtils.makeUnmuteUserItem(target, send.get()) : null : ItemUtils
                         .makeMuteUserItem(target, send.get());
-                targetInventory.setItem(2, muteUnmute);
-                targetInventory.setItem(3, ItemUtils.makeSoftmuteUserItem(target, send.get()));
+                actions.add(muteUnmute);
+                actions.add(player.hasPermission(ConfigProperties.MUTE_PERMISSION) ? ItemUtils.makeSoftmuteUserItem(target, send.get()) : null);
                 JSONObject viewPlayerIPsPacket = new JSONObject();
                 viewPlayerIPsPacket.put("packetType", PacketType.VIEW_PLAYER_IPS);
                 viewPlayerIPsPacket.put("PLAYER-UUID", target.getUUID());
                 ItemStack itemViewIPs = ItemUtils.applyJSON(viewPlayerIPsPacket, ItemUtils
                         .nameItem("View Player IPs", ItemUtils.getSkullofPlayer(target.getUUID())));
-                targetInventory.setItem(4, itemViewIPs);
+                actions.add(player.hasPermission(ConfigProperties.VIEW_PLAYER_IPS_PERMISSION) ? itemViewIPs : null);
                 ItemStack viewExtra = ItemUtils
                         .nameItem("View Player Info", ItemUtils.getSkullofPlayer(target.getUUID()));
                 JSONObject viewExtraInfoPacket = new JSONObject();
                 viewExtraInfoPacket.put("PLAYER-NAME", target.getName());
                 viewExtraInfoPacket.put("packetType", PacketType.VIEW_PLAYER_EXTA_INFO);
-                targetInventory.setItem(5, ItemUtils.applyJSON(viewExtraInfoPacket, viewExtra));
+                actions.add(viewExtra);
+                actions.stream().filter(Objects::nonNull).forEach(targetInventory::addItem);
                 sender.openInventory(targetInventory);
             });
         });
