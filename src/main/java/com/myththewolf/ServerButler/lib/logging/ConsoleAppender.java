@@ -15,12 +15,12 @@ import org.joda.time.DateTime;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 
 @Plugin(name = "DiscordSRV-ConsoleChannel", category = "Core", elementType = "appender", printObject = true)
 public class ConsoleAppender extends AbstractAppender {
 
     private static final PatternLayout PATTERN_LAYOUT;
+
     static {
         Method createLayoutMethod = null;
         for (Method method : PatternLayout.class.getMethods()) {
@@ -29,7 +29,7 @@ public class ConsoleAppender extends AbstractAppender {
             }
         }
         if (createLayoutMethod == null) {
-           ServerButler.plugin.getLogger().severe("Failed to reflectively find the Log4j createLayout method. The console appender is not going to function.");
+            ServerButler.plugin.getLogger().severe("Failed to reflectively find the Log4j createLayout method. The console appender is not going to function.");
             PATTERN_LAYOUT = null;
         } else {
             Object[] args = new Object[createLayoutMethod.getParameterCount()];
@@ -66,12 +66,12 @@ public class ConsoleAppender extends AbstractAppender {
     @Override
     public void append(LogEvent e) {
         // return if console channel isn't available
-       // if (DiscordSRV.getPlugin().getConsoleChannel() == null) return;
+        // if (DiscordSRV.getPlugin().getConsoleChannel() == null) return;
 
         // return if this is not an okay level to send
-      //  boolean isAnOkayLevel = false;
-      //  for (String consoleLevel : DiscordSRV.config().getStringList("DiscordConsoleChannelLevels")) if (consoleLevel.toLowerCase().equals(e.getLevel().name().toLowerCase())) isAnOkayLevel = true;
-      //  if (!isAnOkayLevel) return;
+        //  boolean isAnOkayLevel = false;
+        //  for (String consoleLevel : DiscordSRV.config().getStringList("DiscordConsoleChannelLevels")) if (consoleLevel.toLowerCase().equals(e.getLevel().name().toLowerCase())) isAnOkayLevel = true;
+        //  if (!isAnOkayLevel) return;
 
         String line = e.getMessage().getFormattedMessage();
 
@@ -80,7 +80,6 @@ public class ConsoleAppender extends AbstractAppender {
 
         // do nothing if line is blank before parsing
         if (StringUtils.isBlank(line)) return;
-
 
 
         // do nothing if line is blank after parsing
@@ -100,7 +99,7 @@ public class ConsoleAppender extends AbstractAppender {
 
 
         // queue final message
-       ServerButler.getInstance().getConsoleMessageQueue().add(line);
+        ServerButler.getInstance().getConsoleMessageQueue().add(line);
     }
 
 }
