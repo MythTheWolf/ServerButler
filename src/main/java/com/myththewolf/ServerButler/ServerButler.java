@@ -105,6 +105,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
     private Queue<String> consoleMessageQueue = new LinkedList<>();
     private ConsoleMessageQueueWorker consoleMessageQueueWorker = null;
     private ServerButlerJettyServer webServer;
+    private int TPSWatcherID = -1;
 
     public static ServerButler getInstance() {
         return ((ServerButler) plugin);
@@ -144,16 +145,14 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             getLogger().info("Starting token bot from token dir..");
             API = new DiscordApiBuilder().setToken(ConfigProperties.DISCORD_BOT_TOKEN).login().join();
         }
+
         getLogger().info("Building Channel list");
         DataCache.rebuildChannelList();
         getLogger().info("Caching all announcement tasks");
         DataCache.rebuildTaskList();
         getLogger().info("Starting all announcement tasks");
         DataCache.annoucementHashMap.values().stream().filter(ChatAnnoucement::isEnabled).forEach(ChatAnnoucement::startTask);
-        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 1L);
-        if (ConfigProperties.ENABLE_DISCORD_BOT) {
-            Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> DataCache.getAllChannels().forEach(chatChannel -> chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(startTime, DateTime.now()))).exceptionally(ExceptionLogger.get())), 20, 1200);
-        }
+        TPSWatcherID = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 2L);
         getLogger().info("Building command list");
         registerCommands();
 
@@ -237,6 +236,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                     chatChannel.update();
                     chatChannel.getDiscordChannel().sendMessage(":timer: Server starting").exceptionally(ExceptionLogger.get()).thenAccept(message -> {
                         loadingMessages.add(message);
+                        chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("Use /token in game to talk in here!").join();
                     });
                 });
             });
@@ -275,7 +275,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 }
                 consoleMessageQueueWorker.start();
                 loadingMessages.forEach(message -> {
-                    message.edit("**:arrow_up: Server Online**").exceptionally(ExceptionLogger.get());
+                    message.edit("**:arrow_up: Server Online**").join();
                 });
             });
         }
@@ -338,12 +338,15 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
     public void onDisable() {
         try {
             if (ConfigProperties.ENABLE_DISCORD_BOT) {
+                consoleMessageQueueWorker.interrupt();
+                getLogger().info("Shutting down TPS watcher");
+                Bukkit.getScheduler().cancelTask(TPSWatcherID);
                 DataCache.getAllChannels().forEach(chatChannel -> {
+                    getLogger().info("Running shutdown hook for channel: " + chatChannel.getName());
                     chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                             .join();
                     chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("[Server offline]").join();
                 });
-                consoleMessageQueueWorker.interrupt();
                 API.disconnect();
 
             }

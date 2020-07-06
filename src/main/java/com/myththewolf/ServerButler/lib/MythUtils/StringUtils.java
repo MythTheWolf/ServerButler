@@ -1,12 +1,17 @@
 package com.myththewolf.ServerButler.lib.MythUtils;
 
+import com.myththewolf.ServerButler.ServerButler;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -127,73 +132,11 @@ public class StringUtils {
         return stringBuilder.toString();
     }
 
-    /**
-     * Converts a String to to a encoded/hidden String for a ItemStack
-     *
-     * @param hiddenString The String to hide
-     * @return The new hidden String
-     */
-    public static String encodeStringForItemStack(String hiddenString) {
-        return quote(stringToColors(hiddenString));
-    }
-
-    /**
-     * Checks if a String is hidden
-     *
-     * @param input The String to check
-     * @return true if the String is hidden
-     */
-    public static boolean hasHiddenString(String input) {
-        if (input == null) return false;
-
-        return input.indexOf(SEQUENCE_HEADER) > -1 && input.indexOf(SEQUENCE_FOOTER) > -1;
-    }
-
-    /**
-     * Decodes a hidden String
-     *
-     * @param input The Sting to decode
-     * @return The decoded String
-     */
-    public static String extractHiddenString(String input) {
-        return colorsToString(extract(input));
-    }
-
-
-    /**
-     * Attaches the SEQUENCE_HEADER and the SEQUENCE_FOOTER to a given string
-     *
-     * @param input The string to quote
-     * @return The String, with the headers
-     */
-    private static String quote(String input) {
-        if (input == null) return null;
-        return SEQUENCE_HEADER + input + SEQUENCE_FOOTER;
-    }
-
-    /**
-     * Extracts the String between the two headers
-     *
-     * @param input The String to extract from
-     * @return The extracted String
-     */
-    private static String extract(String input) {
-        if (input == null) return null;
-
-        int start = input.indexOf(SEQUENCE_HEADER);
-        int end = input.indexOf(SEQUENCE_FOOTER);
-
-        if (start < 0 || end < 0) {
-            return null;
-        }
-
-        return input.substring(start + SEQUENCE_HEADER.length(), end);
-    }
 
     private static String stringToColors(String normal) {
         if (normal == null) return null;
 
-        byte[] bytes = normal.getBytes(Charset.forName("UTF-8"));
+        byte[] bytes = normal.getBytes(StandardCharsets.UTF_8);
         char[] chars = new char[bytes.length * 4];
 
         for (int i = 0; i < bytes.length; i++) {
@@ -223,7 +166,7 @@ public class StringUtils {
             bytes[i / 2] = hexToByte(chars[i], chars[i + 1]);
         }
 
-        return new String(bytes, Charset.forName("UTF-8"));
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private static int hexToUnsignedInt(char c) {
@@ -282,15 +225,18 @@ public class StringUtils {
     /**
      * Extracts a hidden string from a ItemStack
      *
-     * @param item The item to extract the String from
+     * @param source The item to extract the String from
      * @return A optional, empty if no hidden String is present
      */
-    public static Optional<String> getEmeddedString(ItemStack item) {
-        if (item == null || item.getItemMeta() == null || item.getItemMeta().getLore() == null) {
+    public static Optional<String> getEmeddedString(ItemStack source) {
+        ItemStack copy = source;
+        ItemMeta meta = source.getItemMeta();
+        NamespacedKey key = new NamespacedKey(ServerButler.plugin, "MythPacketContainer");
+        if (!meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
             return Optional.empty();
         }
-        return item.getItemMeta().getLore().stream().filter(StringUtils::hasHiddenString)
-                .map(StringUtils::extractHiddenString).findFirst();
+        String extracted = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        return Optional.ofNullable(extracted);
     }
 
     /**
@@ -341,4 +287,5 @@ public class StringUtils {
         String exceptionAsString = sw.toString();
         return exceptionAsString;
     }
+
 }

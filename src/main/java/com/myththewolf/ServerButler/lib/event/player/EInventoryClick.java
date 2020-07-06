@@ -17,6 +17,7 @@ import org.json.JSONObject;
 public class EInventoryClick implements Listener, Loggable {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        getLogger().info("Got event: ");
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }
@@ -24,10 +25,6 @@ public class EInventoryClick implements Listener, Loggable {
             return;
         }
 
-        if (event.getCurrentItem().getItemMeta() == null || event.getCurrentItem().getItemMeta()
-                .getLore() == null || event.getCurrentItem().getItemMeta().getLore().size() == 0) {
-            return;
-        }
         if (!StringUtils.getEmeddedString(event.getCurrentItem()).isPresent()) {
             return;
         }

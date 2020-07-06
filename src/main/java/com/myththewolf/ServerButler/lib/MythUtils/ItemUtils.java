@@ -1,20 +1,20 @@
 package com.myththewolf.ServerButler.lib.MythUtils;
 
+import com.myththewolf.ServerButler.ServerButler;
 import com.myththewolf.ServerButler.lib.Chat.ChatChannel;
 import com.myththewolf.ServerButler.lib.cache.DataCache;
 import com.myththewolf.ServerButler.lib.inventory.interfaces.PacketType;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.material.Wool;
+import org.bukkit.persistence.PersistentDataType;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 
 /**
@@ -28,18 +28,16 @@ public class ItemUtils {
      * @return The new ItemStack, with JSON applied
      */
     public static ItemStack makeOpenChannelItemStack(ChatChannel channel) {
-        Wool W = new Wool();
-        W.setColor(DyeColor.LIME);
-        ItemStack stack = W.toItemStack(1);
+        ItemStack stack = new ItemStack(Material.LIME_WOOL, 1);
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.TOGGLE_CHANNEL_ON);
         packet.put("channelID", channel.getID());
-        String[] lore = {"Toggle this channel on", StringUtils.encodeStringForItemStack(packet.toString())};
+        String[] lore = {"Toggle this channel on",};
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName("View this channel");
         meta.setLore(Arrays.asList(lore));
         stack.setItemMeta(meta);
-        return stack;
+        return applyJSON(packet, stack);
     }
 
     /**
@@ -53,12 +51,12 @@ public class ItemUtils {
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.TOGGLE_CHANNEL_OFF);
         packet.put("channelID", channel.getID());
-        String[] lore = {"Toggle this channel off", StringUtils.encodeStringForItemStack(packet.toString())};
+        String[] lore = {"Toggle this channel off"};
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName("Stop viewing this channel");
         meta.setLore(Arrays.asList(lore));
         stack.setItemMeta(meta);
-        return stack;
+        return applyJSON(packet, stack);
     }
 
     /**
@@ -72,12 +70,12 @@ public class ItemUtils {
         JSONObject packet = new JSONObject();
         packet.put("packetType", PacketType.SET_WRITE_CHANNEL);
         packet.put("channelID", channel.getID());
-        String[] lore = {"Set this as your writing channel", StringUtils.encodeStringForItemStack(packet.toString())};
+        String[] lore = {"Set this as your writing channel"};
         ItemMeta meta = stack.getItemMeta();
         meta.setDisplayName("Set this as your writing channel");
         meta.setLore(Arrays.asList(lore));
         stack.setItemMeta(meta);
-        return stack;
+        return applyJSON(packet, stack);
     }
 
     /**
@@ -90,10 +88,9 @@ public class ItemUtils {
     public static ItemStack applyJSON(JSONObject json, ItemStack source) {
         ItemStack copy = source;
         ItemMeta meta = source.getItemMeta();
-        List<String> lore = meta.getLore() == null ? new ArrayList<>() : meta.getLore();
-        lore.add(StringUtils.encodeStringForItemStack(json.toString()));
-        meta.setLore(lore);
-        source.setItemMeta(meta);
+        NamespacedKey key = new NamespacedKey(ServerButler.plugin, "mythPacketContainer");
+        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, json.toString());
+        copy.setItemMeta(meta);
         return copy;
     }
 
@@ -199,9 +196,8 @@ public class ItemUtils {
      * @return The colored wool
      */
     public static ItemStack woolForColor(DyeColor color) {
-        Wool w = new Wool();
-        w.setColor(color);
-        return w.toItemStack(1);
+        Material material = Material.valueOf(color.toString().toUpperCase() + "_WOOL");
+        return new ItemStack(material, 1);
     }
 
     public static ItemStack makeKickItem(MythPlayer target) {

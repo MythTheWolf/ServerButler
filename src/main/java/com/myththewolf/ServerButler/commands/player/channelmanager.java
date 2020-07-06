@@ -11,10 +11,10 @@ import org.bukkit.DyeColor;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.Wool;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +28,7 @@ public class channelmanager extends CommandAdapter {
     public void onCommand(Optional<MythPlayer> sender, String[] args, JavaPlugin javaPlugin) {
         i = 0;
         sender.ifPresent(player -> {
-            if(!player.getBukkitPlayer().isPresent()) return;
+            if (!player.getBukkitPlayer().isPresent()) return;
             Inventory I = (DataCache.getAllChannels().size() > 9 ? Bukkit
                     .createInventory(null, DataCache.getAllChannels().size(), ChatColor
                             .translateAlternateColorCodes('&', "&8[&6All available channels&8]")) : Bukkit
@@ -49,7 +49,10 @@ public class channelmanager extends CommandAdapter {
                 ItemStack json_Applied = ItemUtils.applyJSON(packet, channelItem);
                 ItemMeta meta_jsonApplied = json_Applied.getItemMeta();
                 List<String> oldLore = meta_jsonApplied.getLore();
-                oldLore.add((player.isViewing(theChannel) ? (player.getWritingChannel() != null && player
+                if (oldLore == null) {
+                    oldLore = new ArrayList<>();
+                }
+                oldLore.add((player.isViewing(theChannel) ? (player.getWritingChannel().isPresent() && player
                         .getWritingChannel()
                         .equals(theChannel) ? "You are viewing & writing to this channel." : "You are viewing this channel.") : "You are not viewing this channel."));
                 meta_jsonApplied.setLore(oldLore);
@@ -63,8 +66,6 @@ public class channelmanager extends CommandAdapter {
     }
 
     private ItemStack getWoolOfColor(DyeColor color) {
-        Wool w = new Wool();
-        w.setColor(color);
-        return w.toItemStack(1);
+        return ItemUtils.woolForColor(color);
     }
 }
