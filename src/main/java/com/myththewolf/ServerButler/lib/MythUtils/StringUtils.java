@@ -229,10 +229,12 @@ public class StringUtils {
      * @return A optional, empty if no hidden String is present
      */
     public static Optional<String> getEmeddedString(ItemStack source) {
-        ItemStack copy = source;
+        if(!source.hasItemMeta()){
+            return Optional.empty();
+        }
         ItemMeta meta = source.getItemMeta();
         NamespacedKey key = new NamespacedKey(ServerButler.plugin, "MythPacketContainer");
-        if (!meta.getPersistentDataContainer().has(key, PersistentDataType.STRING)) {
+        if (!(meta != null && meta.getPersistentDataContainer().has(key, PersistentDataType.STRING))) {
             return Optional.empty();
         }
         String extracted = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);

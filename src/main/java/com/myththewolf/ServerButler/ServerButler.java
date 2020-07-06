@@ -19,7 +19,6 @@ import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatVisibility;
 import com.myththewolf.ServerButler.lib.MythUtils.MythTPSWatcher;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
-import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketHandler;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketType;
 import com.myththewolf.ServerButler.lib.bungee.packets.Handlers.BroadcastHandler;
@@ -67,6 +66,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.activity.ActivityType;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.TextChannel;
@@ -77,7 +77,6 @@ import org.javacord.api.entity.permission.PermissionsBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -278,6 +277,9 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                     message.edit("**:arrow_up: Server Online**").join();
                 });
             });
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
+                API.updateActivity(ActivityType.PLAYING, "TPS: " + MythTPSWatcher.getTPS() + " " + Bukkit.getServer().getOnlinePlayers().size() + " online players.");
+            }, 1, 20 * 60);
         }
         getLogger().info("Creating command proxies");
         try {
