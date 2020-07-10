@@ -7,6 +7,11 @@
     <groupId>com.myththewolf</groupId>
     <artifactId>ServerButler</artifactId>
     <version>1.16-PRE</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <undertow.version>2.1.0.Final</undertow.version>
+        <tomcat.version>8.0.48</tomcat.version>
+    </properties>
     <repositories>
         <repository>
             <id>jcenter</id>
@@ -17,10 +22,11 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
         <repository>
-            <id>spigot-repo</id>
+            <id>spgot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
     </repositories>
+
     <dependencies>
         <dependency>
             <groupId>pl.project13.maven</groupId>
@@ -28,7 +34,6 @@
             <version>3.0.1</version>
             <type>maven-plugin</type>
         </dependency>
-
 
 
         <!-- log4j (sucks) -->
@@ -70,10 +75,6 @@
         </dependency>
 
 
-
-
-
-
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
@@ -104,34 +105,8 @@
             <version>3.0.6</version>
             <type>pom</type>
         </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-annotations</artifactId>
-            <version>9.4.12.v20180830</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-            <version>9.4.12.v20180830</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>apache-jsp</artifactId>
-            <version>9.4.12.v20180830</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>apache-jstl</artifactId>
-            <version>9.4.12.v20180830</version>
-            <type>pom</type>
-        </dependency>
     </dependencies>
+
     <build>
         <resources>
             <resource>

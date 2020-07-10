@@ -55,7 +55,6 @@ import com.myththewolf.ServerButler.lib.logging.Loggable;
 import com.myththewolf.ServerButler.lib.mySQL.SQLAble;
 import com.myththewolf.ServerButler.lib.mySQL.SQLConnector;
 import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
-import com.myththewolf.ServerButler.lib.webserver.ServerButlerJettyServer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
@@ -100,10 +99,9 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
     public static DateTime startTime = new DateTime();
     private static ChannelCategory channelCategory;
     private TabCompleter mythTabCompleter;
-    private List<Message> loadingMessages = new ArrayList<>();
-    private Queue<String> consoleMessageQueue = new LinkedList<>();
+    private final List<Message> loadingMessages = new ArrayList<>();
+    private final Queue<String> consoleMessageQueue = new LinkedList<>();
     private ConsoleMessageQueueWorker consoleMessageQueueWorker = null;
-    private ServerButlerJettyServer webServer;
     private int TPSWatcherID = -1;
 
     public static ServerButler getInstance() {
@@ -322,18 +320,6 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (ConfigProperties.ENABLE_WEB_SERVER) {
-            Thread webThread = new Thread(() -> {
-                getLogger().info("Starting web server");
-                if (ConfigProperties.WEBSERVER_HOST_ADDR == null) {
-                    webServer = new ServerButlerJettyServer(ConfigProperties.WEBSERVER_PORT);
-                } else {
-                    webServer = new ServerButlerJettyServer(ConfigProperties.WEBSERVER_HOST_ADDR, ConfigProperties.WEBSERVER_PORT);
-                }
-                webServer.start();
-            });
-            webThread.start();
-        }
     }
 
     @Override
@@ -351,9 +337,6 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 });
                 API.disconnect();
 
-            }
-            if (ConfigProperties.ENABLE_WEB_SERVER) {
-                webServer.stop();
             }
             getSQLConnection().close();
         } catch (Exception e) {
