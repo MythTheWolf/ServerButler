@@ -277,7 +277,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             });
             Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
                 API.updateActivity(ActivityType.PLAYING, "TPS: " + MythTPSWatcher.getTPS() + " " + Bukkit.getServer().getOnlinePlayers().size() + " online players.");
-            }, 1, 20 * 60);
+            }, 1, ((20 * 60)*60));
         }
         getLogger().info("Creating command proxies");
         try {

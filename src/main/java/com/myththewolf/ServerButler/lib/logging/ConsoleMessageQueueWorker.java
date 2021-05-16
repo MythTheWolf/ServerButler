@@ -36,7 +36,6 @@ public class ConsoleMessageQueueWorker extends Thread {
                 // make sure rate isn't less than every second because of rate limitations
                 // even then, a console channel update /every second/ is pushing it
                 int sleepTime = 5 * 1000;
-                if (sleepTime < 1000) sleepTime = 1000;
 
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
