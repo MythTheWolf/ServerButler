@@ -149,7 +149,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         DataCache.rebuildTaskList();
         getLogger().info("Starting all announcement tasks");
         DataCache.annoucementHashMap.values().stream().filter(ChatAnnoucement::isEnabled).forEach(ChatAnnoucement::startTask);
-        TPSWatcherID = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 2L);
+      //  TPSWatcherID = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 2L);
         getLogger().info("Building command list");
         registerCommands();
 
@@ -276,7 +276,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 });
             });
             Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
-                API.updateActivity(ActivityType.PLAYING, "TPS: " + MythTPSWatcher.getTPS() + " " + Bukkit.getServer().getOnlinePlayers().size() + " online players.");
+             //   API.updateActivity(ActivityType.PLAYING, "TPS: " + MythTPSWatcher.getTPS() + " " + Bukkit.getServer().getOnlinePlayers().size() + " online players.");
             }, 1, ((20 * 60)*60));
         }
         getLogger().info("Creating command proxies");

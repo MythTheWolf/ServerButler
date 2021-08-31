@@ -21,7 +21,8 @@ public class ipnames extends CommandAdapter {
         } else {
             Optional<MythPlayer> player = DataCache.getPlayerByName(args[0]);
             if (!player.isPresent()) {
-                reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not grab ip: Player not found.");
+                reply(ConfigProperties.PREFIX + ChatColor.RED + "Could not run /ipnames: Could not grab ip: Player not found. "+args[0]);
+
                 return;
             } else if (!player.get().isOnline()) {
                 reply(ConfigProperties.PREFIX + ChatColor.RED + "ERROR: " + ChatColor.GOLD + "The player isn't online, cannot grab IP address. (Use /ips <playername>)");

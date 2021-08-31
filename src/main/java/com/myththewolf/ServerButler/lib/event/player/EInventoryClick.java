@@ -17,7 +17,6 @@ import org.json.JSONObject;
 public class EInventoryClick implements Listener, Loggable {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        getLogger().info("Got event: ");
         if (!(event.getWhoClicked() instanceof Player)) {
             return;
         }

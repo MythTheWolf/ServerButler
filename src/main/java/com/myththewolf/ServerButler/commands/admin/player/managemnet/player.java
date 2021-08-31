@@ -59,11 +59,12 @@ public class player extends CommandAdapter {
                 ItemStack itemViewIPs = ItemUtils.applyJSON(viewPlayerIPsPacket, ItemUtils
                         .nameItem("View Player IPs", ItemUtils.getSkullofPlayer(target.getUUID())));
                 actions.add(player.hasPermission(ConfigProperties.VIEW_PLAYER_IPS_PERMISSION) ? itemViewIPs : null);
-                ItemStack viewExtra = ItemUtils
-                        .nameItem("View Player Info", ItemUtils.getSkullofPlayer(target.getUUID()));
+
                 JSONObject viewExtraInfoPacket = new JSONObject();
                 viewExtraInfoPacket.put("PLAYER-NAME", target.getName());
                 viewExtraInfoPacket.put("packetType", PacketType.VIEW_PLAYER_EXTA_INFO);
+                ItemStack viewExtra = ItemUtils.applyJSON(viewExtraInfoPacket,ItemUtils
+                        .nameItem("View Player Info", ItemUtils.getSkullofPlayer(target.getUUID())));
                 actions.add(viewExtra);
                 actions.stream().filter(Objects::nonNull).forEach(targetInventory::addItem);
                 sender.openInventory(targetInventory);
