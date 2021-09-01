@@ -21,9 +21,6 @@ public class EPlayerLeave implements Listener {
         MythPlayer MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
         if (ConfigProperties.ENABLE_DISCORD_BOT) {
             DataCache.getGlobalChannel().getDiscordChannel().sendMessage(":arrow_backward: " + ChatColor.stripColor(MP.getDisplayName()) + " left the game.");
-            DataCache.getAllChannels().forEach(chatChannel -> {
-                chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(ServerButler.startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
-            });
         }
     }
 }

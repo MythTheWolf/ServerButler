@@ -37,21 +37,37 @@ import java.util.Optional;
  * This class captures all join events
  */
 public class EPlayerJoin implements Listener, Loggable, SQLAble {
+    private MythPlayer MP;
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         try {
             if (!ServerButler.connector.isConnected()) {
                 throw new Exception("No connection to database");
             }
-            MythPlayer MP;
 
-            if (!DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).isPresent()) {
+            Optional<MythPlayer> optionalMythPlayer = DataCache.getPlayer(event.getPlayer().getUniqueId().toString());
+            if (!optionalMythPlayer.isPresent()) {
                 MP = DataCache.createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
+                MP.updatePlayer();
             } else {
-                MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).get();
+                MP = optionalMythPlayer.get();
             }
             Optional<PlayerInetAddress> ipAddress = DataCache
                     .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
+            if (!ipAddress.isPresent()) {
+                debug("Creating IP Entry for " + event.getPlayer().getAddress().getAddress());
+                DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
+                ipAddress = DataCache
+                        .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
+                DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
+            }
+            if (!MP.getName().equals(event.getPlayer().getName())) {
+                debug("Updating username "+MP.getName() + " to " +event.getPlayer().getName());
+                MP.setName(event.getPlayer().getName());
+                MP.updatePlayer();
+                DataCache.rebuildPlayer(MP.getUUID());
+            }
             if (ConfigProperties.ENABLE_EULA && !MP.tosAccepted()) {
                 File eulaFile = new File(ServerButler.plugin.getDataFolder() + File.separator + "eula.txt");
                 if (!eulaFile.exists()) {
@@ -61,16 +77,15 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
                     (new ConversationFactory(ServerButler.plugin)).withFirstPrompt(new BooleanPrompt() {
                         @Override
                         protected Prompt acceptValidatedInput(ConversationContext conversationContext, boolean b) {
+
                             if (!b) {
-                                MythPlayer player = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
-                                player.kickPlayer("You must agree to the TOS to join this server!", null);
+                                MP.kickPlayer("You must agree to the TOS to join this server!", null);
                             } else {
-                                MythPlayer player = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
-                                player.setTosAccepted(true);
-                                player.updatePlayer();
+                                MP.setTosAccepted(true);
+                                MP.updatePlayer();
                                 conversationContext.getForWhom().sendRawMessage(ChatColor.translateAlternateColorCodes('&', ConfigProperties.PREFIX + "Thank you for accepting. Welcome to the server!"));
                                 ConfigProperties.POST_EULA_COMMANDS.forEach(s -> {
-                                    String command = s.replaceAll("%playerName%", player.getName()).replaceAll("%playerUUID%", player.getUUID());
+                                    String command = s.replaceAll("%playerName%", MP.getName()).replaceAll("%playerUUID%", MP.getUUID());
                                     boolean ran = Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
                                     if (!ran) {
                                         getLogger().warning("Could not run post EULA command: " + command);
@@ -93,49 +108,39 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
                 DataCache.getAllChannels().stream()
                         .filter(chatChannel -> !chatChannel.getPermission().isPresent() || MPL
                                 .hasPermission(chatChannel.getPermission().get())).forEach(chatChannel -> {
-                    ServerButler.API.getUserById(MPL.getDiscordID().get()).thenAccept(user -> {
-                        PermissionsBuilder pb = new PermissionsBuilder();
-                        pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.SEND_MESSAGES);
-                        chatChannel.getDiscordChannel().asServerTextChannel().get().createUpdater()
-                                .addPermissionOverwrite(user, pb.build()).update().exceptionally(ExceptionLogger.get());
-                    });
-                });
+                            ServerButler.API.getUserById(MPL.getDiscordID().get()).thenAccept(user -> {
+                                PermissionsBuilder pb = new PermissionsBuilder();
+                                pb.setAllowed(PermissionType.READ_MESSAGE_HISTORY, PermissionType.READ_MESSAGES, PermissionType.SEND_MESSAGES);
+                                chatChannel.getDiscordChannel().asServerTextChannel().get().createUpdater()
+                                        .addPermissionOverwrite(user, pb.build()).update().exceptionally(ExceptionLogger.get());
+                            });
+                        });
             }
 
-            if (!MP.getName().equals(event.getPlayer().getName())) {
-                MP.setName(event.getPlayer().getName());
-                MP.updatePlayer();
-            }
+
             Bukkit.getScheduler().scheduleSyncDelayedTask(ServerButler.plugin, new Runnable() {
                 public void run() {
-                    MythPlayer mp = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
-                    if (!mp.getDisplayName().equals(event.getPlayer().getDisplayName())) {
-                        mp.setDisplayName(event.getPlayer().getDisplayName());
-                        mp.updatePlayer();
-                        DataCache.rebuildPlayer(mp.getUUID());
+
+                    if (!MP.getDisplayName().equals(event.getPlayer().getDisplayName())) {
+                        MP.setDisplayName(event.getPlayer().getDisplayName());
+                        MP.updatePlayer();
+                        DataCache.rebuildPlayer(MP.getUUID());
                     }
                 }
             }, 20L);
-            MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
             if (!ipAddress.isPresent()) {
                 DataCache.addNewInetAddress(event.getPlayer().getAddress().getAddress(), MP);
                 DataCache.rebuildPlayer(event.getPlayer().getUniqueId().toString());
-                MP = DataCache.getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new);
                 ipAddress = DataCache
                         .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
             }
 
             if (!ipAddress.get().getMappedPlayers().contains(MP)) {
-                getLogger().info("Adding " + MP.getUUID() + " to " + ipAddress.get().toString());
+                debug("Adding " + MP.getUUID() + " to " + ipAddress.get().toString());
                 ipAddress.get().addPlayer(MP);
                 ipAddress.get().update();
                 DataCache.rebuildPlayerInetAddress(ipAddress.get());
                 DataCache.rebuildPlayer(MP.getUUID());
-                MP = DataCache.playerExists(event.getPlayer().getUniqueId().toString()) ? DataCache
-                        .getPlayer(event.getPlayer().getUniqueId().toString()).orElseThrow(IllegalStateException::new) : DataCache
-                        .createPlayer(event.getPlayer().getUniqueId().toString(), event.getPlayer().getName());
-                ipAddress = DataCache
-                        .getPlayerInetAddressByIp(event.getPlayer().getAddress().getAddress().toString());
             }
 
             if (!MP.getWritingChannel().isPresent()) {
@@ -248,9 +253,6 @@ public class EPlayerJoin implements Listener, Loggable, SQLAble {
             }
             if (ConfigProperties.ENABLE_DISCORD_BOT) {
                 DataCache.getGlobalChannel().getDiscordChannel().sendMessage(":arrow_forward: " + ChatColor.stripColor(MP.getDisplayName()) + " joined the game.");
-                DataCache.getAllChannels().forEach(chatChannel -> {
-                    chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(ServerButler.startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
-                });
             }
         } catch (Exception e) {
             e.printStackTrace();

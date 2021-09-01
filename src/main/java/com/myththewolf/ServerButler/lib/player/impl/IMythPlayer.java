@@ -55,7 +55,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
         this.loginStatus = LoginStatus.PERMITTED;
         this.chatStatus = ChatStatus.PERMITTED;
         exists = false;
-        updatePlayer();
+
     }
 
     public IMythPlayer(DateTime joinDate, String UUID1, String name) {
@@ -65,7 +65,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
         this.loginStatus = LoginStatus.PERMITTED;
         this.chatStatus = ChatStatus.PERMITTED;
         exists = false;
-        updatePlayer();
+
     }
 
     public IMythPlayer(String playerUUID) {
@@ -197,11 +197,7 @@ public class IMythPlayer implements MythPlayer, Loggable {
         if (!isOnline()) {
             return Optional.empty();
         }
-        return getPlayerAddresses().stream()
-                .filter(a -> {
-                    return getBukkitPlayer().orElseThrow(IllegalStateException::new).getAddress().getAddress().toString()
-                            .equals(a.getAddress().toString());
-                }).findAny();
+        return DataCache.getPlayerInetAddressByIp(getBukkitPlayer().get().getAddress().getAddress().toString());
     }
 
     @Override

@@ -113,9 +113,6 @@ public class EPlayerChat implements Listener, Loggable {
             event.setFormat(chatChannel.getMessageFromContext(sender));
             chatChannel.sendToDiscord(sender, event.getMessage());
         });
-        DataCache.getAllChannels().forEach(chatChannel -> {
-            chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic(Bukkit.getServer().getOnlinePlayers().size() + "/" + Bukkit.getServer().getMaxPlayers() + " players | " + Math.floor(MythTPSWatcher.getTPS()) + " TPS | Server online for " + TimeUtils.durationToString(new Duration(ServerButler.startTime, DateTime.now()))).exceptionally(ExceptionLogger.get());
-        });
     }
 
 

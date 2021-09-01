@@ -17,6 +17,7 @@ import com.myththewolf.ServerButler.lib.player.interfaces.MythPlayer;
 import org.bukkit.conversations.Conversable;
 import org.bukkit.conversations.ConversationAbandonedEvent;
 import org.bukkit.conversations.ConversationAbandonedListener;
+import org.bukkit.entity.Player;
 import org.joda.time.DateTime;
 import org.json.JSONObject;
 
@@ -33,8 +34,7 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
         }
         String reason = (String) conversationAbandonedEvent.getContext().getSessionData("reason");
         MythPlayer target = (MythPlayer) conversationAbandonedEvent.getContext().getSessionData("target");
-        Optional<MythPlayer> sender = Optional
-                .ofNullable((MythPlayer) conversationAbandonedEvent.getContext().getSessionData("sender"));
+        Optional<MythPlayer> sender = DataCache.getPlayer(((Player) conversationAbandonedEvent.getContext().getForWhom()).getUniqueId().toString());
         Optional<ChatAnnoucement> annoucement = DataCache
                 .getAnnouncement((String) conversationAbandonedEvent.getContext().getSessionData("ID"));
         Conversable conversable = conversationAbandonedEvent.getContext().getForWhom();
@@ -168,7 +168,7 @@ public class PlayerConversationAbandonedEvent implements ConversationAbandonedLi
                         .serializeArray(targetIp.getMappedPlayers().stream().map(MythPlayer::getName)
                                 .collect(Collectors.toList()));
                 CHAT_MESSAGE = StringUtils
-                        .replaceParameters(ConfigProperties.FORMAT_IPBAN_CHAT, targetIp.getAddress().toString(), sender
+                        .replaceParameters(ConfigProperties.FORMAT_IP_PARDON, targetIp.getAddress().toString(), sender
                                 .map(MythPlayer::getName).orElse("CONSOLE"), reason, affected);
                 DataCache.getPunishmentInfoChannel().push(CHAT_MESSAGE);
                 break;

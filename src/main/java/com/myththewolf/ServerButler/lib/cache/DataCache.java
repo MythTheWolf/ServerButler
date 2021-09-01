@@ -63,13 +63,14 @@ public class DataCache implements BungeeSender {
             return playerHashMap.get(UUID).playerExists() ? Optional.ofNullable(playerHashMap.get(UUID)) : Optional.empty();
         } else {
             if (ConfigProperties.DEBUG) {
-                getLogger().info("Player doesn't exist in cache. Creating.");
+                getLogger().info(UUID + " doesn't exist in cache. Creating.");
             }
             MythPlayer player = makeNewPlayerObj(UUID);
             if (player.playerExists()) {
                 playerHashMap.put(UUID, player);
                 return Optional.ofNullable(playerHashMap.get(UUID));
             } else {
+                debug(UUID+" *** UUID NOT FOUND IN DATABASE! ***");
                 return Optional.empty();
             }
         }
@@ -305,9 +306,7 @@ public class DataCache implements BungeeSender {
      */
 
     public static ChatChannel getPunishmentInfoChannel() {
-        Optional<ChatChannel> optionalChatChannel = DataCache
-                .getOrMakeChannel(ConfigProperties.PUNISHMENT_INFO_CHANNEL);
-        return optionalChatChannel.orElseGet(DataCache::getAdminChannel);
+        return getOrMakeChannel("AuditLog").get();
     }
 
     public static ChatChannel getAdminChannel() {

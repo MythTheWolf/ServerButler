@@ -48,6 +48,9 @@ public interface SQLAble extends Loggable {
                 preparedStatement.setString(i + 1, null);
             }
         }
+        if (ConfigProperties.DEBUG) {
+            getLogger().info("Executing SQL Query: " + preparedStatement.toString() +" from class "+ getClass().getCanonicalName());
+        }
         preparedStatement.executeUpdate();
         ResultSet rs = preparedStatement.getGeneratedKeys();
         if (!rs.next()) {
@@ -106,7 +109,7 @@ public interface SQLAble extends Loggable {
             }
         }
         if (ConfigProperties.DEBUG) {
-            getLogger().info("Executing SQL Query: " + preparedStatement.toString());
+            getLogger().info("Executing SQL Query: " + preparedStatement.toString() +" from class "+ getClass().getCanonicalName());
         }
         return preparedStatement.executeQuery();
     }

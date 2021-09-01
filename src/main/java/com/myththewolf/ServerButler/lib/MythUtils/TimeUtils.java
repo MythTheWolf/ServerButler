@@ -2,6 +2,7 @@ package com.myththewolf.ServerButler.lib.MythUtils;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.PeriodFormatter;
@@ -43,6 +44,16 @@ public class TimeUtils {
     }
 
     public static String durationToString(Duration d) {
-        return d.getStandardHours() + " Hours, or " + d.getStandardMinutes() + " minutes";
+        Period p = d.toPeriod();
+        PeriodFormatter hm = new PeriodFormatterBuilder()
+                .printZeroAlways()
+                .minimumPrintedDigits(2) // gives the '01'
+                .appendHours()
+                .appendSeparator(" hours, ")
+                .appendMinutes()
+                .appendSuffix(" minutes")
+                .toFormatter();
+        return hm.print(p);
+
     }
 }

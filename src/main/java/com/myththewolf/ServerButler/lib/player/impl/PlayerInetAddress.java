@@ -36,7 +36,7 @@ public class PlayerInetAddress implements SQLAble {
         try {
             ResultSet rs = prepareAndExecuteSelectThrow(SQL, 1, databaseId);
             while (rs.next()) {
-                StringUtils.deserializeArray(rs.getString("playerUUIDs")).forEach(mappedPlayers::add);
+                mappedPlayers.addAll(StringUtils.deserializeArray(rs.getString("playerUUIDs")));
                 loginStatus = LoginStatus.valueOf(rs.getString("loginStatus"));
                 joinDate = TimeUtils.timeFromString(rs.getString("dateJoined"));
                 this.databaseId = databaseId;
@@ -94,7 +94,10 @@ public class PlayerInetAddress implements SQLAble {
     }
 
     public List<MythPlayer> getMappedPlayers() {
-        return mappedPlayers.stream().map(DataCache::getPlayer).map(mythPlayer -> mythPlayer.orElseThrow(IllegalStateException::new)).collect(Collectors.toList());
+        return mappedPlayers.stream().map(s -> {
+            getLogger().info("Mapping player: "+s);
+            return DataCache.getPlayer(s);
+        }).map(mythPlayer -> mythPlayer.orElseThrow(IllegalStateException::new)).collect(Collectors.toList());
     }
 
     public void addPlayer(MythPlayer mythPlayer) {

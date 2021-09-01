@@ -17,7 +17,7 @@ public class InsertAnnouncementHandler implements ItemPacketHandler {
                 .parsePeriod(data.getString("interval")), data.isNull("permission") ? null : data
                 .getString("permission"));
         annoucement.update();
-        StringUtils.deserializeArray(data.getString("selectedChannels")).stream().map(ChatChannel::new)
+        StringUtils.deserializeArray(data.getString("selectedChannels").substring(1)).stream().map(ChatChannel::new)
                 .forEach(annoucement::addChannel);
         annoucement.update();
         player.getBukkitPlayer()

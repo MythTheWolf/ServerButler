@@ -90,7 +90,6 @@ public class ChatChannel implements SQLAble {
 
     public void setChannel(TextChannel channel) {
         this.channel = channel;
-        update();
     }
 
     public TextChannel getDiscordChannel() {

@@ -19,6 +19,7 @@ import com.myththewolf.ServerButler.lib.Chat.ChatAnnoucement;
 import com.myththewolf.ServerButler.lib.Chat.ChatVisibility;
 import com.myththewolf.ServerButler.lib.MythUtils.MythTPSWatcher;
 import com.myththewolf.ServerButler.lib.MythUtils.StringUtils;
+import com.myththewolf.ServerButler.lib.MythUtils.TimeUtils;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketHandler;
 import com.myththewolf.ServerButler.lib.bungee.packets.BungeePacketType;
 import com.myththewolf.ServerButler.lib.bungee.packets.Handlers.BroadcastHandler;
@@ -76,6 +77,7 @@ import org.javacord.api.entity.permission.PermissionsBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -149,7 +151,7 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
         DataCache.rebuildTaskList();
         getLogger().info("Starting all announcement tasks");
         DataCache.annoucementHashMap.values().stream().filter(ChatAnnoucement::isEnabled).forEach(ChatAnnoucement::startTask);
-      //  TPSWatcherID = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 2L);
+      TPSWatcherID = Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new MythTPSWatcher(), 100L, 2L);
         getLogger().info("Building command list");
         registerCommands();
 
@@ -199,11 +201,11 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             }
             channelCategory = thisServer.getChannelCategoryById(conf.getString("category-id")).get();
             DataCache.getAllChannels().forEach(chatChannel -> {
-                if (channelCategory.getChannels().stream()
-                        .noneMatch(c -> c.getName().equals(ConfigProperties.SERVER_NAME + chatChannel.getName().toLowerCase()))) {
+                if (!chatChannel.getDiscordChannel().asServerTextChannel().isPresent()) {
                     TextChannel tc = channelCategory.getServer().createTextChannelBuilder().setCategory(channelCategory)
                             .setName(ConfigProperties.SERVER_NAME + chatChannel.getName()).create().join();
                     chatChannel.setChannel(tc);
+                    chatChannel.update();
 
                     if (!chatChannel.getPermission().isPresent() && ConfigProperties.GLOBAL_CHAT_VISIBILITY.equals(ChatVisibility.ALL)) {
                         getLogger()
@@ -224,18 +226,18 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                             }
                         });
                         chatChannel.getDiscordChannel().sendMessage(":white_check_mark: Permissions done!");
+                        chatChannel.update();
+                        DataCache.rebuildChannel(chatChannel);
                     }
                 }
-                channelCategory.getChannels().stream()
-                        .filter(serverChannel -> serverChannel.getName().equals(chatChannel.getName().toLowerCase()))
-                        .findFirst().flatMap(Channel::asServerTextChannel).ifPresent(c -> {
-                    chatChannel.setChannel(c);
-                    chatChannel.update();
-                    chatChannel.getDiscordChannel().sendMessage(":timer: Server starting").exceptionally(ExceptionLogger.get()).thenAccept(message -> {
-                        loadingMessages.add(message);
-                        chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("Use /token in game to talk in here!").join();
-                    });
-                });
+            });
+            getLogger().info("Channel list size: "+DataCache.getAllChannels().size());
+
+            DataCache.getAllChannels().forEach(chatChannel1 -> {
+                debug("Sending Starting message to "+chatChannel1.getName());
+                Message message =  chatChannel1.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).sendMessage(":timer: Server starting").join();
+                loadingMessages.add(message);
+                chatChannel1.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("Use /token in game to link your discord account!").exceptionally(ExceptionLogger.get());
             });
         }
 
@@ -272,12 +274,13 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 }
                 consoleMessageQueueWorker.start();
                 loadingMessages.forEach(message -> {
-                    message.edit("**:arrow_up: Server Online**").join();
+                    debug("Sending UP message to "+message.getServerTextChannel().orElseThrow(IllegalStateException::new).getName());
+                    message.edit("**:arrow_up: Server Online**").exceptionally(ExceptionLogger.get());
                 });
             });
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
-             //   API.updateActivity(ActivityType.PLAYING, "TPS: " + MythTPSWatcher.getTPS() + " " + Bukkit.getServer().getOnlinePlayers().size() + " online players.");
-            }, 1, ((20 * 60)*60));
+            Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+                API.updateActivity(ActivityType.PLAYING, "TPS: " + MythTPSWatcher.getTPS() + " " + Bukkit.getServer().getOnlinePlayers().size() + " online players.");
+            }, 1, 6000);
         }
         getLogger().info("Creating command proxies");
         try {
@@ -330,10 +333,9 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
                 getLogger().info("Shutting down TPS watcher");
                 Bukkit.getScheduler().cancelTask(TPSWatcherID);
                 DataCache.getAllChannels().forEach(chatChannel -> {
-                    getLogger().info("Running shutdown hook for channel: " + chatChannel.getName());
+                    debug("Running shutdown channel hook for channel: " + chatChannel.getName());
                     chatChannel.getDiscordChannel().sendMessage("**:arrow_down: Server Offline**")
                             .join();
-                    chatChannel.getDiscordChannel().asServerTextChannel().orElseThrow(IllegalStateException::new).updateTopic("[Server offline]").join();
                 });
                 API.disconnect();
 
@@ -378,7 +380,6 @@ public class ServerButler extends JavaPlugin implements SQLAble, Loggable {
             registerDiscordCommand(";link", new link());
             registerDiscordCommand(";eval", new com.myththewolf.ServerButler.commands.admin.discord.eval(this));
         }
-        DataCache.rebuildChannelList();
     }
 
     public void registerPacketHandlers() {
